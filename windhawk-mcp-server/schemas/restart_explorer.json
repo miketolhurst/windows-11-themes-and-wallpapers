@@ -1,0 +1,1 @@
+{"name":"restart_explorer","description":"\nRestarts Windows Explorer (explorer.exe) to redraw taskbar, start menu, and notification center with newly applied styles.\n","parameters":{"properties":{},"title":"restart_explorerArguments","type":"object"}}

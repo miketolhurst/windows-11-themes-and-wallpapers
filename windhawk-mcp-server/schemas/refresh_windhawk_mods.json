@@ -1,0 +1,1 @@
+{"name":"refresh_windhawk_mods","description":"\nSignals the Windhawk engine to reload mod settings immediately by updating SettingsChangeTime on all active mods.\n","parameters":{"properties":{"auto_elevate":{"default":true,"title":"Auto Elevate","type":"boolean"}},"title":"refresh_windhawk_modsArguments","type":"object"}}

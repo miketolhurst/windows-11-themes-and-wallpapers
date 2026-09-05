@@ -1,0 +1,139 @@
+### Windhawk Taskbar Settings ###
+
+theme: ''
+styleConstants:
+  - ''
+controlStyles:
+  - target: Taskbar.ExperienceToggleButton#LaunchListButton[AutomationPropertiesAutomationId=StartButton] > Taskbar.TaskListButtonPanel > Grid > Microsoft.UI.Xaml.Controls.AnimatedVisualPlayer#Icon
+    styles:
+      - Visibility=Collapsed
+  - target: Taskbar.ExperienceToggleButton#LaunchListButton[AutomationPropertiesAutomationId=StartButton] > Taskbar.TaskListButtonPanel > Grid > Border#BackgroundElement
+    styles:
+      - Background:=<ImageBrush ImageSource="C:\Users\Mike\Downloads\Yellow_Windows11_Start_Menu_Icon_218_x_218.png" Stretch="Uniform"/>
+  - target: Taskbar.TaskbarBackground#BackgroundControl > Windows.UI.Xaml.Controls.Grid > Windows.UI.Xaml.Shapes.Rectangle#BackgroundFill
+    styles:
+      - Fill:=<WindhawkBlur BlurAmount="14" TintColor="#34A853" FallbackColor="#34A853" TintOpacity="0.85"/>
+  - target: Taskbar.TaskbarBackground#BackgroundControl > Windows.UI.Xaml.Controls.Grid > Windows.UI.Xaml.Shapes.Rectangle#BackgroundStroke
+    styles:
+      - Fill=#131314
+      - Height=2
+  - target: Taskbar.TaskListLabeledButtonPanel@RunningIndicatorStates > Rectangle#RunningIndicator
+    styles:
+      - Fill=#FBBC05
+      - Height=3
+      - CornerRadius=2
+      - Fill@ActiveRunningIndicator=#FCCC37
+  - target: Taskbar.TaskListButtonPanel > Border#BackgroundElement
+    styles:
+      - CornerRadius=8
+      - Background@ActiveNormal:=<SolidColorBrush Color="#FBBC05" Opacity="0.18"/>
+themeResourceVariables:
+  - ''
+clickThroughTaskbar: 0
+xamlDiagnosticsHandling: ''
+
+
+### Windhawk Notification Centre Settings ###
+
+theme: ''
+styleConstants:
+  - ''
+controlStyles:
+  - target: Grid#NotificationCenterGrid
+    styles:
+      - Background:=<WindhawkBlur BlurAmount="14" TintColor="#34A853" FallbackColor="#34A853" TintOpacity="0.85"/>
+      - BorderBrush=#FBBC05
+      - BorderThickness=2
+      - CornerRadius=14
+  - target: Grid#CalendarCenterGrid
+    styles:
+      - Background:=<WindhawkBlur BlurAmount="14" TintColor="#34A853" FallbackColor="#34A853" TintOpacity="0.85"/>
+      - BorderBrush=#FBBC05
+      - BorderThickness=2
+      - CornerRadius=14
+  - target: Grid#ControlCenterRegion
+    styles:
+      - Background:=<WindhawkBlur BlurAmount="14" TintColor="#34A853" FallbackColor="#34A853" TintOpacity="0.85"/>
+      - BorderBrush=#FBBC05
+      - BorderThickness=2
+      - CornerRadius=14
+  - target: QuickActions.ControlCenter.AccessibleWindow#PageWindow > ContentPresenter > Grid#FullScreenPageRoot
+    styles:
+      - Background:=<WindhawkBlur BlurAmount="14" TintColor="#34A853" FallbackColor="#34A853" TintOpacity="0.85"/>
+      - BorderBrush=#FBBC05
+      - BorderThickness=2
+      - CornerRadius=14
+  - target: ContentPresenter > Grid#FullScreenPageRoot
+    styles:
+      - Background:=<WindhawkBlur BlurAmount="14" TintColor="#34A853" FallbackColor="#34A853" TintOpacity="0.85"/>
+      - BorderBrush=#FBBC05
+      - BorderThickness=2
+      - CornerRadius=14
+  - target: ContentPresenter#PageContent > Grid > Border
+    styles:
+      - Background=Transparent
+      - BorderBrush=Transparent
+  - target: ContentPresenter#PageHeader
+    styles:
+      - Background=Transparent
+      - BorderBrush=Transparent
+  - target: QuickActions.AccessibleToggleButton#ToggleButton
+    styles:
+      - CornerRadius=10
+  - target: QuickActions.AccessibleToggleButton#SplitL2Button
+    styles:
+      - CornerRadius=10
+themeResourceVariables:
+  - SystemAccentColor=#FBBC05
+  - SystemAccentColorLight1=#FCCC37
+  - SystemAccentColorLight2=#FDD969
+  - SystemAccentColorLight3=#FEE79B
+  - SystemAccentColorDark1=#D69E04
+  - SystemAccentColorDark2=#B08203
+  - SystemAccentColorDark3=#8A6602
+  - ToggleSwitchFillOn=#FBBC05
+  - ToggleSwitchFillOnPointerOver=#FCCC37
+  - ToggleSwitchFillOnPressed=#D69E04
+  - SliderTrackValueFill=#FBBC05
+  - SliderTrackValueFillPointerOver=#FCCC37
+  - SliderTrackValueFillPressed=#D69E04
+  - SliderThumbBackground=#FBBC05
+  - SliderThumbBackgroundPointerOver=#FCCC37
+  - SliderThumbBackgroundPressed=#D69E04
+
+
+### Windhawk Start Menu Settings ###
+
+theme: ''
+disableNewStartMenuLayout: ''
+styleConstants:
+  - ''
+controlStyles:
+  - target: Border#AcrylicBorder
+    styles:
+      - Background:=<WindhawkBlur BlurAmount="14" TintColor="#34A853" FallbackColor="#34A853" TintOpacity="0.85"/>
+      - BorderBrush=#FBBC05
+      - BorderThickness=2
+      - CornerRadius=14
+  - target: Border#AppBorder
+    styles:
+      - CornerRadius=14
+  - target: StartDocked.SearchBoxToggleButton
+    styles:
+      - Background=#18FBBC05
+      - BorderBrush=#40FBBC05
+      - BorderThickness=2
+      - CornerRadius=8
+themeResourceVariables:
+  - SystemAccentColor=#FBBC05
+  - SystemAccentColorLight1=#FCCC37
+  - SystemAccentColorLight2=#FDD969
+  - SystemAccentColorLight3=#FEE79B
+  - SystemAccentColorDark1=#D69E04
+  - SystemAccentColorDark2=#B08203
+  - SystemAccentColorDark3=#8A6602
+webContentStyles:
+  - target: ''
+    styles:
+      - ''
+webContentCustomJs: ''

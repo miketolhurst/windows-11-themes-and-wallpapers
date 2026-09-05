@@ -1,0 +1,65 @@
+theme: ''
+styleConstants:
+  - ''
+controlStyles:
+  - target: Grid#NotificationCenterGrid
+    styles:
+      - Background:=<WindhawkBlur BlurAmount="5" TintColor="#281834" TintOpacity="0.55" NoiseOpacity="0.05" NoiseDensity="1.0" />
+      - BorderBrush=#c084fc
+      - BorderThickness=2
+      - CornerRadius=18
+  - target: Grid#CalendarCenterGrid
+    styles:
+      - Background:=<WindhawkBlur BlurAmount="5" TintColor="#281834" TintOpacity="0.55" NoiseOpacity="0.05" NoiseDensity="1.0" />
+      - BorderBrush=#c084fc
+      - BorderThickness=2
+      - CornerRadius=18
+  - target: Grid#ControlCenterRegion
+    styles:
+      - Background:=<WindhawkBlur BlurAmount="5" TintColor="#281834" TintOpacity="0.55" NoiseOpacity="0.05" NoiseDensity="1.0" />
+      - BorderBrush=#c084fc
+      - BorderThickness=2
+      - CornerRadius=18
+  - target: QuickActions.ControlCenter.AccessibleWindow#PageWindow > ContentPresenter > Grid#FullScreenPageRoot
+    styles:
+      - Background:=<WindhawkBlur BlurAmount="5" TintColor="#281834" TintOpacity="0.55" NoiseOpacity="0.05" NoiseDensity="1.0" />
+      - BorderBrush=#c084fc
+      - BorderThickness=2
+      - CornerRadius=18
+  - target: ContentPresenter > Grid#FullScreenPageRoot
+    styles:
+      - Background:=<WindhawkBlur BlurAmount="5" TintColor="#281834" TintOpacity="0.55" NoiseOpacity="0.05" NoiseDensity="1.0" />
+      - BorderBrush=#c084fc
+      - BorderThickness=2
+      - CornerRadius=18
+  - target: ContentPresenter#PageContent > Grid > Border
+    styles:
+      - Background=Transparent
+      - BorderBrush=Transparent
+  - target: ContentPresenter#PageHeader
+    styles:
+      - Background=Transparent
+      - BorderBrush=Transparent
+  - target: QuickActions.AccessibleToggleButton#ToggleButton
+    styles:
+      - CornerRadius=14
+  - target: QuickActions.AccessibleToggleButton#SplitL2Button
+    styles:
+      - CornerRadius=14
+themeResourceVariables:
+  - SystemAccentColor=#c084fc
+  - SystemAccentColorLight1=#cfa2fc
+  - SystemAccentColorLight2=#dfc1fd
+  - SystemAccentColorLight3=#efe0fe
+  - SystemAccentColorDark1=#9969c9
+  - SystemAccentColorDark2=#734f97
+  - SystemAccentColorDark3=#4c3464
+  - ToggleSwitchFillOn=#c084fc
+  - ToggleSwitchFillOnPointerOver=#cfa2fc
+  - ToggleSwitchFillOnPressed=#9969c9
+  - SliderTrackValueFill=#c084fc
+  - SliderTrackValueFillPointerOver=#cfa2fc
+  - SliderTrackValueFillPressed=#9969c9
+  - SliderThumbBackground=#c084fc
+  - SliderThumbBackgroundPointerOver=#cfa2fc
+  - SliderThumbBackgroundPressed=#9969c9

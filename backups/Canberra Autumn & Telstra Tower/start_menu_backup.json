@@ -1,0 +1,33 @@
+theme: ''
+disableNewStartMenuLayout: ''
+styleConstants:
+  - ''
+controlStyles:
+  - target: Border#AcrylicBorder
+    styles:
+      - Background:=<WindhawkBlur BlurAmount="22" TintColor="#151b28" TintOpacity="0.60" NoiseOpacity="0.04" NoiseDensity="1.0" />
+      - BorderBrush=#d97706
+      - BorderThickness=1.5
+      - CornerRadius=12
+  - target: Border#AppBorder
+    styles:
+      - CornerRadius=12
+  - target: StartDocked.SearchBoxToggleButton
+    styles:
+      - Background=#d97706EE
+      - BorderBrush=#d97706EE
+      - BorderThickness=1.5
+      - CornerRadius=12
+themeResourceVariables:
+  - SystemAccentColor=#d97706
+  - SystemAccentColorLight1=#e29944
+  - SystemAccentColorLight2=#ecbb82
+  - SystemAccentColorLight3=#f5ddc0
+  - SystemAccentColorDark1=#ad5f04
+  - SystemAccentColorDark2=#824703
+  - SystemAccentColorDark3=#562f02
+webContentStyles:
+  - target: ''
+    styles:
+      - ''
+webContentCustomJs: ''

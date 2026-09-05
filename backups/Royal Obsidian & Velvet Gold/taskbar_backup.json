@@ -1,0 +1,28 @@
+theme: ''
+styleConstants:
+  - ''
+controlStyles:
+  - target: Taskbar.ExperienceToggleButton#LaunchListButton[AutomationPropertiesAutomationId=StartButton] > Taskbar.TaskListButtonPanel > Grid > Border#BackgroundElement
+    styles:
+      - CornerRadius=8
+  - target: Taskbar.TaskbarBackground#BackgroundControl > Windows.UI.Xaml.Controls.Grid > Windows.UI.Xaml.Shapes.Rectangle#BackgroundFill
+    styles:
+      - Fill:=<LinearGradientBrush StartPoint="1.4, 1.4" EndPoint="-0.4, -0.4"><GradientStop Color="#f80a0a0c" Offset="0.0" /><GradientStop Color="#f8d4af37" Offset="0.5" /><GradientStop Color="#f8f59e0b" Offset="1.0"/></LinearGradientBrush>
+  - target: Taskbar.TaskbarBackground#BackgroundControl > Windows.UI.Xaml.Controls.Grid > Windows.UI.Xaml.Shapes.Rectangle#BackgroundStroke
+    styles:
+      - Fill=#d4af37
+      - Height=2
+  - target: Taskbar.TaskListLabeledButtonPanel@RunningIndicatorStates > Rectangle#RunningIndicator
+    styles:
+      - Fill=#d4af37
+      - Height=3
+      - CornerRadius=8
+      - Fill@ActiveRunningIndicator=#d4af37
+  - target: Taskbar.TaskListButtonPanel > Border#BackgroundElement
+    styles:
+      - CornerRadius=8
+      - Background@ActiveNormal:=<SolidColorBrush Color="#d4af37" Opacity="0.18"/>
+themeResourceVariables:
+  - ''
+clickThroughTaskbar: 0
+xamlDiagnosticsHandling: ''

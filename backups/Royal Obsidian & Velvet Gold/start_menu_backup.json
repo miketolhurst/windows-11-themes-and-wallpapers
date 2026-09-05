@@ -1,0 +1,33 @@
+theme: ''
+disableNewStartMenuLayout: ''
+styleConstants:
+  - ''
+controlStyles:
+  - target: Border#AcrylicBorder
+    styles:
+      - Background:=<LinearGradientBrush StartPoint="1.2, -0.2" EndPoint="-0.2, 1.2"><GradientStop Color="#f80a0a0c" Offset="0.0" /><GradientStop Color="#f8d4af37" Offset="0.5" /><GradientStop Color="#f8f59e0b" Offset="1.0"/></LinearGradientBrush>
+      - BorderBrush=#d4af37
+      - BorderThickness=2
+      - CornerRadius=8
+  - target: Border#AppBorder
+    styles:
+      - CornerRadius=8
+  - target: StartDocked.SearchBoxToggleButton
+    styles:
+      - Background=#d4af37EE
+      - BorderBrush=#d4af37EE
+      - BorderThickness=2
+      - CornerRadius=8
+themeResourceVariables:
+  - SystemAccentColor=#d4af37
+  - SystemAccentColorLight1=#dec369
+  - SystemAccentColorLight2=#e9d79b
+  - SystemAccentColorLight3=#f4ebcd
+  - SystemAccentColorDark1=#a98c2c
+  - SystemAccentColorDark2=#7f6921
+  - SystemAccentColorDark3=#544616
+webContentStyles:
+  - target: ''
+    styles:
+      - ''
+webContentCustomJs: ''

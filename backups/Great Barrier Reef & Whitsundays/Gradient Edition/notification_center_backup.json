@@ -1,0 +1,65 @@
+theme: ''
+styleConstants:
+  - ''
+controlStyles:
+  - target: Grid#NotificationCenterGrid
+    styles:
+      - Background:=<LinearGradientBrush StartPoint="1.2, 1.2" EndPoint="-0.2, -0.2"><GradientStop Color="#ef082836" Offset="0.0" /><GradientStop Color="#ef0284c7" Offset="0.5" /><GradientStop Color="#ef06b6d4" Offset="1.0"/></LinearGradientBrush>
+      - BorderBrush=#06b6d4
+      - BorderThickness=1.5
+      - CornerRadius=16
+  - target: Grid#CalendarCenterGrid
+    styles:
+      - Background:=<LinearGradientBrush StartPoint="1.2, 1.2" EndPoint="-0.2, -0.2"><GradientStop Color="#ef082836" Offset="0.0" /><GradientStop Color="#ef0284c7" Offset="0.5" /><GradientStop Color="#ef06b6d4" Offset="1.0"/></LinearGradientBrush>
+      - BorderBrush=#06b6d4
+      - BorderThickness=1.5
+      - CornerRadius=16
+  - target: Grid#ControlCenterRegion
+    styles:
+      - Background:=<LinearGradientBrush StartPoint="1.2, 1.2" EndPoint="-0.2, -0.2"><GradientStop Color="#ef082836" Offset="0.0" /><GradientStop Color="#ef0284c7" Offset="0.5" /><GradientStop Color="#ef06b6d4" Offset="1.0"/></LinearGradientBrush>
+      - BorderBrush=#06b6d4
+      - BorderThickness=1.5
+      - CornerRadius=16
+  - target: QuickActions.ControlCenter.AccessibleWindow#PageWindow > ContentPresenter > Grid#FullScreenPageRoot
+    styles:
+      - Background:=<LinearGradientBrush StartPoint="1.2, 1.2" EndPoint="-0.2, -0.2"><GradientStop Color="#ef082836" Offset="0.0" /><GradientStop Color="#ef0284c7" Offset="0.5" /><GradientStop Color="#ef06b6d4" Offset="1.0"/></LinearGradientBrush>
+      - BorderBrush=#06b6d4
+      - BorderThickness=1.5
+      - CornerRadius=16
+  - target: ContentPresenter > Grid#FullScreenPageRoot
+    styles:
+      - Background:=<LinearGradientBrush StartPoint="1.2, 1.2" EndPoint="-0.2, -0.2"><GradientStop Color="#ef082836" Offset="0.0" /><GradientStop Color="#ef0284c7" Offset="0.5" /><GradientStop Color="#ef06b6d4" Offset="1.0"/></LinearGradientBrush>
+      - BorderBrush=#06b6d4
+      - BorderThickness=1.5
+      - CornerRadius=16
+  - target: ContentPresenter#PageContent > Grid > Border
+    styles:
+      - Background=Transparent
+      - BorderBrush=Transparent
+  - target: ContentPresenter#PageHeader
+    styles:
+      - Background=Transparent
+      - BorderBrush=Transparent
+  - target: QuickActions.AccessibleToggleButton#ToggleButton
+    styles:
+      - CornerRadius=12
+  - target: QuickActions.AccessibleToggleButton#SplitL2Button
+    styles:
+      - CornerRadius=12
+themeResourceVariables:
+  - SystemAccentColor=#06b6d4
+  - SystemAccentColorLight1=#44c8de
+  - SystemAccentColorLight2=#82dae9
+  - SystemAccentColorLight3=#c0ecf4
+  - SystemAccentColorDark1=#0491a9
+  - SystemAccentColorDark2=#036d7f
+  - SystemAccentColorDark3=#024854
+  - ToggleSwitchFillOn=#06b6d4
+  - ToggleSwitchFillOnPointerOver=#44c8de
+  - ToggleSwitchFillOnPressed=#0491a9
+  - SliderTrackValueFill=#06b6d4
+  - SliderTrackValueFillPointerOver=#44c8de
+  - SliderTrackValueFillPressed=#0491a9
+  - SliderThumbBackground=#06b6d4
+  - SliderThumbBackgroundPointerOver=#44c8de
+  - SliderThumbBackgroundPressed=#0491a9

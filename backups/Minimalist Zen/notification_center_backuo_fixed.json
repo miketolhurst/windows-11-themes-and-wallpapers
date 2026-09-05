@@ -1,0 +1,65 @@
+theme: ''
+styleConstants:
+  - ''
+controlStyles:
+  - target: Grid#NotificationCenterGrid
+    styles:
+      - Background:=<LinearGradientBrush StartPoint="1,1" EndPoint="0,0"><GradientStop Color="#F81e1e24" Offset="0.0" /><GradientStop Color="#F82a2a35" Offset="1.0"/></LinearGradientBrush>
+      - BorderBrush=#8fbc8f
+      - BorderThickness=2
+      - CornerRadius=20
+  - target: Grid#CalendarCenterGrid
+    styles:
+      - Background:=<LinearGradientBrush StartPoint="1,1" EndPoint="0,0"><GradientStop Color="#F81e1e24" Offset="0.0" /><GradientStop Color="#F82a2a35" Offset="1.0"/></LinearGradientBrush>
+      - BorderBrush=#8fbc8f
+      - BorderThickness=2
+      - CornerRadius=20
+  - target: Grid#ControlCenterRegion
+    styles:
+      - Background:=<LinearGradientBrush StartPoint="1,1" EndPoint="0,0"><GradientStop Color="#F81e1e24" Offset="0.0" /><GradientStop Color="#F82a2a35" Offset="1.0"/></LinearGradientBrush>
+      - BorderBrush=#8fbc8f
+      - BorderThickness=2
+      - CornerRadius=20
+  - target: QuickActions.ControlCenter.AccessibleWindow#PageWindow > ContentPresenter > Grid#FullScreenPageRoot
+    styles:
+      - Background:=<LinearGradientBrush StartPoint="1,1" EndPoint="0,0"><GradientStop Color="#F81e1e24" Offset="0.0" /><GradientStop Color="#F82a2a35" Offset="1.0"/></LinearGradientBrush>
+      - BorderBrush=#8fbc8f
+      - BorderThickness=2
+      - CornerRadius=20
+  - target: ContentPresenter > Grid#FullScreenPageRoot
+    styles:
+      - Background:=<LinearGradientBrush StartPoint="1,1" EndPoint="0,0"><GradientStop Color="#F81e1e24" Offset="0.0" /><GradientStop Color="#F82a2a35" Offset="1.0"/></LinearGradientBrush>
+      - BorderBrush=#8fbc8f
+      - BorderThickness=2
+      - CornerRadius=20
+  - target: ContentPresenter#PageContent > Grid > Border
+    styles:
+      - Background=Transparent
+      - BorderBrush=Transparent
+  - target: ContentPresenter#PageHeader
+    styles:
+      - Background=Transparent
+      - BorderBrush=Transparent
+  - target: QuickActions.AccessibleToggleButton#ToggleButton
+    styles:
+      - CornerRadius=16
+  - target: QuickActions.AccessibleToggleButton#SplitL2Button
+    styles:
+      - CornerRadius=16
+themeResourceVariables:
+  - SystemAccentColor=#8fbc8f
+  - SystemAccentColorLight1=#a5c9a5
+  - SystemAccentColorLight2=#bbd6bb
+  - SystemAccentColorLight3=#d1e3d1
+  - SystemAccentColorDark1=#729672
+  - SystemAccentColorDark2=#557055
+  - SystemAccentColorDark3=#394b39
+  - ToggleSwitchFillOn=#8fbc8f
+  - ToggleSwitchFillOnPointerOver=#a5c9a5
+  - ToggleSwitchFillOnPressed=#729672
+  - SliderTrackValueFill=#8fbc8f
+  - SliderTrackValueFillPointerOver=#a5c9a5
+  - SliderTrackValueFillPressed=#729672
+  - SliderThumbBackground=#8fbc8f
+  - SliderThumbBackgroundPointerOver=#a5c9a5
+  - SliderThumbBackgroundPressed=#729672

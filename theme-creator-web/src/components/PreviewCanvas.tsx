@@ -1,5 +1,6 @@
 import React from 'react';
 import { useThemeStore } from '../store/useThemeStore';
+import { opacityToAlphaHex } from '../lib/paletteEngine';
 
 export default function PreviewCanvas() {
   const {
@@ -17,25 +18,31 @@ export default function PreviewCanvas() {
     taskbarBlur,
     startMenuBlur,
     notificationBlur,
+    taskbarOpacity,
+    startMenuOpacity,
+    notificationOpacity,
     activePane,
     setActivePane,
   } = useThemeStore();
 
   const baseBg = isLightMode ? '#f0f0f5' : '#101216';
+  const tbAlpha = opacityToAlphaHex(taskbarOpacity ?? 97);
+  const smAlpha = opacityToAlphaHex(startMenuOpacity ?? 97);
+  const ncAlpha = opacityToAlphaHex(notificationOpacity ?? 97);
 
   // Dynamic flyout backgrounds matching Windhawk Styler:
-  // In gradient mode: uses exact sm_grad & nc_grad from create_theme.py / exportEngine.ts
+  // In gradient mode: uses exact sm_grad & nc_grad from create_theme.py / exportEngine.ts with chosen opacity
   // In frosted blur mode: uses acrylic material infused with dual primary and secondary accent ambient lighting
   const startMenuBg =
     taskbarMode === 'gradient'
-      ? `linear-gradient(135deg, ${baseBg}f0 0%, ${accentColor}d4 50%, ${secondaryAccent}d4 100%)`
+      ? `linear-gradient(135deg, ${baseBg}${smAlpha} 0%, ${accentColor}${smAlpha} 50%, ${secondaryAccent}${smAlpha} 100%)`
       : isLightMode
       ? `radial-gradient(circle at 90% 10%, ${secondaryAccent}35 0%, transparent 65%), radial-gradient(circle at 10% 90%, ${accentColor}35 0%, transparent 65%), rgba(245, 245, 250, 0.84)`
       : `radial-gradient(circle at 90% 10%, ${secondaryAccent}40 0%, transparent 65%), radial-gradient(circle at 10% 90%, ${accentColor}40 0%, transparent 65%), rgba(18, 20, 25, 0.84)`;
 
   const notifCenterBg =
     taskbarMode === 'gradient'
-      ? `linear-gradient(315deg, ${baseBg}f0 0%, ${accentColor}d4 50%, ${secondaryAccent}d4 100%)`
+      ? `linear-gradient(315deg, ${baseBg}${ncAlpha} 0%, ${accentColor}${ncAlpha} 50%, ${secondaryAccent}${ncAlpha} 100%)`
       : isLightMode
       ? `radial-gradient(circle at 90% 90%, ${secondaryAccent}35 0%, transparent 65%), radial-gradient(circle at 10% 10%, ${accentColor}35 0%, transparent 65%), rgba(245, 245, 250, 0.84)`
       : `radial-gradient(circle at 90% 90%, ${secondaryAccent}40 0%, transparent 65%), radial-gradient(circle at 10% 10%, ${accentColor}40 0%, transparent 65%), rgba(18, 20, 25, 0.84)`;
@@ -61,7 +68,7 @@ export default function PreviewCanvas() {
   if (taskbarMode === 'gradient') {
     taskbarStyle.background = `linear-gradient(90deg, ${
       isLightMode ? '#f0f0f5' : '#101216'
-    } 0%, ${accentColor}cc 50%, ${secondaryAccent}cc 100%)`;
+    }${tbAlpha} 0%, ${accentColor}${tbAlpha} 50%, ${secondaryAccent}${tbAlpha} 100%)`;
   } else {
     taskbarStyle.backgroundColor = isLightMode
       ? 'rgba(245, 245, 250, 0.72)'

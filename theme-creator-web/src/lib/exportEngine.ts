@@ -27,11 +27,32 @@ export function generateRegFileString(state: ThemeState): string {
 
   const tbFill =
     state.taskbarMode === 'gradient'
-      ? buildLinearGradientBrush('1.4, 1.4', '-0.4, -0.4', baseBgRgb, accentRgb, secRgb)
+      ? buildLinearGradientBrush(
+          '1.4, 1.4',
+          '-0.4, -0.4',
+          baseBgRgb,
+          accentRgb,
+          secRgb,
+          state.taskbarOpacity ?? 97
+        )
       : `<WindhawkBlur BlurAmount="${state.taskbarBlur}" />`;
 
-  const smGrad = buildLinearGradientBrush('1.2, -0.2', '-0.2, 1.2', baseBgRgb, accentRgb, secRgb);
-  const ncGrad = buildLinearGradientBrush('1.2, 1.2', '-0.2, -0.2', baseBgRgb, accentRgb, secRgb);
+  const smGrad = buildLinearGradientBrush(
+    '1.2, -0.2',
+    '-0.2, 1.2',
+    baseBgRgb,
+    accentRgb,
+    secRgb,
+    state.startMenuOpacity ?? 97
+  );
+  const ncGrad = buildLinearGradientBrush(
+    '1.2, 1.2',
+    '-0.2, -0.2',
+    baseBgRgb,
+    accentRgb,
+    secRgb,
+    state.notificationOpacity ?? 97
+  );
 
   const radius = state.cornerRadius;
   const buttonRadius = Math.max(0, radius - 4);

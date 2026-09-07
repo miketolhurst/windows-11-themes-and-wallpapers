@@ -40,16 +40,37 @@ describe('paletteEngine', () => {
     expect(result.colors[7]).toBeDefined();
   });
 
-  it('builds valid linear gradient brush XAML', () => {
-    const brush = buildLinearGradientBrush(
+  it('builds valid linear gradient brush XAML with custom opacity', () => {
+    const brushDefault = buildLinearGradientBrush(
       '0,0',
       '1,1',
       [16, 18, 22],
       [0, 120, 212],
       [42, 161, 152]
     );
-    expect(brush).toContain('<LinearGradientBrush');
-    expect(brush).toContain('GradientStop');
-    expect(brush).toContain('Color="#f80078d4"');
+    expect(brushDefault).toContain('<LinearGradientBrush');
+    expect(brushDefault).toContain('GradientStop');
+
+    // Test 100% opacity -> ff
+    const brush100 = buildLinearGradientBrush(
+      '0,0',
+      '1,1',
+      [16, 18, 22],
+      [0, 120, 212],
+      [42, 161, 152],
+      100
+    );
+    expect(brush100).toContain('Color="#ff0078d4"');
+
+    // Test 50% opacity -> 80
+    const brush50 = buildLinearGradientBrush(
+      '0,0',
+      '1,1',
+      [16, 18, 22],
+      [0, 120, 212],
+      [42, 161, 152],
+      50
+    );
+    expect(brush50).toContain('Color="#800078d4"');
   });
 });

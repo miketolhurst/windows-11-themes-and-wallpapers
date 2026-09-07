@@ -35,6 +35,12 @@ export default function Sidebar() {
     setStartMenuBlur,
     notificationBlur,
     setNotificationBlur,
+    taskbarOpacity,
+    setTaskbarOpacity,
+    startMenuOpacity,
+    setStartMenuOpacity,
+    notificationOpacity,
+    setNotificationOpacity,
     activePane,
     setActivePane,
     applyThemeConfig,
@@ -386,62 +392,119 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Blur Sliders */}
+      {/* Blur & Transparency */}
       <div className="pt-2 border-t border-neutral-800">
-        <label className="text-xs font-semibold uppercase text-neutral-400 mb-2 block">Blur & Transparency</label>
+        <label className="text-xs font-semibold uppercase text-neutral-400 mb-2 block">
+          {taskbarMode === 'gradient' ? 'Gradient Opacity' : 'Blur & Transparency'}
+        </label>
 
-        <div className="flex flex-col gap-3">
-          <div>
-            <div className="flex justify-between text-xs mb-1">
-              <label htmlFor="taskbarBlur" className="text-neutral-300">Taskbar Blur</label>
-              <span className="text-blue-400 font-mono">{taskbarBlur}px</span>
+        {taskbarMode === 'gradient' ? (
+          <div className="flex flex-col gap-3">
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <label htmlFor="taskbarOpacity" className="text-neutral-300">Taskbar Opacity</label>
+                <span className="text-blue-400 font-mono">{taskbarOpacity}%</span>
+              </div>
+              <input
+                id="taskbarOpacity"
+                aria-label="Taskbar Opacity"
+                type="range"
+                min="0"
+                max="100"
+                value={taskbarOpacity}
+                onChange={(e) => setTaskbarOpacity(parseInt(e.target.value))}
+                className="w-full accent-blue-500 cursor-pointer"
+              />
             </div>
-            <input
-              id="taskbarBlur"
-              aria-label="Taskbar Blur"
-              type="range"
-              min="0"
-              max="30"
-              value={taskbarBlur}
-              onChange={(e) => setTaskbarBlur(parseInt(e.target.value))}
-              className="w-full accent-blue-500 cursor-pointer"
-            />
-          </div>
 
-          <div>
-            <div className="flex justify-between text-xs mb-1">
-              <label htmlFor="startMenuBlur" className="text-neutral-300">Start Menu Blur</label>
-              <span className="text-blue-400 font-mono">{startMenuBlur}px</span>
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <label htmlFor="startMenuOpacity" className="text-neutral-300">Start Menu Opacity</label>
+                <span className="text-blue-400 font-mono">{startMenuOpacity}%</span>
+              </div>
+              <input
+                id="startMenuOpacity"
+                aria-label="Start Menu Opacity"
+                type="range"
+                min="0"
+                max="100"
+                value={startMenuOpacity}
+                onChange={(e) => setStartMenuOpacity(parseInt(e.target.value))}
+                className="w-full accent-blue-500 cursor-pointer"
+              />
             </div>
-            <input
-              id="startMenuBlur"
-              aria-label="Start Menu Blur"
-              type="range"
-              min="0"
-              max="30"
-              value={startMenuBlur}
-              onChange={(e) => setStartMenuBlur(parseInt(e.target.value))}
-              className="w-full accent-blue-500 cursor-pointer"
-            />
-          </div>
 
-          <div>
-            <div className="flex justify-between text-xs mb-1">
-              <label htmlFor="notificationBlur" className="text-neutral-300">Notification Blur</label>
-              <span className="text-blue-400 font-mono">{notificationBlur}px</span>
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <label htmlFor="notificationOpacity" className="text-neutral-300">Notification Center Opacity</label>
+                <span className="text-blue-400 font-mono">{notificationOpacity}%</span>
+              </div>
+              <input
+                id="notificationOpacity"
+                aria-label="Notification Center Opacity"
+                type="range"
+                min="0"
+                max="100"
+                value={notificationOpacity}
+                onChange={(e) => setNotificationOpacity(parseInt(e.target.value))}
+                className="w-full accent-blue-500 cursor-pointer"
+              />
             </div>
-            <input
-              id="notificationBlur"
-              aria-label="Notification Blur"
-              type="range"
-              min="0"
-              max="30"
-              value={notificationBlur}
-              onChange={(e) => setNotificationBlur(parseInt(e.target.value))}
-              className="w-full accent-blue-500 cursor-pointer"
-            />
           </div>
-        </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <label htmlFor="taskbarBlur" className="text-neutral-300">Taskbar Blur</label>
+                <span className="text-blue-400 font-mono">{taskbarBlur}px</span>
+              </div>
+              <input
+                id="taskbarBlur"
+                aria-label="Taskbar Blur"
+                type="range"
+                min="0"
+                max="30"
+                value={taskbarBlur}
+                onChange={(e) => setTaskbarBlur(parseInt(e.target.value))}
+                className="w-full accent-blue-500 cursor-pointer"
+              />
+            </div>
+
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <label htmlFor="startMenuBlur" className="text-neutral-300">Start Menu Blur</label>
+                <span className="text-blue-400 font-mono">{startMenuBlur}px</span>
+              </div>
+              <input
+                id="startMenuBlur"
+                aria-label="Start Menu Blur"
+                type="range"
+                min="0"
+                max="30"
+                value={startMenuBlur}
+                onChange={(e) => setStartMenuBlur(parseInt(e.target.value))}
+                className="w-full accent-blue-500 cursor-pointer"
+              />
+            </div>
+
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <label htmlFor="notificationBlur" className="text-neutral-300">Notification Blur</label>
+                <span className="text-blue-400 font-mono">{notificationBlur}px</span>
+              </div>
+              <input
+                id="notificationBlur"
+                aria-label="Notification Blur"
+                type="range"
+                min="0"
+                max="30"
+                value={notificationBlur}
+                onChange={(e) => setNotificationBlur(parseInt(e.target.value))}
+                className="w-full accent-blue-500 cursor-pointer"
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Preview Viewport Switcher */}

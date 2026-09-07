@@ -19,10 +19,15 @@ export interface ThemeState {
   dynamicNotificationHeight: boolean;
   removeDropShadows: boolean;
 
-  // Styler blur levels
+  // Styler blur levels (px)
   taskbarBlur: number;
   startMenuBlur: number;
   notificationBlur: number;
+
+  // Styler gradient opacity levels (0-100%)
+  taskbarOpacity: number;
+  startMenuOpacity: number;
+  notificationOpacity: number;
   
   // Active flyout preview pane
   activePane: 'start' | 'notifications' | null;
@@ -43,6 +48,9 @@ export interface ThemeState {
   setTaskbarBlur: (b: number) => void;
   setStartMenuBlur: (b: number) => void;
   setNotificationBlur: (b: number) => void;
+  setTaskbarOpacity: (o: number) => void;
+  setStartMenuOpacity: (o: number) => void;
+  setNotificationOpacity: (o: number) => void;
   setActivePane: (pane: 'start' | 'notifications' | null) => void;
   
   // Bulk state update (e.g. preset or reg import)
@@ -68,6 +76,9 @@ const DEFAULT_THEME_STATE = {
   taskbarBlur: 10,
   startMenuBlur: 15,
   notificationBlur: 15,
+  taskbarOpacity: 97,
+  startMenuOpacity: 97,
+  notificationOpacity: 97,
   activePane: 'start' as const,
 };
 
@@ -92,6 +103,9 @@ export const useThemeStore = create<ThemeState>((set) => ({
   setTaskbarBlur: (b: number) => set({ taskbarBlur: b }),
   setStartMenuBlur: (b: number) => set({ startMenuBlur: b }),
   setNotificationBlur: (b: number) => set({ notificationBlur: b }),
+  setTaskbarOpacity: (o: number) => set({ taskbarOpacity: o }),
+  setStartMenuOpacity: (o: number) => set({ startMenuOpacity: o }),
+  setNotificationOpacity: (o: number) => set({ notificationOpacity: o }),
   setActivePane: (pane: 'start' | 'notifications' | null) => set({ activePane: pane }),
 
   applyThemeConfig: (config: Partial<ThemeState>) => set((state) => ({ ...state, ...config })),

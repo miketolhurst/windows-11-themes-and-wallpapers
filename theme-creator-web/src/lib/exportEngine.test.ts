@@ -21,6 +21,9 @@ describe('exportEngine', () => {
     taskbarBlur: 20,
     startMenuBlur: 25,
     notificationBlur: 25,
+    taskbarOpacity: 80,
+    startMenuOpacity: 90,
+    notificationOpacity: 85,
     activePane: 'start',
     setThemeName: () => {},
     setAccentColor: () => {},
@@ -37,6 +40,9 @@ describe('exportEngine', () => {
     setTaskbarBlur: () => {},
     setStartMenuBlur: () => {},
     setNotificationBlur: () => {},
+    setTaskbarOpacity: () => {},
+    setStartMenuOpacity: () => {},
+    setNotificationOpacity: () => {},
     setActivePane: () => {},
     applyThemeConfig: () => {},
     resetToDefaults: () => {},
@@ -55,6 +61,7 @@ describe('exportEngine', () => {
     expect(reg).toContain('"controlStyles[0].styles[1]"="BorderBrush=#0078d4"');
     expect(reg).toContain('"controlStyles[2].target"="Grid#ControlCenterRegion"');
     expect(reg).toContain('"controlStyles[2].styles[1]"="BorderBrush=#0078d4"');
+    expect(reg).toContain('Color=\\"#cc');
   });
 
   it('generates PowerShell script with Explorer restart and broadcast messages', () => {

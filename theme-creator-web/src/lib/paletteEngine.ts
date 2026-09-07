@@ -90,14 +90,21 @@ export function computeAccentPalette(accentHex: string, secondaryHex?: string | 
   };
 }
 
+export function opacityToAlphaHex(opacity: number): string {
+  const alphaVal = Math.max(0, Math.min(255, Math.round((opacity / 100) * 255)));
+  return alphaVal.toString(16).padStart(2, '0');
+}
+
 export function buildLinearGradientBrush(
   startPoint: string,
   endPoint: string,
   bgRgb: RGB,
   accentRgb: RGB,
-  secRgb: RGB
+  secRgb: RGB,
+  opacity: number = 97
 ): string {
+  const alphaHex = opacityToAlphaHex(opacity);
   const toHex = (rgb: RGB) =>
     rgb.map((c) => c.toString(16).padStart(2, '0')).join('');
-  return `<LinearGradientBrush StartPoint="${startPoint}" EndPoint="${endPoint}"><GradientStop Color="#f8${toHex(bgRgb)}" Offset="0.0" /><GradientStop Color="#f8${toHex(accentRgb)}" Offset="0.5" /><GradientStop Color="#f8${toHex(secRgb)}" Offset="1.0"/></LinearGradientBrush>`;
+  return `<LinearGradientBrush StartPoint="${startPoint}" EndPoint="${endPoint}"><GradientStop Color="#${alphaHex}${toHex(bgRgb)}" Offset="0.0" /><GradientStop Color="#${alphaHex}${toHex(accentRgb)}" Offset="0.5" /><GradientStop Color="#${alphaHex}${toHex(secRgb)}" Offset="1.0"/></LinearGradientBrush>`;
 }

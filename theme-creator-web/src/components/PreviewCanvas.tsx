@@ -1,6 +1,6 @@
 import React from 'react';
 import { useThemeStore } from '../store/useThemeStore';
-import { opacityToAlphaHex } from '../lib/paletteEngine';
+import { hexToRgb } from '../lib/paletteEngine';
 
 export default function PreviewCanvas() {
   const {
@@ -25,24 +25,27 @@ export default function PreviewCanvas() {
     setActivePane,
   } = useThemeStore();
 
-  const baseBg = isLightMode ? '#f0f0f5' : '#101216';
-  const tbAlpha = opacityToAlphaHex(taskbarOpacity ?? 97);
-  const smAlpha = opacityToAlphaHex(startMenuOpacity ?? 97);
-  const ncAlpha = opacityToAlphaHex(notificationOpacity ?? 97);
+  const tbOpacity = (taskbarOpacity ?? 97) / 100;
+  const smOpacity = (startMenuOpacity ?? 97) / 100;
+  const ncOpacity = (notificationOpacity ?? 97) / 100;
+
+  const accentRgb = hexToRgb(accentColor);
+  const secRgb = hexToRgb(secondaryAccent);
+  const bgRgb = isLightMode ? [240, 240, 245] : [16, 18, 22];
 
   // Dynamic flyout backgrounds matching Windhawk Styler:
-  // In gradient mode: uses exact sm_grad & nc_grad from create_theme.py / exportEngine.ts with chosen opacity
-  // In frosted blur mode: uses acrylic material infused with dual primary and secondary accent ambient lighting
+  // In gradient mode: uses exact sm_grad & nc_grad with explicit RGBA transparency and NO BLUR
+  // In frosted blur mode: uses acrylic material infused with dual primary and secondary accent ambient lighting and blur
   const startMenuBg =
     taskbarMode === 'gradient'
-      ? `linear-gradient(135deg, ${baseBg}${smAlpha} 0%, ${accentColor}${smAlpha} 50%, ${secondaryAccent}${smAlpha} 100%)`
+      ? `linear-gradient(135deg, rgba(${bgRgb[0]}, ${bgRgb[1]}, ${bgRgb[2]}, ${smOpacity}) 0%, rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, ${smOpacity}) 50%, rgba(${secRgb[0]}, ${secRgb[1]}, ${secRgb[2]}, ${smOpacity}) 100%)`
       : isLightMode
       ? `radial-gradient(circle at 90% 10%, ${secondaryAccent}35 0%, transparent 65%), radial-gradient(circle at 10% 90%, ${accentColor}35 0%, transparent 65%), rgba(245, 245, 250, 0.84)`
       : `radial-gradient(circle at 90% 10%, ${secondaryAccent}40 0%, transparent 65%), radial-gradient(circle at 10% 90%, ${accentColor}40 0%, transparent 65%), rgba(18, 20, 25, 0.84)`;
 
   const notifCenterBg =
     taskbarMode === 'gradient'
-      ? `linear-gradient(315deg, ${baseBg}${ncAlpha} 0%, ${accentColor}${ncAlpha} 50%, ${secondaryAccent}${ncAlpha} 100%)`
+      ? `linear-gradient(315deg, rgba(${bgRgb[0]}, ${bgRgb[1]}, ${bgRgb[2]}, ${ncOpacity}) 0%, rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, ${ncOpacity}) 50%, rgba(${secRgb[0]}, ${secRgb[1]}, ${secRgb[2]}, ${ncOpacity}) 100%)`
       : isLightMode
       ? `radial-gradient(circle at 90% 90%, ${secondaryAccent}35 0%, transparent 65%), radial-gradient(circle at 10% 10%, ${accentColor}35 0%, transparent 65%), rgba(245, 245, 250, 0.84)`
       : `radial-gradient(circle at 90% 90%, ${secondaryAccent}40 0%, transparent 65%), radial-gradient(circle at 10% 10%, ${accentColor}40 0%, transparent 65%), rgba(18, 20, 25, 0.84)`;
@@ -51,7 +54,23 @@ export default function PreviewCanvas() {
   const flyoutBorder = accentColor;
   const textColor = isLightMode ? 'text-neutral-900' : 'text-white';
   const subTextColor = isLightMode ? 'text-neutral-600' : 'text-neutral-400';
-  const cardBg = isLightMode ? 'rgba(255, 255, 255, 0.65)' : 'rgba(0, 0, 0, 0.35)';
+  const startCardBg =
+    taskbarMode === 'gradient'
+      ? isLightMode
+        ? `rgba(255, 255, 255, ${Math.min(0.7, smOpacity * 0.7)})`
+        : `rgba(0, 0, 0, ${Math.min(0.4, smOpacity * 0.4)})`
+      : isLightMode
+      ? 'rgba(255, 255, 255, 0.65)'
+      : 'rgba(0, 0, 0, 0.35)';
+
+  const notifCardBg =
+    taskbarMode === 'gradient'
+      ? isLightMode
+        ? `rgba(255, 255, 255, ${Math.min(0.7, ncOpacity * 0.7)})`
+        : `rgba(0, 0, 0, ${Math.min(0.4, ncOpacity * 0.4)})`
+      : isLightMode
+      ? 'rgba(255, 255, 255, 0.65)'
+      : 'rgba(0, 0, 0, 0.35)';
   const cardHover = isLightMode ? 'hover:bg-neutral-200/60' : 'hover:bg-white/10';
   const shadowClass = removeDropShadows
     ? 'shadow-none'
@@ -61,14 +80,12 @@ export default function PreviewCanvas() {
 
   // Taskbar background styling
   const taskbarStyle: React.CSSProperties = {
-    backdropFilter: `blur(${taskbarBlur}px)`,
-    WebkitBackdropFilter: `blur(${taskbarBlur}px)`,
+    backdropFilter: taskbarMode === 'gradient' ? 'none' : `blur(${taskbarBlur}px)`,
+    WebkitBackdropFilter: taskbarMode === 'gradient' ? 'none' : `blur(${taskbarBlur}px)`,
   };
 
   if (taskbarMode === 'gradient') {
-    taskbarStyle.background = `linear-gradient(90deg, ${
-      isLightMode ? '#f0f0f5' : '#101216'
-    }${tbAlpha} 0%, ${accentColor}${tbAlpha} 50%, ${secondaryAccent}${tbAlpha} 100%)`;
+    taskbarStyle.background = `linear-gradient(90deg, rgba(${bgRgb[0]}, ${bgRgb[1]}, ${bgRgb[2]}, ${tbOpacity}) 0%, rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, ${tbOpacity}) 50%, rgba(${secRgb[0]}, ${secRgb[1]}, ${secRgb[2]}, ${tbOpacity}) 100%)`;
   } else {
     taskbarStyle.backgroundColor = isLightMode
       ? 'rgba(245, 245, 250, 0.72)'
@@ -139,8 +156,8 @@ export default function PreviewCanvas() {
             } flex flex-col pointer-events-auto transition-all duration-200 overflow-hidden ${textColor} ${shadowClass}`}
             style={{
               background: startMenuBg,
-              backdropFilter: `blur(${startMenuBlur}px)`,
-              WebkitBackdropFilter: `blur(${startMenuBlur}px)`,
+              backdropFilter: taskbarMode === 'gradient' ? 'none' : `blur(${startMenuBlur}px)`,
+              WebkitBackdropFilter: taskbarMode === 'gradient' ? 'none' : `blur(${startMenuBlur}px)`,
               borderRadius: `${cornerRadius}px`,
               border: `2px solid ${flyoutBorder}`,
               boxShadow: `0 0 24px -6px ${accentColor}40`,
@@ -153,7 +170,14 @@ export default function PreviewCanvas() {
                   compactSearch ? 'py-1.5 px-3' : 'py-2.5 px-4'
                 }`}
                 style={{
-                  backgroundColor: isLightMode ? `${accentColor}10` : `${accentColor}18`,
+                  backgroundColor:
+                    taskbarMode === 'gradient'
+                      ? isLightMode
+                        ? `rgba(255, 255, 255, ${Math.min(0.5, smOpacity * 0.4)})`
+                        : `rgba(0, 0, 0, ${Math.min(0.35, smOpacity * 0.35)})`
+                      : isLightMode
+                      ? `${accentColor}10`
+                      : `${accentColor}18`,
                   borderRadius: `${Math.max(4, cornerRadius - 2)}px`,
                   border: `1.5px solid ${accentColor}88`,
                 }}
@@ -219,7 +243,7 @@ export default function PreviewCanvas() {
                     <div
                       className={`flex items-center gap-2.5 p-2.5 transition-colors cursor-pointer ${cardHover}`}
                       style={{
-                        backgroundColor: cardBg,
+                        backgroundColor: startCardBg,
                         borderRadius: `${Math.max(4, cornerRadius - 4)}px`,
                         border: `1px solid ${accentColor}44`,
                         borderLeft: `3px solid ${accentColor}`,
@@ -234,7 +258,7 @@ export default function PreviewCanvas() {
                     <div
                       className={`flex items-center gap-2.5 p-2.5 transition-colors cursor-pointer ${cardHover}`}
                       style={{
-                        backgroundColor: cardBg,
+                        backgroundColor: startCardBg,
                         borderRadius: `${Math.max(4, cornerRadius - 4)}px`,
                         border: `1px solid ${secondaryAccent}44`,
                         borderLeft: `3px solid ${secondaryAccent}`,
@@ -255,7 +279,14 @@ export default function PreviewCanvas() {
             <div
               className="mt-auto px-6 py-3 border-t flex items-center justify-between"
               style={{
-                backgroundColor: isLightMode ? 'rgba(235, 235, 240, 0.92)' : 'rgba(15, 15, 18, 0.92)',
+                backgroundColor:
+                  taskbarMode === 'gradient'
+                    ? isLightMode
+                      ? `rgba(235, 235, 240, ${smOpacity * 0.5})`
+                      : `rgba(15, 15, 18, ${smOpacity * 0.5})`
+                    : isLightMode
+                    ? 'rgba(235, 235, 240, 0.92)'
+                    : 'rgba(15, 15, 18, 0.92)',
                 borderColor: `${accentColor}33`,
               }}
             >
@@ -295,8 +326,8 @@ export default function PreviewCanvas() {
             } absolute right-4 bottom-0 flex flex-col pointer-events-auto transition-all duration-200 overflow-hidden ${textColor} ${shadowClass}`}
             style={{
               background: notifCenterBg,
-              backdropFilter: `blur(${notificationBlur}px)`,
-              WebkitBackdropFilter: `blur(${notificationBlur}px)`,
+              backdropFilter: taskbarMode === 'gradient' ? 'none' : `blur(${notificationBlur}px)`,
+              WebkitBackdropFilter: taskbarMode === 'gradient' ? 'none' : `blur(${notificationBlur}px)`,
               borderRadius: `${cornerRadius}px`,
               border: `2px solid ${flyoutBorder}`,
               boxShadow: `0 0 24px -6px ${accentColor}40`,
@@ -318,7 +349,7 @@ export default function PreviewCanvas() {
               <div
                 className="p-3 text-left shadow-sm"
                 style={{
-                  backgroundColor: cardBg,
+                  backgroundColor: notifCardBg,
                   borderRadius: `${Math.max(4, cornerRadius - 4)}px`,
                   border: `1px solid ${accentColor}44`,
                   borderLeft: `3px solid ${accentColor}`,
@@ -336,7 +367,7 @@ export default function PreviewCanvas() {
               <div
                 className="p-3 text-left shadow-sm"
                 style={{
-                  backgroundColor: cardBg,
+                  backgroundColor: notifCardBg,
                   borderRadius: `${Math.max(4, cornerRadius - 4)}px`,
                   border: `1px solid ${secondaryAccent}44`,
                   borderLeft: `3px solid ${secondaryAccent}`,
@@ -360,7 +391,7 @@ export default function PreviewCanvas() {
                   {[
                     { label: 'Wi-Fi', bg: accentColor, text: '#ffffff' },
                     { label: 'Bluetooth', bg: secondaryAccent, text: '#ffffff' },
-                    { label: 'Airplane', bg: cardBg, text: isLightMode ? '#000000' : '#ffffff' },
+                    { label: 'Airplane', bg: notifCardBg, text: isLightMode ? '#000000' : '#ffffff' },
                   ].map((btn, i) => (
                     <button
                       key={btn.label}

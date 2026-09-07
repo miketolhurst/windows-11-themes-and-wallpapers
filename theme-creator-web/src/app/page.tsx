@@ -13,7 +13,8 @@ export default function Home() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'WindhawkTheme.zip';
+    const slug = (state.themeName || 'Theme').replace(/[^a-zA-Z0-9_-]/g, '_');
+    a.download = `Windhawk_${slug}_Theme.zip`;
     a.click();
     URL.revokeObjectURL(url);
   };

@@ -55,6 +55,7 @@ export function generateRegFileString(state: ThemeState): string {
   );
 
   const radius = state.cornerRadius;
+  const thickness = state.borderThickness ?? 2;
   const buttonRadius = Math.max(0, radius - 4);
   const darkVal = state.isLightMode ? 1 : 0;
   const rgbStr = `${accentRgb[0]} ${accentRgb[1]} ${accentRgb[2]}`;
@@ -93,7 +94,7 @@ export function generateRegFileString(state: ThemeState): string {
   taskbarControlStyles.push({
     target:
       'Taskbar.TaskbarBackground#BackgroundControl > Windows.UI.Xaml.Controls.Grid > Windows.UI.Xaml.Shapes.Rectangle#BackgroundStroke',
-    styles: [`Fill=${cNormal}`, 'Height=2'],
+    styles: [`Fill=${cNormal}`, `Height=${thickness}`, `BorderThickness=${thickness}`],
   });
 
   taskbarControlStyles.push({
@@ -143,14 +144,14 @@ export function generateRegFileString(state: ThemeState): string {
     `"controlStyles[0].target"="Border#AcrylicBorder"`,
     `"controlStyles[0].styles[0]"="Background:=${escapeRegStr(smGrad)}"`,
     `"controlStyles[0].styles[1]"="BorderBrush=${cNormal}"`,
-    `"controlStyles[0].styles[2]"="BorderThickness=2"`,
+    `"controlStyles[0].styles[2]"="BorderThickness=${thickness}"`,
     `"controlStyles[0].styles[3]"="CornerRadius=${radius}"`,
     `"controlStyles[1].target"="Border#AppBorder"`,
     `"controlStyles[1].styles[0]"="CornerRadius=${radius}"`,
     `"controlStyles[2].target"="StartDocked.SearchBoxToggleButton"`,
     `"controlStyles[2].styles[0]"="Background=${cNormal}EE"`,
     `"controlStyles[2].styles[1]"="BorderBrush=${cNormal}EE"`,
-    `"controlStyles[2].styles[2]"="BorderThickness=2"`,
+    `"controlStyles[2].styles[2]"="BorderThickness=${thickness}"`,
     `"controlStyles[2].styles[3]"="CornerRadius=${radius}"`,
     `"themeResourceVariables[0]"="SystemAccentColor=${cNormal}"`,
     `"themeResourceVariables[1]"="SystemAccentColorLight1=${cLight1}"`,
@@ -169,17 +170,17 @@ export function generateRegFileString(state: ThemeState): string {
     `"controlStyles[0].target"="Grid#NotificationCenterGrid"`,
     `"controlStyles[0].styles[0]"="Background:=${escapeRegStr(ncGrad)}"`,
     `"controlStyles[0].styles[1]"="BorderBrush=${cNormal}"`,
-    `"controlStyles[0].styles[2]"="BorderThickness=2"`,
+    `"controlStyles[0].styles[2]"="BorderThickness=${thickness}"`,
     `"controlStyles[0].styles[3]"="CornerRadius=${radius}"`,
     `"controlStyles[1].target"="Grid#CalendarCenterGrid"`,
     `"controlStyles[1].styles[0]"="Background:=${escapeRegStr(ncGrad)}"`,
     `"controlStyles[1].styles[1]"="BorderBrush=${cNormal}"`,
-    `"controlStyles[1].styles[2]"="BorderThickness=2"`,
+    `"controlStyles[1].styles[2]"="BorderThickness=${thickness}"`,
     `"controlStyles[1].styles[3]"="CornerRadius=${radius}"`,
     `"controlStyles[2].target"="Grid#ControlCenterRegion"`,
     `"controlStyles[2].styles[0]"="Background:=${escapeRegStr(ncGrad)}"`,
     `"controlStyles[2].styles[1]"="BorderBrush=${cNormal}"`,
-    `"controlStyles[2].styles[2]"="BorderThickness=2"`,
+    `"controlStyles[2].styles[2]"="BorderThickness=${thickness}"`,
     `"controlStyles[2].styles[3]"="CornerRadius=${radius}"`,
     `"controlStyles[3].target"="QuickActions.AccessibleToggleButton#ToggleButton"`,
     `"controlStyles[3].styles[0]"="CornerRadius=${buttonRadius}"`,

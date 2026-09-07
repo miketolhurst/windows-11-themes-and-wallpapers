@@ -17,6 +17,8 @@ export default function Sidebar() {
     setTaskbarMode,
     cornerRadius,
     setCornerRadius,
+    borderThickness,
+    setBorderThickness,
     wallpaperUrl,
     setWallpaper,
     customStartIconUrl,
@@ -161,6 +163,7 @@ export default function Sidebar() {
                   isLightMode: preset.isLightMode,
                   taskbarMode: preset.taskbarMode,
                   cornerRadius: preset.cornerRadius,
+                  borderThickness: preset.borderThickness ?? 2,
                   taskbarBlur: preset.taskbarBlur,
                   startMenuBlur: preset.startMenuBlur,
                   notificationBlur: preset.notificationBlur,
@@ -345,6 +348,24 @@ export default function Sidebar() {
             value={cornerRadius}
             onChange={(e) => setCornerRadius(parseInt(e.target.value))}
             className="w-full accent-blue-500 cursor-pointer"
+            aria-label="Corner Radius"
+          />
+        </div>
+
+        {/* Border Thickness */}
+        <div className="mb-3">
+          <div className="flex justify-between text-xs mb-1">
+            <span className="text-neutral-300">Border Thickness</span>
+            <span className="text-blue-400 font-mono">{borderThickness}px</span>
+          </div>
+          <input
+            type="range"
+            min="0"
+            max="8"
+            value={borderThickness}
+            onChange={(e) => setBorderThickness(parseInt(e.target.value, 10))}
+            className="w-full accent-blue-500 cursor-pointer"
+            aria-label="Border Thickness"
           />
         </div>
 

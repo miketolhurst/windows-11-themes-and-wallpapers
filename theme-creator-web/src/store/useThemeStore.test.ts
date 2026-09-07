@@ -11,3 +11,9 @@ test('can update accent color', () => {
   useThemeStore.getState().setAccentColor('#FF0000');
   expect(useThemeStore.getState().accentColor).toBe('#FF0000');
 });
+
+test('can update borderThickness', () => {
+  expect(useThemeStore.getState().borderThickness).toBe(2);
+  useThemeStore.getState().setBorderThickness(4);
+  expect(useThemeStore.getState().borderThickness).toBe(4);
+});

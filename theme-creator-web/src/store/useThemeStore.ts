@@ -8,6 +8,7 @@ export interface ThemeState {
   isLightMode: boolean;
   taskbarMode: 'blur' | 'gradient';
   cornerRadius: number;
+  borderThickness: number;
   wallpaperUrl: string | null;
   wallpaperData: Uint8Array | null;
   customStartIconUrl: string | null;
@@ -39,6 +40,7 @@ export interface ThemeState {
   setIsLightMode: (v: boolean) => void;
   setTaskbarMode: (m: 'blur' | 'gradient') => void;
   setCornerRadius: (r: number) => void;
+  setBorderThickness: (t: number) => void;
   setWallpaper: (url: string | null, data?: Uint8Array | null) => void;
   setCustomStartIcon: (url: string | null, data?: Uint8Array | null) => void;
   setHideRecommended: (v: boolean) => void;
@@ -65,6 +67,7 @@ const DEFAULT_THEME_STATE = {
   isLightMode: false,
   taskbarMode: 'blur' as const,
   cornerRadius: 8,
+  borderThickness: 2,
   wallpaperUrl: null,
   wallpaperData: null,
   customStartIconUrl: null,
@@ -91,6 +94,7 @@ export const useThemeStore = create<ThemeState>((set) => ({
   setIsLightMode: (v: boolean) => set({ isLightMode: v }),
   setTaskbarMode: (m: 'blur' | 'gradient') => set({ taskbarMode: m }),
   setCornerRadius: (r: number) => set({ cornerRadius: r }),
+  setBorderThickness: (t: number) => set({ borderThickness: t }),
   setWallpaper: (url: string | null, data: Uint8Array | null = null) =>
     set({ wallpaperUrl: url, wallpaperData: data }),
   setCustomStartIcon: (url: string | null, data: Uint8Array | null = null) =>

@@ -22,3 +22,10 @@ test('renders opacity sliders and updates store in gradient mode', () => {
   fireEvent.change(opacitySlider, { target: { value: '75' } });
   expect(useThemeStore.getState().taskbarOpacity).toBe(75);
 });
+
+test('renders Border Thickness slider and updates store', () => {
+  render(<Sidebar />);
+  const borderSlider = screen.getByLabelText(/Border Thickness/i) as HTMLInputElement;
+  fireEvent.change(borderSlider, { target: { value: '4' } });
+  expect(useThemeStore.getState().borderThickness).toBe(4);
+});

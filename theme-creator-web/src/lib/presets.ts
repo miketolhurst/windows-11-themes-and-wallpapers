@@ -7,6 +7,7 @@ export interface ThemePreset {
   isLightMode: boolean;
   taskbarMode: 'blur' | 'gradient';
   cornerRadius: number;
+  borderThickness?: number;
   taskbarBlur: number;
   startMenuBlur: number;
   notificationBlur: number;

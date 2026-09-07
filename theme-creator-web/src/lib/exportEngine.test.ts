@@ -10,6 +10,7 @@ describe('exportEngine', () => {
     isLightMode: false,
     taskbarMode: 'gradient',
     cornerRadius: 12,
+    borderThickness: 3,
     wallpaperUrl: 'data:image/png;base64,123',
     wallpaperData: new Uint8Array([1, 2, 3, 4]),
     customStartIconUrl: null,
@@ -31,6 +32,7 @@ describe('exportEngine', () => {
     setIsLightMode: () => {},
     setTaskbarMode: () => {},
     setCornerRadius: () => {},
+    setBorderThickness: () => {},
     setWallpaper: () => {},
     setCustomStartIcon: () => {},
     setHideRecommended: () => {},
@@ -61,6 +63,8 @@ describe('exportEngine', () => {
     expect(reg).toContain('"controlStyles[0].styles[1]"="BorderBrush=#0078d4"');
     expect(reg).toContain('"controlStyles[2].target"="Grid#ControlCenterRegion"');
     expect(reg).toContain('"controlStyles[2].styles[1]"="BorderBrush=#0078d4"');
+    expect(reg).toContain('"BorderThickness=3"');
+    expect(reg).toContain('"Height=3"');
     expect(reg).toContain('Color=\\"#cc');
   });
 

@@ -28,6 +28,12 @@ export function parseRegFile(content: string): Partial<ThemeState> {
     result.cornerRadius = parseInt(cornerRadiusMatch[1], 10);
   }
 
+  // Extract BorderThickness from styler control styles
+  const borderThicknessMatch = content.match(/BorderThickness=(\d+(?:\.\d+)?)/i);
+  if (borderThicknessMatch) {
+    result.borderThickness = Math.round(parseFloat(borderThicknessMatch[1]));
+  }
+
   // Check taskbar mode: if LinearGradientBrush is present in settings
   if (content.includes('LinearGradientBrush')) {
     result.taskbarMode = 'gradient';

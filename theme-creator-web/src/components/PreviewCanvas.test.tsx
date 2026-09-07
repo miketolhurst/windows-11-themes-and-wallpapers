@@ -27,12 +27,29 @@ test('disables backdrop blur and uses rgba gradient in gradient mode with second
   expect(container.textContent).not.toContain('22°C');
   expect(container.textContent).not.toContain('Mostly Sunny');
 
-  // Start Menu flyout is positioned on the left
+  // Start Menu flyout is positioned on the left with a gap above taskbar
   const startMenu = container.querySelector('.w-\\[580px\\]') as HTMLElement;
   expect(startMenu).toBeTruthy();
-  expect(startMenu.className).toContain('absolute left-3 bottom-0');
+  expect(startMenu.className).toContain('absolute left-3 bottom-3');
   expect(startMenu.style.backdropFilter).toBe('none');
   expect(startMenu.style.background).toContain('linear-gradient');
+  expect(startMenu.style.border).toContain('2px solid');
+  expect(taskbar.style.borderTop).toContain('2px solid');
+});
+
+test('respects custom borderThickness across taskbar and flyouts', () => {
+  useThemeStore.setState({
+    accentColor: '#ff007f',
+    borderThickness: 4,
+    activePane: 'start',
+  });
+
+  const { container } = render(<PreviewCanvas />);
+  const taskbar = container.querySelector('.h-12.w-full') as HTMLElement;
+  const startMenu = container.querySelector('.w-\\[580px\\]') as HTMLElement;
+
+  expect(taskbar.style.borderTop).toContain('4px solid');
+  expect(startMenu.style.border).toContain('4px solid');
 });
 
 test('enables backdrop blur in blur mode', () => {

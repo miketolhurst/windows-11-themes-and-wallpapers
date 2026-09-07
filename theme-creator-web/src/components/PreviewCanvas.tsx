@@ -9,6 +9,7 @@ export default function PreviewCanvas() {
     isLightMode,
     taskbarMode,
     cornerRadius,
+    borderThickness: rawBorderThickness,
     wallpaperUrl,
     customStartIconUrl,
     hideRecommended,
@@ -25,6 +26,7 @@ export default function PreviewCanvas() {
     setActivePane,
   } = useThemeStore();
 
+  const borderThickness = rawBorderThickness ?? 2;
   const tbOpacity = (taskbarOpacity ?? 97) / 100;
   const smOpacity = (startMenuOpacity ?? 97) / 100;
   const ncOpacity = (notificationOpacity ?? 97) / 100;
@@ -153,13 +155,13 @@ export default function PreviewCanvas() {
           <div
             className={`w-[580px] ${
               hideRecommended ? 'h-[520px]' : 'h-[640px]'
-            } absolute left-3 bottom-0 flex flex-col pointer-events-auto transition-all duration-200 overflow-hidden ${textColor} ${shadowClass}`}
+            } absolute left-3 bottom-3 flex flex-col pointer-events-auto transition-all duration-200 overflow-hidden ${textColor} ${shadowClass}`}
             style={{
               background: startMenuBg,
               backdropFilter: taskbarMode === 'gradient' ? 'none' : `blur(${startMenuBlur}px)`,
               WebkitBackdropFilter: taskbarMode === 'gradient' ? 'none' : `blur(${startMenuBlur}px)`,
               borderRadius: `${cornerRadius}px`,
-              border: `2px solid ${flyoutBorder}`,
+              border: borderThickness > 0 ? `${borderThickness}px solid ${accentColor}` : 'none',
               boxShadow: `0 0 24px -6px ${accentColor}40`,
             }}
           >
@@ -323,13 +325,13 @@ export default function PreviewCanvas() {
           <div
             className={`w-[380px] ${
               dynamicNotificationHeight ? 'h-[500px]' : 'h-[580px]'
-            } absolute right-4 bottom-0 flex flex-col pointer-events-auto transition-all duration-200 overflow-hidden ${textColor} ${shadowClass}`}
+            } absolute right-4 bottom-3 flex flex-col pointer-events-auto transition-all duration-200 overflow-hidden ${textColor} ${shadowClass}`}
             style={{
               background: notifCenterBg,
               backdropFilter: taskbarMode === 'gradient' ? 'none' : `blur(${notificationBlur}px)`,
               WebkitBackdropFilter: taskbarMode === 'gradient' ? 'none' : `blur(${notificationBlur}px)`,
               borderRadius: `${cornerRadius}px`,
-              border: `2px solid ${flyoutBorder}`,
+              border: borderThickness > 0 ? `${borderThickness}px solid ${accentColor}` : 'none',
               boxShadow: `0 0 24px -6px ${accentColor}40`,
             }}
           >
@@ -451,7 +453,7 @@ export default function PreviewCanvas() {
         className="h-12 w-full z-30 flex items-center justify-between px-3 transition-all duration-300"
         style={{
           ...taskbarStyle,
-          borderTop: `1px solid ${accentColor}44`,
+          borderTop: borderThickness > 0 ? `${borderThickness}px solid ${accentColor}` : 'none',
         }}
       >
         {/* Left: Start Button & App Icons */}

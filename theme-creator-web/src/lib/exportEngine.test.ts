@@ -51,6 +51,10 @@ describe('exportEngine', () => {
     expect(reg).toContain('"AccentColor"=dword:');
     expect(reg).toContain('"AccentPalette"=hex:');
     expect(reg).toContain('CornerRadius=12');
+    expect(reg).toContain('"controlStyles[0].target"="Grid#NotificationCenterGrid"');
+    expect(reg).toContain('"controlStyles[0].styles[1]"="BorderBrush=#0078d4"');
+    expect(reg).toContain('"controlStyles[2].target"="Grid#ControlCenterRegion"');
+    expect(reg).toContain('"controlStyles[2].styles[1]"="BorderBrush=#0078d4"');
   });
 
   it('generates PowerShell script with Explorer restart and broadcast messages', () => {

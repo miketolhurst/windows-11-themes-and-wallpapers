@@ -78,4 +78,25 @@ describe('exportEngine', () => {
     expect(blob).toBeDefined();
     expect(blob.size).toBeGreaterThan(0);
   });
+
+  it('includes custom start icon in theme.reg, Apply_Theme.ps1, and zip payload', async () => {
+    const iconState: ThemeState = {
+      ...mockState,
+      customStartIconUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+      customStartIconData: new Uint8Array([137, 80, 78, 71]),
+    };
+
+    const reg = generateRegFileString(iconState);
+    expect(reg).toContain('AnimatedVisualPlayer#Icon');
+    expect(reg).toContain('Visibility=Collapsed');
+    expect(reg).toContain('ImageBrush ImageSource=\\"C:\\\\Users\\\\Public\\\\Pictures\\\\Windhawk_start_icon.png\\"');
+
+    const ps1 = generatePs1Script(iconState);
+    expect(ps1).toContain('Deploying Custom Start Button Icon');
+    expect(ps1).toContain('Windhawk_start_icon.png');
+
+    const blob = await generateZipPayload(iconState);
+    expect(blob).toBeDefined();
+    expect(blob.size).toBeGreaterThan(0);
+  });
 });

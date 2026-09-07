@@ -59,6 +59,70 @@ export function generateRegFileString(state: ThemeState): string {
   const darkVal = state.isLightMode ? 1 : 0;
   const rgbStr = `${accentRgb[0]} ${accentRgb[1]} ${accentRgb[2]}`;
 
+  const hasCustomIcon = !!(state.customStartIconUrl || state.customStartIconData);
+  const taskbarControlStyles: Array<{ target: string; styles: string[] }> = [];
+
+  if (hasCustomIcon) {
+    taskbarControlStyles.push({
+      target:
+        'Taskbar.ExperienceToggleButton#LaunchListButton[AutomationPropertiesAutomationId=StartButton] > Taskbar.TaskListButtonPanel > Grid > Microsoft.UI.Xaml.Controls.AnimatedVisualPlayer#Icon',
+      styles: ['Visibility=Collapsed'],
+    });
+    taskbarControlStyles.push({
+      target:
+        'Taskbar.ExperienceToggleButton#LaunchListButton[AutomationPropertiesAutomationId=StartButton] > Taskbar.TaskListButtonPanel > Grid > Border#BackgroundElement',
+      styles: [
+        `CornerRadius=${radius}`,
+        `Background:=${escapeRegStr('<ImageBrush ImageSource="C:\\Users\\Public\\Pictures\\Windhawk_start_icon.png" Stretch="Uniform"/>')}`,
+      ],
+    });
+  } else {
+    taskbarControlStyles.push({
+      target:
+        'Taskbar.ExperienceToggleButton#LaunchListButton[AutomationPropertiesAutomationId=StartButton] > Taskbar.TaskListButtonPanel > Grid > Border#BackgroundElement',
+      styles: [`CornerRadius=${radius}`],
+    });
+  }
+
+  taskbarControlStyles.push({
+    target:
+      'Taskbar.TaskbarBackground#BackgroundControl > Windows.UI.Xaml.Controls.Grid > Windows.UI.Xaml.Shapes.Rectangle#BackgroundFill',
+    styles: [`Fill:=${escapeRegStr(tbFill)}`],
+  });
+
+  taskbarControlStyles.push({
+    target:
+      'Taskbar.TaskbarBackground#BackgroundControl > Windows.UI.Xaml.Controls.Grid > Windows.UI.Xaml.Shapes.Rectangle#BackgroundStroke',
+    styles: [`Fill=${cNormal}`, 'Height=2'],
+  });
+
+  taskbarControlStyles.push({
+    target:
+      'Taskbar.TaskListLabeledButtonPanel@RunningIndicatorStates > Rectangle#RunningIndicator',
+    styles: [
+      `Fill=${cNormal}`,
+      'Height=3',
+      `CornerRadius=${radius}`,
+      `Fill@ActiveRunningIndicator=${cNormal}`,
+    ],
+  });
+
+  taskbarControlStyles.push({
+    target: 'Taskbar.TaskListButtonPanel > Border#BackgroundElement',
+    styles: [
+      `CornerRadius=${radius}`,
+      `Background@ActiveNormal:=<SolidColorBrush Color=\\"${cNormal}\\" Opacity=\\"0.18\\"/>`,
+    ],
+  });
+
+  const taskbarLines: string[] = [];
+  taskbarControlStyles.forEach((ctrl, i) => {
+    taskbarLines.push(`"controlStyles[${i}].target"="${ctrl.target}"`);
+    ctrl.styles.forEach((style, sIdx) => {
+      taskbarLines.push(`"controlStyles[${i}].styles[${sIdx}]"="${style}"`);
+    });
+  });
+
   const regLines: string[] = [
     'Windows Registry Editor Version 5.00',
     '',
@@ -68,21 +132,7 @@ export function generateRegFileString(state: ThemeState): string {
     '[-HKEY_LOCAL_MACHINE\\SOFTWARE\\Windhawk\\Engine\\Mods\\windows-11-taskbar-styler\\Settings]',
     '',
     '[HKEY_LOCAL_MACHINE\\SOFTWARE\\Windhawk\\Engine\\Mods\\windows-11-taskbar-styler\\Settings]',
-    `"controlStyles[0].target"="Taskbar.ExperienceToggleButton#LaunchListButton[AutomationPropertiesAutomationId=StartButton] > Taskbar.TaskListButtonPanel > Grid > Border#BackgroundElement"`,
-    `"controlStyles[0].styles[0]"="CornerRadius=${radius}"`,
-    `"controlStyles[1].target"="Taskbar.TaskbarBackground#BackgroundControl > Windows.UI.Xaml.Controls.Grid > Windows.UI.Xaml.Shapes.Rectangle#BackgroundFill"`,
-    `"controlStyles[1].styles[0]"="Fill:=${escapeRegStr(tbFill)}"`,
-    `"controlStyles[2].target"="Taskbar.TaskbarBackground#BackgroundControl > Windows.UI.Xaml.Controls.Grid > Windows.UI.Xaml.Shapes.Rectangle#BackgroundStroke"`,
-    `"controlStyles[2].styles[0]"="Fill=${cNormal}"`,
-    `"controlStyles[2].styles[1]"="Height=2"`,
-    `"controlStyles[3].target"="Taskbar.TaskListLabeledButtonPanel@RunningIndicatorStates > Rectangle#RunningIndicator"`,
-    `"controlStyles[3].styles[0]"="Fill=${cNormal}"`,
-    `"controlStyles[3].styles[1]"="Height=3"`,
-    `"controlStyles[3].styles[2]"="CornerRadius=${radius}"`,
-    `"controlStyles[3].styles[3]"="Fill@ActiveRunningIndicator=${cNormal}"`,
-    `"controlStyles[4].target"="Taskbar.TaskListButtonPanel > Border#BackgroundElement"`,
-    `"controlStyles[4].styles[0]"="CornerRadius=${radius}"`,
-    `"controlStyles[4].styles[1]"="Background@ActiveNormal:=<SolidColorBrush Color=\\"${cNormal}\\" Opacity=\\"0.18\\"/>"`,
+    ...taskbarLines,
     '',
     '; ============================================================',
     '; 2. Windows 11 Start Menu Styler',
@@ -266,6 +316,22 @@ $msgResult = [UIntPtr]::Zero
 Write-Host "Windows 11 accent color applied." -ForegroundColor Green
 Write-Host ""
 
+# Deploy Custom Start Button Icon if present
+$iconFile = "$PSScriptRoot\\start_icon.png"
+if (Test-Path $iconFile) {
+    Write-Host "[*] Deploying Custom Start Button Icon..." -ForegroundColor Yellow
+    $publicDir = "$env:PUBLIC\\Pictures"
+    if (-not (Test-Path $publicDir)) {
+        New-Item -ItemType Directory -Path $publicDir -Force | Out-Null
+    }
+    Copy-Item -Path $iconFile -Destination "$publicDir\\Windhawk_start_icon.png" -Force
+    if (Test-Path "C:\\Users\\Public\\Pictures") {
+        Copy-Item -Path $iconFile -Destination "C:\\Users\\Public\\Pictures\\Windhawk_start_icon.png" -Force -ErrorAction SilentlyContinue
+    }
+    Write-Host "Start button icon deployed to '$publicDir\\Windhawk_start_icon.png'." -ForegroundColor Green
+    Write-Host ""
+}
+
 # 3. Windhawk Registry & Mod Refresh (Elevated)
 Write-Host "[3/4] Importing Windhawk Styler Mod Settings (Elevated)..." -ForegroundColor Yellow
 $regPath = (Resolve-Path "$PSScriptRoot\\theme.reg").Path
@@ -315,6 +381,11 @@ export async function generateZipPayload(state: ThemeState): Promise<Blob> {
   // 5. Custom Start Icon if present
   if (state.customStartIconData) {
     zip.file('start_icon.png', state.customStartIconData);
+  } else if (state.customStartIconUrl && state.customStartIconUrl.startsWith('data:')) {
+    const parts = state.customStartIconUrl.split(',');
+    if (parts[1]) {
+      zip.file('start_icon.png', parts[1], { base64: true });
+    }
   }
 
   return await zip.generateAsync({ type: 'blob' });

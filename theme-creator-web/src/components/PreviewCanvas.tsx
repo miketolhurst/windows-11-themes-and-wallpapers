@@ -85,7 +85,7 @@ export default function PreviewCanvas() {
   };
 
   if (taskbarMode === 'gradient') {
-    taskbarStyle.background = `linear-gradient(90deg, rgba(${bgRgb[0]}, ${bgRgb[1]}, ${bgRgb[2]}, ${tbOpacity}) 0%, rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, ${tbOpacity}) 50%, rgba(${secRgb[0]}, ${secRgb[1]}, ${secRgb[2]}, ${tbOpacity}) 100%)`;
+    taskbarStyle.background = `linear-gradient(90deg, rgba(${secRgb[0]}, ${secRgb[1]}, ${secRgb[2]}, ${tbOpacity}) 0%, rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, ${tbOpacity}) 50%, rgba(${bgRgb[0]}, ${bgRgb[1]}, ${bgRgb[2]}, ${tbOpacity}) 100%)`;
   } else {
     taskbarStyle.backgroundColor = isLightMode
       ? 'rgba(245, 245, 250, 0.72)'
@@ -148,12 +148,12 @@ export default function PreviewCanvas() {
       />
 
       {/* Floating Canvas Area (Start Menu or Notification Center) */}
-      <div className="z-20 w-full h-[calc(100%-48px)] relative flex items-end justify-center pointer-events-none pb-3">
+      <div className="z-20 w-full h-[calc(100%-48px)] relative pointer-events-none pb-3">
         {activePane === 'start' && (
           <div
             className={`w-[580px] ${
               hideRecommended ? 'h-[520px]' : 'h-[640px]'
-            } flex flex-col pointer-events-auto transition-all duration-200 overflow-hidden ${textColor} ${shadowClass}`}
+            } absolute left-3 bottom-0 flex flex-col pointer-events-auto transition-all duration-200 overflow-hidden ${textColor} ${shadowClass}`}
             style={{
               background: startMenuBg,
               backdropFilter: taskbarMode === 'gradient' ? 'none' : `blur(${startMenuBlur}px)`,
@@ -448,25 +448,13 @@ export default function PreviewCanvas() {
 
       {/* Windows 11 Taskbar */}
       <div
-        className="h-12 w-full z-30 flex items-center justify-between px-4 transition-all duration-300"
+        className="h-12 w-full z-30 flex items-center justify-between px-3 transition-all duration-300"
         style={{
           ...taskbarStyle,
           borderTop: `1px solid ${accentColor}44`,
         }}
       >
-        {/* Left Weather Widget Area */}
-        <div
-          className={`flex items-center gap-2 cursor-pointer px-2.5 py-1.5 transition-colors ${cardHover}`}
-          style={{ borderRadius: `${Math.max(4, cornerRadius - 4)}px` }}
-        >
-          <span>🌤️</span>
-          <div className="flex flex-col text-[11px] leading-tight">
-            <span className={`font-semibold ${textColor}`}>22°C</span>
-            <span className={`text-[9px] ${subTextColor}`}>Mostly Sunny</span>
-          </div>
-        </div>
-
-        {/* Center App Icons & Start Button */}
+        {/* Left: Start Button & App Icons */}
         <div className="flex items-center gap-1.5">
           {/* Start Button */}
           <button

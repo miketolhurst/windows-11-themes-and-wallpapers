@@ -21,20 +21,36 @@ export default function PreviewCanvas() {
     setActivePane,
   } = useThemeStore();
 
-  // Determine dynamic colors for Light vs Dark mode
-  const flyoutBg = isLightMode
-    ? 'rgba(245, 245, 250, 0.85)'
-    : 'rgba(24, 24, 27, 0.75)';
-  const flyoutBorder = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+  const baseBg = isLightMode ? '#f0f0f5' : '#101216';
+
+  // Dynamic flyout backgrounds matching Windhawk Styler:
+  // In gradient mode: uses exact sm_grad & nc_grad from create_theme.py / exportEngine.ts
+  // In frosted blur mode: uses acrylic material infused with dual primary and secondary accent ambient lighting
+  const startMenuBg =
+    taskbarMode === 'gradient'
+      ? `linear-gradient(135deg, ${baseBg}f0 0%, ${accentColor}d4 50%, ${secondaryAccent}d4 100%)`
+      : isLightMode
+      ? `radial-gradient(circle at 90% 10%, ${secondaryAccent}35 0%, transparent 65%), radial-gradient(circle at 10% 90%, ${accentColor}35 0%, transparent 65%), rgba(245, 245, 250, 0.84)`
+      : `radial-gradient(circle at 90% 10%, ${secondaryAccent}40 0%, transparent 65%), radial-gradient(circle at 10% 90%, ${accentColor}40 0%, transparent 65%), rgba(18, 20, 25, 0.84)`;
+
+  const notifCenterBg =
+    taskbarMode === 'gradient'
+      ? `linear-gradient(315deg, ${baseBg}f0 0%, ${accentColor}d4 50%, ${secondaryAccent}d4 100%)`
+      : isLightMode
+      ? `radial-gradient(circle at 90% 90%, ${secondaryAccent}35 0%, transparent 65%), radial-gradient(circle at 10% 10%, ${accentColor}35 0%, transparent 65%), rgba(245, 245, 250, 0.84)`
+      : `radial-gradient(circle at 90% 90%, ${secondaryAccent}40 0%, transparent 65%), radial-gradient(circle at 10% 10%, ${accentColor}40 0%, transparent 65%), rgba(18, 20, 25, 0.84)`;
+
+  // Borders match Windhawk Styler (BorderBrush=c_normal, BorderThickness=2)
+  const flyoutBorder = accentColor;
   const textColor = isLightMode ? 'text-neutral-900' : 'text-white';
-  const subTextColor = isLightMode ? 'text-neutral-500' : 'text-neutral-400';
-  const cardBg = isLightMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.35)';
-  const cardHover = isLightMode ? 'hover:bg-neutral-200/50' : 'hover:bg-white/5';
+  const subTextColor = isLightMode ? 'text-neutral-600' : 'text-neutral-400';
+  const cardBg = isLightMode ? 'rgba(255, 255, 255, 0.65)' : 'rgba(0, 0, 0, 0.35)';
+  const cardHover = isLightMode ? 'hover:bg-neutral-200/60' : 'hover:bg-white/10';
   const shadowClass = removeDropShadows
     ? 'shadow-none'
     : isLightMode
-    ? 'shadow-[0_20px_40px_-10px_rgba(0,0,0,0.15)]'
-    : 'shadow-[0_25px_50px_-12px_rgba(0,0,0,0.7)]';
+    ? 'shadow-[0_20px_40px_-10px_rgba(0,0,0,0.2)]'
+    : 'shadow-[0_25px_50px_-12px_rgba(0,0,0,0.75)]';
 
   // Taskbar background styling
   const taskbarStyle: React.CSSProperties = {
@@ -90,12 +106,12 @@ export default function PreviewCanvas() {
             }
           : {
               background: isLightMode
-                ? `radial-gradient(circle at 50% 60%, ${accentColor}22 0%, #e2e8f0 75%)`
-                : `radial-gradient(circle at 50% 60%, ${accentColor}33 0%, #09090b 75%)`,
+                ? `radial-gradient(circle at 25% 45%, ${accentColor}28 0%, transparent 55%), radial-gradient(circle at 75% 55%, ${secondaryAccent}28 0%, transparent 55%), #e2e8f0`
+                : `radial-gradient(circle at 25% 45%, ${accentColor}38 0%, transparent 55%), radial-gradient(circle at 75% 55%, ${secondaryAccent}38 0%, transparent 55%), #09090b`,
             }
       }
     >
-      {/* Mobile warning overlay (Task 4.3) */}
+      {/* Mobile warning overlay */}
       <div className="lg:hidden absolute top-3 left-3 right-3 z-50 bg-amber-500/90 text-neutral-950 px-3 py-2 rounded-lg text-xs font-medium shadow flex items-center gap-2">
         <span>⚠️</span>
         <span>Windhawk Studio is optimized for larger displays to accurately render the desktop canvas.</span>
@@ -115,11 +131,12 @@ export default function PreviewCanvas() {
               hideRecommended ? 'h-[520px]' : 'h-[640px]'
             } flex flex-col pointer-events-auto transition-all duration-200 overflow-hidden ${textColor} ${shadowClass}`}
             style={{
-              backgroundColor: flyoutBg,
+              background: startMenuBg,
               backdropFilter: `blur(${startMenuBlur}px)`,
               WebkitBackdropFilter: `blur(${startMenuBlur}px)`,
               borderRadius: `${cornerRadius}px`,
-              border: `1px solid ${flyoutBorder}`,
+              border: `2px solid ${flyoutBorder}`,
+              boxShadow: `0 0 24px -6px ${accentColor}40`,
             }}
           >
             {/* Search Bar */}
@@ -129,12 +146,12 @@ export default function PreviewCanvas() {
                   compactSearch ? 'py-1.5 px-3' : 'py-2.5 px-4'
                 }`}
                 style={{
-                  backgroundColor: cardBg,
+                  backgroundColor: isLightMode ? `${accentColor}10` : `${accentColor}18`,
                   borderRadius: `${Math.max(4, cornerRadius - 2)}px`,
-                  border: `1px solid ${flyoutBorder}`,
+                  border: `1.5px solid ${accentColor}88`,
                 }}
               >
-                <svg className={`w-4 h-4 ${subTextColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" style={{ color: accentColor }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 <span className={`text-xs ${subTextColor}`}>
@@ -148,9 +165,11 @@ export default function PreviewCanvas() {
               <div className="flex justify-between items-center text-xs font-semibold mb-3">
                 <span className={textColor}>Pinned</span>
                 <button
-                  className={`px-2 py-0.5 text-[11px] transition-colors ${subTextColor} ${cardHover}`}
+                  className="px-2.5 py-1 text-[11px] font-medium transition-all"
                   style={{
-                    backgroundColor: cardBg,
+                    backgroundColor: `${secondaryAccent}22`,
+                    border: `1px solid ${secondaryAccent}60`,
+                    color: isLightMode ? '#0f172a' : '#f8fafc',
                     borderRadius: `${Math.max(3, cornerRadius - 4)}px`,
                   }}
                 >
@@ -177,9 +196,11 @@ export default function PreviewCanvas() {
                   <div className="mt-5 flex justify-between items-center text-xs font-semibold mb-2.5">
                     <span className={textColor}>Recommended</span>
                     <button
-                      className={`px-2 py-0.5 text-[11px] transition-colors ${subTextColor} ${cardHover}`}
+                      className="px-2.5 py-1 text-[11px] font-medium transition-all"
                       style={{
-                        backgroundColor: cardBg,
+                        backgroundColor: `${secondaryAccent}22`,
+                        border: `1px solid ${secondaryAccent}60`,
+                        color: isLightMode ? '#0f172a' : '#f8fafc',
                         borderRadius: `${Math.max(3, cornerRadius - 4)}px`,
                       }}
                     >
@@ -189,11 +210,12 @@ export default function PreviewCanvas() {
 
                   <div className="grid grid-cols-2 gap-2 text-[12px]">
                     <div
-                      className={`flex items-center gap-2.5 p-2 transition-colors cursor-pointer ${cardHover}`}
+                      className={`flex items-center gap-2.5 p-2.5 transition-colors cursor-pointer ${cardHover}`}
                       style={{
                         backgroundColor: cardBg,
                         borderRadius: `${Math.max(4, cornerRadius - 4)}px`,
-                        border: `1px solid ${flyoutBorder}`,
+                        border: `1px solid ${accentColor}44`,
+                        borderLeft: `3px solid ${accentColor}`,
                       }}
                     >
                       <span className="text-lg">📄</span>
@@ -203,11 +225,12 @@ export default function PreviewCanvas() {
                       </div>
                     </div>
                     <div
-                      className={`flex items-center gap-2.5 p-2 transition-colors cursor-pointer ${cardHover}`}
+                      className={`flex items-center gap-2.5 p-2.5 transition-colors cursor-pointer ${cardHover}`}
                       style={{
                         backgroundColor: cardBg,
                         borderRadius: `${Math.max(4, cornerRadius - 4)}px`,
-                        border: `1px solid ${flyoutBorder}`,
+                        border: `1px solid ${secondaryAccent}44`,
+                        borderLeft: `3px solid ${secondaryAccent}`,
                       }}
                     >
                       <span className="text-lg">🎨</span>
@@ -225,8 +248,8 @@ export default function PreviewCanvas() {
             <div
               className="mt-auto px-6 py-3 border-t flex items-center justify-between"
               style={{
-                backgroundColor: isLightMode ? 'rgba(235, 235, 240, 0.9)' : 'rgba(15, 15, 18, 0.9)',
-                borderColor: flyoutBorder,
+                backgroundColor: isLightMode ? 'rgba(235, 235, 240, 0.92)' : 'rgba(15, 15, 18, 0.92)',
+                borderColor: `${accentColor}33`,
               }}
             >
               <div
@@ -235,7 +258,10 @@ export default function PreviewCanvas() {
               >
                 <div
                   className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shadow"
-                  style={{ backgroundColor: accentColor }}
+                  style={{
+                    backgroundColor: accentColor,
+                    boxShadow: `0 0 0 2px ${secondaryAccent}`,
+                  }}
                 >
                   U
                 </div>
@@ -261,20 +287,21 @@ export default function PreviewCanvas() {
               dynamicNotificationHeight ? 'h-[500px]' : 'h-[580px]'
             } absolute right-4 bottom-0 flex flex-col pointer-events-auto transition-all duration-200 overflow-hidden ${textColor} ${shadowClass}`}
             style={{
-              backgroundColor: flyoutBg,
+              background: notifCenterBg,
               backdropFilter: `blur(${notificationBlur}px)`,
               WebkitBackdropFilter: `blur(${notificationBlur}px)`,
               borderRadius: `${cornerRadius}px`,
-              border: `1px solid ${flyoutBorder}`,
+              border: `2px solid ${flyoutBorder}`,
+              boxShadow: `0 0 24px -6px ${accentColor}40`,
             }}
           >
             {/* Header */}
             <div
               className="px-5 py-3.5 border-b flex justify-between items-center text-xs font-semibold"
-              style={{ borderColor: flyoutBorder }}
+              style={{ borderColor: `${accentColor}33` }}
             >
               <span className={textColor}>Notifications</span>
-              <button className={`text-[11px] transition-colors ${subTextColor} hover:underline`}>
+              <button className="text-[11px] transition-colors font-medium hover:underline" style={{ color: accentColor }}>
                 Clear all
               </button>
             </div>
@@ -286,7 +313,8 @@ export default function PreviewCanvas() {
                 style={{
                   backgroundColor: cardBg,
                   borderRadius: `${Math.max(4, cornerRadius - 4)}px`,
-                  border: `1px solid ${flyoutBorder}`,
+                  border: `1px solid ${accentColor}44`,
+                  borderLeft: `3px solid ${accentColor}`,
                 }}
               >
                 <div className="flex items-center justify-between text-[11px] mb-1">
@@ -303,7 +331,8 @@ export default function PreviewCanvas() {
                 style={{
                   backgroundColor: cardBg,
                   borderRadius: `${Math.max(4, cornerRadius - 4)}px`,
-                  border: `1px solid ${flyoutBorder}`,
+                  border: `1px solid ${secondaryAccent}44`,
+                  borderLeft: `3px solid ${secondaryAccent}`,
                 }}
               >
                 <div className="flex items-center justify-between text-[11px] mb-1">
@@ -318,20 +347,25 @@ export default function PreviewCanvas() {
               {/* Quick Actions Panel */}
               <div
                 className="mt-auto pt-3 border-t"
-                style={{ borderColor: flyoutBorder }}
+                style={{ borderColor: `${accentColor}33` }}
               >
                 <div className="grid grid-cols-3 gap-2 mb-3">
-                  {['Wi-Fi', 'Bluetooth', 'Airplane'].map((action, i) => (
+                  {[
+                    { label: 'Wi-Fi', bg: accentColor, text: '#ffffff' },
+                    { label: 'Bluetooth', bg: secondaryAccent, text: '#ffffff' },
+                    { label: 'Airplane', bg: cardBg, text: isLightMode ? '#000000' : '#ffffff' },
+                  ].map((btn, i) => (
                     <button
-                      key={action}
-                      className="p-2 text-center text-[10px] font-medium transition-colors"
+                      key={btn.label}
+                      className="p-2 text-center text-[10px] font-medium transition-colors shadow-sm"
                       style={{
-                        backgroundColor: i === 0 ? accentColor : cardBg,
-                        color: i === 0 ? '#ffffff' : isLightMode ? '#000000' : '#ffffff',
+                        backgroundColor: btn.bg,
+                        color: btn.text,
                         borderRadius: `${Math.max(4, cornerRadius - 4)}px`,
+                        border: i === 2 ? `1px solid ${accentColor}33` : undefined,
                       }}
                     >
-                      {action}
+                      {btn.label}
                     </button>
                   ))}
                 </div>
@@ -350,12 +384,17 @@ export default function PreviewCanvas() {
                     <span
                       key={d}
                       className={`py-1 text-[10px] ${
-                        d === 7
+                        d === 7 || d === 15
                           ? 'text-white font-bold'
                           : 'hover:opacity-80 cursor-pointer'
                       }`}
                       style={{
-                        backgroundColor: d === 7 ? accentColor : undefined,
+                        backgroundColor:
+                          d === 7
+                            ? accentColor
+                            : d === 15
+                            ? secondaryAccent
+                            : undefined,
                         borderRadius: `${Math.max(2, cornerRadius - 6)}px`,
                       }}
                     >
@@ -374,7 +413,7 @@ export default function PreviewCanvas() {
         className="h-12 w-full z-30 flex items-center justify-between px-4 transition-all duration-300"
         style={{
           ...taskbarStyle,
-          borderTop: `1px solid ${flyoutBorder}`,
+          borderTop: `1px solid ${accentColor}44`,
         }}
       >
         {/* Left Weather Widget Area */}
@@ -419,14 +458,23 @@ export default function PreviewCanvas() {
             )}
           </button>
 
-          {/* Taskbar Pinned Icons */}
+          {/* Taskbar Pinned Icons with Running Indicators */}
           {['🔍', '📂', '🌐', '💬', '🎵'].map((icon, idx) => (
             <div
               key={idx}
-              className={`w-10 h-10 flex items-center justify-center text-lg cursor-pointer transition-colors ${cardHover}`}
+              className={`w-10 h-10 flex flex-col items-center justify-center text-lg cursor-pointer transition-colors relative ${cardHover}`}
               style={{ borderRadius: `${cornerRadius}px` }}
             >
-              {icon}
+              <span>{icon}</span>
+              {/* Running indicator pill matching Windows 11 Taskbar Styler */}
+              {idx < 3 && (
+                <div
+                  className="w-4 h-0.5 rounded-full absolute bottom-1 transition-colors"
+                  style={{
+                    backgroundColor: idx === 0 ? accentColor : secondaryAccent,
+                  }}
+                />
+              )}
             </div>
           ))}
         </div>

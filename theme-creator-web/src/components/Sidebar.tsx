@@ -310,15 +310,15 @@ export default function Sidebar() {
             onClick={() => wallpaperInputRef.current?.click()}
             className="flex-1 py-1.5 px-3 rounded text-xs bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700 transition-colors"
           >
-            {wallpaperUrl ? 'Change Wallpaper...' : 'Upload Custom Wallpaper...'}
+            {wallpaperUrl ? 'Change Custom Wallpaper...' : 'Upload Custom Wallpaper...'}
           </button>
           {wallpaperUrl && (
             <button
               onClick={() => setWallpaper(null, null)}
               className="text-xs px-2.5 py-1 rounded bg-neutral-800 hover:bg-neutral-700 text-neutral-400 border border-neutral-700"
-              title="Reset wallpaper"
+              title="Reset to default abstract wallpaper"
             >
-              Clear
+              Reset
             </button>
           )}
           <input

@@ -70,3 +70,52 @@ test('enables backdrop blur in blur mode', () => {
   expect(startMenu).toBeTruthy();
   expect(startMenu.style.backdropFilter).toBe('blur(18px)');
 });
+
+test('uses abstract wallpaper render by default when wallpaperUrl is null', () => {
+  useThemeStore.setState({
+    wallpaperUrl: null,
+    isLightMode: false,
+  });
+
+  const { container } = render(<PreviewCanvas />);
+  const canvasRoot = container.firstElementChild as HTMLElement;
+  expect(canvasRoot.style.backgroundImage).toContain('/wallpapers/default-dark.jpg');
+
+  useThemeStore.setState({
+    wallpaperUrl: null,
+    isLightMode: true,
+  });
+
+  const { container: lightContainer } = render(<PreviewCanvas />);
+  const lightCanvasRoot = lightContainer.firstElementChild as HTMLElement;
+  expect(lightCanvasRoot.style.backgroundImage).toContain('/wallpapers/default-light.jpg');
+});
+
+test('restricts secondaryAccent strictly to gradient tints and does not leak to calendar or buttons', () => {
+  useThemeStore.setState({
+    accentColor: '#123456',
+    secondaryAccent: '#abcdef',
+    activePane: 'notifications',
+  });
+
+  const { container } = render(<PreviewCanvas />);
+
+  // Bluetooth button uses primary accentColor
+  const buttons = Array.from(container.querySelectorAll('button'));
+  const bluetoothBtn = buttons.find((b) => b.textContent?.includes('Bluetooth'));
+  expect(bluetoothBtn).toBeTruthy();
+  expect(bluetoothBtn?.style.backgroundColor).toBe('rgb(18, 52, 86)'); // #123456
+
+  // Calendar: day 7 uses primary accentColor, day 15 does NOT use secondaryAccent
+  const daySpans = Array.from(container.querySelectorAll('span'));
+  const day7 = daySpans.find((s) => s.textContent === '7');
+  const day15 = daySpans.find((s) => s.textContent === '15');
+
+  expect(day7).toBeTruthy();
+  expect(day7?.style.backgroundColor).toBe('rgb(18, 52, 86)');
+
+  expect(day15).toBeTruthy();
+  expect(day15?.style.backgroundColor).not.toBe('rgb(171, 205, 239)'); // not #abcdef
+  expect(day15?.style.backgroundColor).toBe('');
+});
+

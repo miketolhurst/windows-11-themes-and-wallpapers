@@ -120,22 +120,25 @@ export default function PreviewCanvas() {
       : []),
   ];
 
+  // Derive active wallpaper: user upload or rich abstract 3D flowing wallpaper render
+  const basePath =
+    typeof window !== 'undefined' && window.location.pathname.startsWith('/theme-creator')
+      ? '/theme-creator'
+      : '';
+  const defaultWallpaper = isLightMode
+    ? `${basePath}/wallpapers/default-light.jpg`
+    : `${basePath}/wallpapers/default-dark.jpg`;
+  const activeWallpaper = wallpaperUrl || defaultWallpaper;
+
   return (
     <div
       className="flex-1 h-full flex flex-col justify-end relative select-none overflow-hidden font-sans"
-      style={
-        wallpaperUrl
-          ? {
-              backgroundImage: `url(${wallpaperUrl})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            }
-          : {
-              background: isLightMode
-                ? `radial-gradient(circle at 25% 45%, ${accentColor}28 0%, transparent 55%), radial-gradient(circle at 75% 55%, ${secondaryAccent}28 0%, transparent 55%), #e2e8f0`
-                : `radial-gradient(circle at 25% 45%, ${accentColor}38 0%, transparent 55%), radial-gradient(circle at 75% 55%, ${secondaryAccent}38 0%, transparent 55%), #09090b`,
-            }
-      }
+      style={{
+        backgroundColor: isLightMode ? '#f8fafc' : '#090a10',
+        backgroundImage: `url("${activeWallpaper}")`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
     >
       {/* Mobile warning overlay */}
       <div className="lg:hidden absolute top-3 left-3 right-3 z-50 bg-amber-500/90 text-neutral-950 px-3 py-2 rounded-lg text-xs font-medium shadow flex items-center gap-2">
@@ -200,8 +203,8 @@ export default function PreviewCanvas() {
                 <button
                   className="px-2.5 py-1 text-[11px] font-medium transition-all"
                   style={{
-                    backgroundColor: `${secondaryAccent}22`,
-                    border: `1px solid ${secondaryAccent}60`,
+                    backgroundColor: startCardBg,
+                    border: `1px solid ${accentColor}33`,
                     color: isLightMode ? '#0f172a' : '#f8fafc',
                     borderRadius: `${Math.max(3, cornerRadius - 4)}px`,
                   }}
@@ -231,8 +234,8 @@ export default function PreviewCanvas() {
                     <button
                       className="px-2.5 py-1 text-[11px] font-medium transition-all"
                       style={{
-                        backgroundColor: `${secondaryAccent}22`,
-                        border: `1px solid ${secondaryAccent}60`,
+                        backgroundColor: startCardBg,
+                        border: `1px solid ${accentColor}33`,
                         color: isLightMode ? '#0f172a' : '#f8fafc',
                         borderRadius: `${Math.max(3, cornerRadius - 4)}px`,
                       }}
@@ -262,8 +265,8 @@ export default function PreviewCanvas() {
                       style={{
                         backgroundColor: startCardBg,
                         borderRadius: `${Math.max(4, cornerRadius - 4)}px`,
-                        border: `1px solid ${secondaryAccent}44`,
-                        borderLeft: `3px solid ${secondaryAccent}`,
+                        border: `1px solid ${accentColor}44`,
+                        borderLeft: `3px solid ${accentColor}`,
                       }}
                     >
                       <span className="text-lg">🎨</span>
@@ -300,7 +303,7 @@ export default function PreviewCanvas() {
                   className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shadow"
                   style={{
                     backgroundColor: accentColor,
-                    boxShadow: `0 0 0 2px ${secondaryAccent}`,
+                    boxShadow: `0 0 0 2px ${accentColor}66`,
                   }}
                 >
                   U
@@ -371,8 +374,8 @@ export default function PreviewCanvas() {
                 style={{
                   backgroundColor: notifCardBg,
                   borderRadius: `${Math.max(4, cornerRadius - 4)}px`,
-                  border: `1px solid ${secondaryAccent}44`,
-                  borderLeft: `3px solid ${secondaryAccent}`,
+                  border: `1px solid ${accentColor}44`,
+                  borderLeft: `3px solid ${accentColor}`,
                 }}
               >
                 <div className="flex items-center justify-between text-[11px] mb-1">
@@ -392,7 +395,7 @@ export default function PreviewCanvas() {
                 <div className="grid grid-cols-3 gap-2 mb-3">
                   {[
                     { label: 'Wi-Fi', bg: accentColor, text: '#ffffff' },
-                    { label: 'Bluetooth', bg: secondaryAccent, text: '#ffffff' },
+                    { label: 'Bluetooth', bg: accentColor, text: '#ffffff' },
                     { label: 'Airplane', bg: notifCardBg, text: isLightMode ? '#000000' : '#ffffff' },
                   ].map((btn, i) => (
                     <button
@@ -424,17 +427,12 @@ export default function PreviewCanvas() {
                     <span
                       key={d}
                       className={`py-1 text-[10px] ${
-                        d === 7 || d === 15
+                        d === 7
                           ? 'text-white font-bold'
                           : 'hover:opacity-80 cursor-pointer'
                       }`}
                       style={{
-                        backgroundColor:
-                          d === 7
-                            ? accentColor
-                            : d === 15
-                            ? secondaryAccent
-                            : undefined,
+                        backgroundColor: d === 7 ? accentColor : undefined,
                         borderRadius: `${Math.max(2, cornerRadius - 6)}px`,
                       }}
                     >
@@ -499,7 +497,12 @@ export default function PreviewCanvas() {
                 <div
                   className="w-4 h-0.5 rounded-full absolute bottom-1 transition-colors"
                   style={{
-                    backgroundColor: idx === 0 ? accentColor : secondaryAccent,
+                    backgroundColor:
+                      idx === 0
+                        ? accentColor
+                        : isLightMode
+                        ? 'rgba(0,0,0,0.35)'
+                        : 'rgba(255,255,255,0.45)',
                   }}
                 />
               )}

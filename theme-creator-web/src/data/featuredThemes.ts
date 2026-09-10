@@ -1,5 +1,4 @@
-﻿import { encodeThemeToUrl } from "../lib/urlSharing";
-import { ThemeState } from "../store/useThemeStore";
+import { encodeThemeToUrl } from "../lib/urlSharing";
 
 export interface FeaturedTheme {
   id: string;
@@ -166,54 +165,19 @@ export function getThemeById(id: string): FeaturedTheme | undefined {
 }
 
 export function getThemeStudioUrl(theme: FeaturedTheme, basePath: string = ""): string {
-  const pseudoState: ThemeState = {
+  const query = encodeThemeToUrl({
     themeName: theme.name,
     accentColor: theme.config.accentColor,
     secondaryAccent: theme.config.secondaryAccent,
     isLightMode: theme.config.mode === "light",
     taskbarMode: "blur",
     cornerRadius: theme.config.taskbarRadius,
-    borderThickness: 2,
-    hideRecommended: false,
-    compactSearch: false,
-    dynamicNotificationHeight: false,
-    removeDropShadows: false,
     taskbarBlur: theme.config.taskbarBlur,
     startMenuBlur: theme.config.startMenuBlur,
     notificationBlur: theme.config.ncBlur,
     taskbarOpacity: theme.config.taskbarOpacity,
-    startMenuOpacity: 97,
-    notificationOpacity: 97,
-    customWallpaper: null,
-    history: [],
-    historyIndex: -1,
-    setThemeName: () => {},
-    setAccentColor: () => {},
-    setSecondaryAccent: () => {},
-    toggleLightMode: () => {},
-    setTaskbarMode: () => {},
-    setCornerRadius: () => {},
-    setBorderThickness: () => {},
-    toggleHideRecommended: () => {},
-    toggleCompactSearch: () => {},
-    toggleDynamicNotificationHeight: () => {},
-    toggleRemoveDropShadows: () => {},
-    setTaskbarBlur: () => {},
-    setStartMenuBlur: () => {},
-    setNotificationBlur: () => {},
-    setTaskbarOpacity: () => {},
-    setStartMenuOpacity: () => {},
-    setNotificationOpacity: () => {},
-    setCustomWallpaper: () => {},
-    resetDefaults: () => {},
-    undo: () => {},
-    redo: () => {},
-    canUndo: () => false,
-    canRedo: () => false,
-    applyPreset: () => {},
-  };
+  });
 
-  const query = encodeThemeToUrl(pseudoState);
   const cleanBase = basePath.endsWith("/") ? basePath.slice(0, -1) : basePath;
   return `${cleanBase}/studio${query}`;
 }

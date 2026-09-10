@@ -1,4 +1,4 @@
-﻿import { ThemeState } from '../store/useThemeStore';
+import { ThemeState } from '../store/useThemeStore';
 
 export interface SharedThemePayload {
   name: string;
@@ -20,25 +20,25 @@ export interface SharedThemePayload {
   ncOp: number;
 }
 
-export function encodeThemeToUrl(state: ThemeState): string {
+export function encodeThemeToUrl(state: Partial<ThemeState> & { accentColor: string }): string {
   const payload: SharedThemePayload = {
-    name: state.themeName,
+    name: state.themeName || 'Custom Theme',
     accent: state.accentColor,
-    sec: state.secondaryAccent,
-    light: state.isLightMode,
-    mode: state.taskbarMode,
-    rad: state.cornerRadius,
-    bord: state.borderThickness,
-    hideRec: state.hideRecommended,
-    comp: state.compactSearch,
-    dynNotif: state.dynamicNotificationHeight,
-    noShad: state.removeDropShadows,
-    tbBlur: state.taskbarBlur,
-    smBlur: state.startMenuBlur,
-    ncBlur: state.notificationBlur,
-    tbOp: state.taskbarOpacity,
-    smOp: state.startMenuOpacity,
-    ncOp: state.notificationOpacity,
+    sec: state.secondaryAccent || '#005A9E',
+    light: Boolean(state.isLightMode),
+    mode: state.taskbarMode || 'blur',
+    rad: typeof state.cornerRadius === 'number' ? state.cornerRadius : 8,
+    bord: typeof state.borderThickness === 'number' ? state.borderThickness : 2,
+    hideRec: Boolean(state.hideRecommended),
+    comp: Boolean(state.compactSearch),
+    dynNotif: Boolean(state.dynamicNotificationHeight),
+    noShad: Boolean(state.removeDropShadows),
+    tbBlur: typeof state.taskbarBlur === 'number' ? state.taskbarBlur : 10,
+    smBlur: typeof state.startMenuBlur === 'number' ? state.startMenuBlur : 15,
+    ncBlur: typeof state.notificationBlur === 'number' ? state.notificationBlur : 15,
+    tbOp: typeof state.taskbarOpacity === 'number' ? state.taskbarOpacity : 97,
+    smOp: typeof state.startMenuOpacity === 'number' ? state.startMenuOpacity : 97,
+    ncOp: typeof state.notificationOpacity === 'number' ? state.notificationOpacity : 97,
   };
 
   const jsonStr = JSON.stringify(payload);

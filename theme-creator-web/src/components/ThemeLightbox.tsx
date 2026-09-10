@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -239,7 +239,7 @@ export function ThemeLightbox({ theme, onClose }: ThemeLightboxProps) {
           </button>
 
           <Link
-            href={getThemeStudioUrl(theme, basePath)}
+            href={getThemeStudioUrl(theme)}
             className="w-full sm:flex-1 bg-neutral-800 hover:bg-neutral-700 text-neutral-100 hover:text-white font-semibold text-sm py-3.5 px-6 rounded-xl border border-white/15 transition-all flex items-center justify-center gap-2 text-center"
           >
             <span>🎨</span>

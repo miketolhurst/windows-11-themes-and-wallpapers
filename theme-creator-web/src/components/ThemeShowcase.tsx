@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React from "react";
 import Link from "next/link";
@@ -112,7 +112,7 @@ export function ThemeShowcase({ onSelectTheme }: ThemeShowcaseProps) {
                     🔍 Preview Details
                   </button>
                   <Link
-                    href={getThemeStudioUrl(heroTheme, basePath)}
+                    href={getThemeStudioUrl(heroTheme)}
                     className="flex-1 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 hover:text-white font-medium text-xs sm:text-sm py-3 px-4 rounded-xl border border-white/10 transition-all text-center flex items-center justify-center gap-1.5"
                   >
                     <span>🎨</span>
@@ -190,7 +190,7 @@ export function ThemeShowcase({ onSelectTheme }: ThemeShowcaseProps) {
                   🔍 Preview Details
                 </button>
                 <Link
-                  href={getThemeStudioUrl(theme, basePath)}
+                  href={getThemeStudioUrl(theme)}
                   className="bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white text-xs font-medium py-2 px-3 rounded-lg border border-white/10 transition-colors flex items-center justify-center gap-1"
                   title="Open in Theme Studio"
                 >

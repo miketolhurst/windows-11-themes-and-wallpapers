@@ -1,4 +1,4 @@
-﻿import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useThemeStore } from '../store/useThemeStore';
 import { THEME_PRESETS } from '../lib/presets';
 import { parseRegFile } from '../lib/regParser';
@@ -194,12 +194,12 @@ export default function Sidebar() {
 
   return (
     <div
-      className={`h-full bg-neutral-900 text-white flex flex-col relative z-30 border-r border-neutral-800 transition-all duration-300 select-none ${
+      className={`h-full bg-neutral-900 text-white flex flex-col relative z-30 border-r border-neutral-800 transition-all duration-300 select-none overflow-x-hidden ${
         isSidebarCollapsed ? 'w-0 p-0 border-0 opacity-0 overflow-hidden pointer-events-none' : 'w-88 p-4 md:p-5'
       }`}
     >
       {/* Scrollable Options Section */}
-      <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-4.5 scrollbar-thin scrollbar-thumb-neutral-700">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden pr-1 flex flex-col gap-4.5 scrollbar-thin scrollbar-thumb-neutral-700">
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
           <div>
@@ -254,17 +254,10 @@ export default function Sidebar() {
             />
             <button
               onClick={() => regInputRef.current?.click()}
-              className="text-xs px-2.5 py-1.5 rounded bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700 whitespace-nowrap transition-colors cursor-pointer"
+              className="text-xs px-3 py-1.5 rounded bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700 whitespace-nowrap transition-colors cursor-pointer"
               title="Import .reg file"
             >
               Import
-            </button>
-            <button
-              onClick={handleShare}
-              className="text-xs px-2.5 py-1.5 rounded bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700 whitespace-nowrap transition-colors cursor-pointer"
-              title="Copy shareable link"
-            >
-              {copiedShare ? '✓ Copied' : '🔗 Share'}
             </button>
             <input
               ref={regInputRef}
@@ -274,6 +267,14 @@ export default function Sidebar() {
               className="hidden"
             />
           </div>
+          <button
+            onClick={handleShare}
+            className="w-full py-1.5 px-3 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-200 border border-neutral-700 text-xs font-medium flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+            title="Copy shareable link to clipboard"
+          >
+            <span>🔗</span>
+            <span>{copiedShare ? '✓ Link Copied to Clipboard!' : 'Share this theme'}</span>
+          </button>
         </div>
 
         {/* Preset Chips */}

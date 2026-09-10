@@ -231,7 +231,7 @@ def create_theme(name, accent, secondary=None, bg="#101216", radius=10, wallpape
         "controlStyles": [
             {
                 "target": "Grid#NotificationCenterGrid",
-                "styles": [f"Background:={nc_grad}", "BorderThickness=2", f"CornerRadius={radius}"]
+                "styles": [f"Background:={nc_grad}", f"BorderBrush={c_normal}", "BorderThickness=2", f"CornerRadius={radius}"]
             },
             {
                 "target": "Grid#CalendarCenterGrid",
@@ -239,7 +239,7 @@ def create_theme(name, accent, secondary=None, bg="#101216", radius=10, wallpape
             },
             {
                 "target": "Grid#ControlCenterRegion",
-                "styles": [f"Background:={nc_grad}", "BorderThickness=2", f"CornerRadius={radius}"]
+                "styles": [f"Background:={nc_grad}", f"BorderBrush={c_normal}", "BorderThickness=2", f"CornerRadius={radius}"]
             },
             {
                 "target": "QuickActions.ControlCenter.AccessibleWindow#PageWindow > ContentPresenter > Grid#FullScreenPageRoot",
@@ -247,7 +247,7 @@ def create_theme(name, accent, secondary=None, bg="#101216", radius=10, wallpape
             },
             {
                 "target": "ContentPresenter > Grid#FullScreenPageRoot",
-                "styles": [f"Background:={nc_grad}", "BorderThickness=2", f"CornerRadius={radius}"]
+                "styles": [f"Background:={nc_grad}", f"BorderBrush={c_normal}", "BorderThickness=2", f"CornerRadius={radius}"]
             },
             {
                 "target": "ContentPresenter#PageContent > Grid > Border",

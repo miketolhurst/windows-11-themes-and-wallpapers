@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Windows 11/Windhawk Theme Generator",
-  description: "Design, customize, and export custom Windows 11 themes for Windhawk with real-time visual preview.",
+  title: "Windows 11 / Windhawk Theme Studio & Showcase",
+  description: "Browse hand-crafted Windows 11 themes, follow the quick 3-step Windhawk setup guide, or design your own custom theme in the real-time browser studio.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

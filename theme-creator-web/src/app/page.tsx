@@ -1,40 +1,45 @@
 'use client';
 
+import React, { useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import PreviewCanvas from '../components/PreviewCanvas';
+import PostDownloadModal from '../components/PostDownloadModal';
 import { useThemeStore } from '../store/useThemeStore';
-import { generateZipPayload } from '../lib/exportEngine';
+import { decodeThemeFromUrl } from '../lib/urlSharing';
 
 export default function Home() {
-  const state = useThemeStore();
+  const { isSidebarCollapsed, toggleSidebar, applyThemeConfig } = useThemeStore();
 
-  const handleDownload = async () => {
-    const blob = await generateZipPayload(state);
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    const slug = (state.themeName || 'Theme').replace(/[^a-zA-Z0-9_-]/g, '_');
-    a.download = `Windhawk_${slug}_Theme.zip`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+  // Load shared theme from URL params on initial mount
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.search) {
+      const decoded = decodeThemeFromUrl(window.location.search);
+      if (decoded) {
+        applyThemeConfig(decoded);
+      }
+    }
+  }, [applyThemeConfig]);
 
   return (
     <main className="flex h-screen w-screen overflow-hidden bg-black font-sans relative">
       <Sidebar />
       <PreviewCanvas />
-      
-      <div className="absolute top-4 right-4 z-50 flex items-center gap-3">
-        <button 
-          onClick={handleDownload}
-          className="bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-sm px-5 py-2.5 rounded-lg shadow-xl font-semibold tracking-wide flex items-center gap-2 transition-all cursor-pointer border border-blue-400/30"
+
+      {/* Floating expand sidebar button when collapsed */}
+      {isSidebarCollapsed && (
+        <button
+          onClick={toggleSidebar}
+          className="absolute top-4 left-4 z-40 bg-neutral-900/90 hover:bg-neutral-800 text-white text-xs px-3.5 py-2 rounded-xl shadow-xl font-medium flex items-center gap-2 border border-neutral-700/80 backdrop-blur transition-all cursor-pointer hover:scale-105 active:scale-95"
+          title="Open Theme Settings"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-          <span>Download Theme (.zip)</span>
+          <span>⚙️</span>
+          <span>Customize Theme</span>
         </button>
-      </div>
+      )}
+
+      {/* Post-Download Instructions Modal */}
+      <PostDownloadModal />
     </main>
   );
 }
+

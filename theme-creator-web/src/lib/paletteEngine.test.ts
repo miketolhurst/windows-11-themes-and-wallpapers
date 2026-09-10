@@ -5,6 +5,7 @@ import {
   blend,
   computeAccentPalette,
   buildLinearGradientBrush,
+  extractPaletteFromPixels,
 } from './paletteEngine';
 
 describe('paletteEngine', () => {
@@ -73,4 +74,27 @@ describe('paletteEngine', () => {
     );
     expect(brush50).toContain('Color="#800078d4"');
   });
+
+  it('extracts dominant primary and secondary colors from pixel data', () => {
+    // Generate mock pixel data: 100 pixels of cyan [0, 240, 255] and 40 pixels of magenta [255, 0, 128]
+    const pixels: number[] = [];
+    for (let i = 0; i < 100; i++) {
+      pixels.push(0, 240, 255, 255);
+    }
+    for (let i = 0; i < 40; i++) {
+      pixels.push(255, 0, 128, 255);
+    }
+
+    const { primary, secondary } = extractPaletteFromPixels(pixels);
+    expect(primary.toLowerCase()).toBe('#00f0ff');
+    expect(secondary.toLowerCase()).toBe('#ff0080');
+  });
+
+  it('returns valid fallback colors for monochrome image data', () => {
+    const pixels = [0, 0, 0, 255, 255, 255, 255, 255, 50, 50, 50, 255];
+    const { primary, secondary } = extractPaletteFromPixels(pixels);
+    expect(primary).toMatch(/^#[0-9a-fA-F]{6}$/);
+    expect(secondary).toMatch(/^#[0-9a-fA-F]{6}$/);
+  });
 });
+

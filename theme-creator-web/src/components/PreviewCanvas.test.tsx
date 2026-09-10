@@ -95,19 +95,28 @@ test('restricts secondaryAccent strictly to gradient tints and does not leak to 
   useThemeStore.setState({
     accentColor: '#123456',
     secondaryAccent: '#abcdef',
-    activePane: 'notifications',
+    activePane: 'quicksettings',
   });
 
   const { container } = render(<PreviewCanvas />);
 
-  // Bluetooth button uses primary accentColor
+  // Bluetooth button in Quick Settings uses primary accentColor
   const buttons = Array.from(container.querySelectorAll('button'));
   const bluetoothBtn = buttons.find((b) => b.textContent?.includes('Bluetooth'));
   expect(bluetoothBtn).toBeTruthy();
   expect(bluetoothBtn?.style.backgroundColor).toBe('rgb(18, 52, 86)'); // #123456
 
-  // Calendar: day 7 uses primary accentColor, day 15 does NOT use secondaryAccent
-  const daySpans = Array.from(container.querySelectorAll('span'));
+  cleanup();
+
+  // Test Notification Center & Calendar
+  useThemeStore.setState({
+    accentColor: '#123456',
+    secondaryAccent: '#abcdef',
+    activePane: 'notifications',
+  });
+
+  const { container: notifContainer } = render(<PreviewCanvas />);
+  const daySpans = Array.from(notifContainer.querySelectorAll('span'));
   const day7 = daySpans.find((s) => s.textContent === '7');
   const day15 = daySpans.find((s) => s.textContent === '15');
 
@@ -118,4 +127,31 @@ test('restricts secondaryAccent strictly to gradient tints and does not leak to 
   expect(day15?.style.backgroundColor).not.toBe('rgb(171, 205, 239)'); // not #abcdef
   expect(day15?.style.backgroundColor).toBe('');
 });
+
+test('renders separated Notification and Calendar cards when activePane is notifications', () => {
+  useThemeStore.setState({
+    activePane: 'notifications',
+  });
+
+  const { container } = render(<PreviewCanvas />);
+  expect(container.textContent).toContain('Notifications');
+  expect(container.textContent).toContain('Clear all');
+  expect(container.textContent).toContain('September 2026');
+  expect(container.textContent).toContain('Focus session');
+});
+
+test('renders desktop icons and mock window preview when enabled', () => {
+  useThemeStore.setState({
+    showDesktopIcons: true,
+    showWindowPreview: true,
+    activePane: null,
+  });
+
+  const { container } = render(<PreviewCanvas />);
+  expect(container.textContent).toContain('Recycle Bin');
+  expect(container.textContent).toContain('This PC');
+  expect(container.textContent).toContain('Quick Access');
+  expect(container.textContent).toContain('Search Home');
+});
+
 

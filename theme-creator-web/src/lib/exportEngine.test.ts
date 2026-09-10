@@ -3,7 +3,7 @@ import { generateRegFileString, generatePs1Script, generateZipPayload } from './
 import { ThemeState } from '../store/useThemeStore';
 
 describe('exportEngine', () => {
-  const mockState: ThemeState = {
+  const mockState = {
     themeName: 'Cyber Test',
     accentColor: '#0078D4',
     secondaryAccent: '#005A9E',
@@ -26,29 +26,7 @@ describe('exportEngine', () => {
     startMenuOpacity: 90,
     notificationOpacity: 85,
     activePane: 'start',
-    setThemeName: () => {},
-    setAccentColor: () => {},
-    setSecondaryAccent: () => {},
-    setIsLightMode: () => {},
-    setTaskbarMode: () => {},
-    setCornerRadius: () => {},
-    setBorderThickness: () => {},
-    setWallpaper: () => {},
-    setCustomStartIcon: () => {},
-    setHideRecommended: () => {},
-    setCompactSearch: () => {},
-    setDynamicNotificationHeight: () => {},
-    setRemoveDropShadows: () => {},
-    setTaskbarBlur: () => {},
-    setStartMenuBlur: () => {},
-    setNotificationBlur: () => {},
-    setTaskbarOpacity: () => {},
-    setStartMenuOpacity: () => {},
-    setNotificationOpacity: () => {},
-    setActivePane: () => {},
-    applyThemeConfig: () => {},
-    resetToDefaults: () => {},
-  };
+  } as unknown as ThemeState;
 
   it('generates comprehensive .reg string with all mods and HKCU keys', () => {
     const reg = generateRegFileString(mockState);

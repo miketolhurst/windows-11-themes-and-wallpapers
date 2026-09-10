@@ -24,6 +24,9 @@ export default function PreviewCanvas() {
     notificationOpacity,
     activePane,
     setActivePane,
+    showDesktopIcons,
+    showWindowPreview,
+    setShowWindowPreview,
   } = useThemeStore();
 
   const borderThickness = rawBorderThickness ?? 2;
@@ -122,9 +125,11 @@ export default function PreviewCanvas() {
 
   // Derive active wallpaper: user upload or rich abstract 3D flowing wallpaper render
   const basePath =
-    typeof window !== 'undefined' && window.location.pathname.startsWith('/theme-creator')
-      ? '/theme-creator'
-      : '';
+    typeof window !== 'undefined'
+      ? window.location.pathname.startsWith('/theme-creator')
+        ? '/theme-creator'
+        : ''
+      : '/theme-creator';
   const defaultWallpaper = isLightMode
     ? `${basePath}/wallpapers/default-light.jpg`
     : `${basePath}/wallpapers/default-dark.jpg`;
@@ -152,7 +157,147 @@ export default function PreviewCanvas() {
         onClick={() => setActivePane(null)}
       />
 
-      {/* Floating Canvas Area (Start Menu or Notification Center) */}
+      {/* Desktop Icons Layer */}
+      {showDesktopIcons && (
+        <div className="absolute left-5 top-5 flex flex-col gap-4 pointer-events-auto z-15">
+          {[
+            { name: 'Recycle Bin', icon: '🗑️' },
+            { name: 'This PC', icon: '💻' },
+            { name: 'Files', icon: '📁' },
+            { name: 'Edge', icon: '🌐' },
+          ].map((item) => (
+            <div
+              key={item.name}
+              className="w-20 p-2 rounded-lg flex flex-col items-center text-center cursor-pointer border border-transparent hover:bg-white/15 hover:border-white/20 transition-all group"
+            >
+              <span className="text-3xl mb-1 filter drop-shadow-md">{item.icon}</span>
+              <span className="text-[11px] text-white font-normal leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)] truncate max-w-full">
+                {item.name}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Window Preview (Mock Windows 11 File Explorer) */}
+      {showWindowPreview && (
+        <div
+          className={`absolute left-1/2 top-[44%] -translate-x-1/2 -translate-y-1/2 w-[680px] h-[420px] max-w-[92%] max-h-[72%] rounded-xl shadow-2xl border overflow-hidden flex flex-col pointer-events-auto z-15 transition-all duration-200 ${shadowClass}`}
+          style={{
+            background: isLightMode ? 'rgba(255, 255, 255, 0.88)' : 'rgba(24, 24, 28, 0.88)',
+            backdropFilter: `blur(${Math.max(12, taskbarBlur)}px)`,
+            WebkitBackdropFilter: `blur(${Math.max(12, taskbarBlur)}px)`,
+            borderColor: `${accentColor}44`,
+            borderRadius: `${cornerRadius}px`,
+          }}
+        >
+          {/* Window Title Bar & Tabs */}
+          <div className="h-9 flex items-center justify-between border-b px-2 select-none" style={{ borderColor: `${accentColor}22` }}>
+            <div className="flex items-center gap-1 text-xs">
+              <div
+                className="px-3 py-1 rounded-t-md flex items-center gap-1.5 font-medium border-t-2"
+                style={{
+                  backgroundColor: isLightMode ? 'rgba(240, 240, 245, 0.9)' : 'rgba(35, 35, 42, 0.9)',
+                  borderColor: accentColor,
+                  color: isLightMode ? '#111827' : '#f3f4f6',
+                }}
+              >
+                <span>📁</span>
+                <span>Home</span>
+                <span className="text-[10px] opacity-60 ml-1">✕</span>
+              </div>
+              <button className="w-6 h-6 flex items-center justify-center rounded hover:bg-white/10 text-xs opacity-70">+</button>
+            </div>
+            <div className="flex items-center gap-2 text-xs">
+              <span className="p-1 hover:bg-white/10 rounded cursor-pointer">─</span>
+              <span className="p-1 hover:bg-white/10 rounded cursor-pointer">□</span>
+              <button
+                onClick={() => setShowWindowPreview(false)}
+                className="p-1 hover:bg-red-600 hover:text-white rounded cursor-pointer"
+                title="Close window preview"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+
+          {/* Address & Search Bar */}
+          <div className="px-3 py-2 flex items-center gap-2 border-b text-xs" style={{ borderColor: `${accentColor}22` }}>
+            <div className="flex gap-2 text-neutral-400">
+              <span>←</span>
+              <span>→</span>
+              <span>↑</span>
+            </div>
+            <div
+              className="flex-1 px-2.5 py-1 rounded flex items-center gap-2 border text-xs"
+              style={{
+                backgroundColor: isLightMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(15, 15, 18, 0.6)',
+                borderColor: `${accentColor}33`,
+              }}
+            >
+              <span>📁</span>
+              <span className={textColor}>Home</span>
+            </div>
+            <div
+              className="w-48 px-2.5 py-1 rounded flex items-center gap-1.5 border text-xs text-neutral-400"
+              style={{
+                backgroundColor: isLightMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(15, 15, 18, 0.6)',
+                borderColor: `${accentColor}33`,
+              }}
+            >
+              <span>🔍</span>
+              <span>Search Home</span>
+            </div>
+          </div>
+
+          {/* Window Body: Navigation + Content */}
+          <div className="flex-1 flex overflow-hidden">
+            <div className="w-40 border-r p-2 flex flex-col gap-1 text-xs" style={{ borderColor: `${accentColor}22` }}>
+              {[
+                { name: 'Home', icon: '⭐', active: true },
+                { name: 'Desktop', icon: '💻', active: false },
+                { name: 'Downloads', icon: '⬇️', active: false },
+                { name: 'Documents', icon: '📄', active: false },
+                { name: 'Pictures', icon: '🖼️', active: false },
+              ].map((nav) => (
+                <div
+                  key={nav.name}
+                  className="px-2 py-1 rounded flex items-center gap-2 cursor-pointer transition-colors"
+                  style={{
+                    backgroundColor: nav.active ? `${accentColor}25` : undefined,
+                    color: nav.active ? accentColor : undefined,
+                    fontWeight: nav.active ? 600 : 400,
+                  }}
+                >
+                  <span>{nav.icon}</span>
+                  <span>{nav.name}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex-1 p-3.5 overflow-y-auto">
+              <h4 className={`text-xs font-semibold mb-2.5 ${textColor}`}>Quick Access</h4>
+              <div className="grid grid-cols-3 gap-2.5">
+                {['Desktop', 'Downloads', 'Documents', 'Pictures', 'Music', 'Videos'].map((f) => (
+                  <div
+                    key={f}
+                    className="p-2.5 rounded-lg border flex items-center gap-2.5 text-xs transition-all hover:border-blue-400 cursor-pointer shadow-xs"
+                    style={{
+                      backgroundColor: notifCardBg,
+                      borderColor: `${accentColor}25`,
+                    }}
+                  >
+                    <span className="text-xl">📁</span>
+                    <span className={`font-medium ${textColor}`}>{f}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Canvas Area (Start Menu, Notification Center, or Quick Settings) */}
       <div className="z-20 w-full h-[calc(100%-48px)] relative pointer-events-none pb-3">
         {activePane === 'start' && (
           <div
@@ -324,11 +469,133 @@ export default function PreviewCanvas() {
           </div>
         )}
 
+        {/* Windows 11 Notification Center & Calendar (Separated Floating Cards) */}
         {activePane === 'notifications' && (
+          <div className="absolute right-4 bottom-3 flex flex-col gap-3 pointer-events-auto z-40">
+            {/* Top Card: Notifications List */}
+            <div
+              className={`w-[360px] ${
+                dynamicNotificationHeight ? 'max-h-[280px]' : 'h-[250px]'
+              } flex flex-col overflow-hidden ${textColor} ${shadowClass} transition-all duration-200`}
+              style={{
+                background: notifCenterBg,
+                backdropFilter: taskbarMode === 'gradient' ? 'none' : `blur(${notificationBlur}px)`,
+                WebkitBackdropFilter: taskbarMode === 'gradient' ? 'none' : `blur(${notificationBlur}px)`,
+                borderRadius: `${cornerRadius}px`,
+                border: borderThickness > 0 ? `${borderThickness}px solid ${accentColor}` : 'none',
+                boxShadow: `0 0 24px -6px ${accentColor}40`,
+              }}
+            >
+              {/* Header */}
+              <div
+                className="px-4 py-3 border-b flex justify-between items-center text-xs font-semibold"
+                style={{ borderColor: `${accentColor}33` }}
+              >
+                <div className="flex items-center gap-2">
+                  <span className={textColor}>Notifications</span>
+                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-white/10 text-neutral-300">2</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <span title="Do not disturb" className="text-xs cursor-pointer hover:opacity-80">🔕</span>
+                  <button className="text-[11px] transition-colors font-medium hover:underline cursor-pointer" style={{ color: accentColor }}>
+                    Clear all
+                  </button>
+                </div>
+              </div>
+
+              {/* Notifications List */}
+              <div className="p-3 flex-1 flex flex-col gap-2.5 overflow-y-auto">
+                <div
+                  className="p-3 text-left shadow-sm"
+                  style={{
+                    backgroundColor: notifCardBg,
+                    borderRadius: `${Math.max(4, cornerRadius - 4)}px`,
+                    border: `1px solid ${accentColor}44`,
+                    borderLeft: `3px solid ${accentColor}`,
+                  }}
+                >
+                  <div className="flex items-center justify-between text-[11px] mb-1">
+                    <span className={`font-semibold flex items-center gap-1.5 ${textColor}`}>
+                      🦅 Windhawk Engine
+                    </span>
+                    <span className={subTextColor}>Just now</span>
+                  </div>
+                  <p className={`text-xs ${textColor}`}>New Styler mod configuration applied smoothly.</p>
+                </div>
+
+                <div
+                  className="p-3 text-left shadow-sm"
+                  style={{
+                    backgroundColor: notifCardBg,
+                    borderRadius: `${Math.max(4, cornerRadius - 4)}px`,
+                    border: `1px solid ${accentColor}44`,
+                    borderLeft: `3px solid ${accentColor}`,
+                  }}
+                >
+                  <div className="flex items-center justify-between text-[11px] mb-1">
+                    <span className={`font-semibold flex items-center gap-1.5 ${textColor}`}>
+                      ⚡ Windows 11
+                    </span>
+                    <span className={subTextColor}>10m ago</span>
+                  </div>
+                  <p className={`text-xs ${textColor}`}>32-byte AccentPalette loaded into HKCU.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Card: Calendar & Clock */}
+            <div
+              className={`w-[360px] p-3.5 flex flex-col overflow-hidden ${textColor} ${shadowClass} transition-all duration-200`}
+              style={{
+                background: notifCenterBg,
+                backdropFilter: taskbarMode === 'gradient' ? 'none' : `blur(${notificationBlur}px)`,
+                WebkitBackdropFilter: taskbarMode === 'gradient' ? 'none' : `blur(${notificationBlur}px)`,
+                borderRadius: `${cornerRadius}px`,
+                border: borderThickness > 0 ? `${borderThickness}px solid ${accentColor}` : 'none',
+                boxShadow: `0 0 24px -6px ${accentColor}40`,
+              }}
+            >
+              <div className="flex justify-between items-center mb-2 px-1">
+                <span className={`text-xs font-semibold ${textColor}`}>September 2026</span>
+                <div className={`flex gap-1 text-xs ${subTextColor}`}>
+                  <button className="hover:opacity-80 p-1 cursor-pointer">&lt;</button>
+                  <button className="hover:opacity-80 p-1 cursor-pointer">&gt;</button>
+                </div>
+              </div>
+              <div className={`grid grid-cols-7 text-center text-[10px] gap-y-1 ${subTextColor}`}>
+                <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                  <span
+                    key={d}
+                    className={`py-1 text-[10px] ${
+                      d === 7
+                        ? 'text-white font-bold'
+                        : 'hover:opacity-80 cursor-pointer'
+                    }`}
+                    style={{
+                      backgroundColor: d === 7 ? accentColor : undefined,
+                      borderRadius: `${Math.max(2, cornerRadius - 6)}px`,
+                    }}
+                  >
+                    {d}
+                  </span>
+                ))}
+              </div>
+              <div className="mt-3 pt-2 border-t flex justify-between items-center text-[11px]" style={{ borderColor: `${accentColor}33` }}>
+                <button className="flex items-center gap-1.5 text-xs hover:opacity-80 font-medium cursor-pointer" style={{ color: accentColor }}>
+                  <span>⏱️</span>
+                  <span>Focus session</span>
+                </button>
+                <button className={`${subTextColor} hover:opacity-80 text-xs cursor-pointer`}>▲</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Windows 11 Quick Settings Flyout */}
+        {activePane === 'quicksettings' && (
           <div
-            className={`w-[380px] ${
-              dynamicNotificationHeight ? 'h-[500px]' : 'h-[580px]'
-            } absolute right-4 bottom-3 flex flex-col pointer-events-auto transition-all duration-200 overflow-hidden ${textColor} ${shadowClass}`}
+            className={`w-[360px] absolute right-4 bottom-3 flex flex-col p-4 gap-3.5 pointer-events-auto transition-all duration-200 overflow-hidden ${textColor} ${shadowClass} z-40`}
             style={{
               background: notifCenterBg,
               backdropFilter: taskbarMode === 'gradient' ? 'none' : `blur(${notificationBlur}px)`,
@@ -338,108 +605,73 @@ export default function PreviewCanvas() {
               boxShadow: `0 0 24px -6px ${accentColor}40`,
             }}
           >
-            {/* Header */}
-            <div
-              className="px-5 py-3.5 border-b flex justify-between items-center text-xs font-semibold"
-              style={{ borderColor: `${accentColor}33` }}
-            >
-              <span className={textColor}>Notifications</span>
-              <button className="text-[11px] transition-colors font-medium hover:underline" style={{ color: accentColor }}>
-                Clear all
-              </button>
+            {/* 3x2 Quick Toggles Grid */}
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { label: 'Wi-Fi', icon: '📶', active: true },
+                { label: 'Bluetooth', icon: 'ᛒ', active: true },
+                { label: 'Airplane', icon: '✈️', active: false },
+                { label: 'Night light', icon: '🌙', active: false },
+                { label: 'Accessibility', icon: '♿', active: false },
+                { label: 'Cast', icon: '🖥️', active: false },
+              ].map((btn) => (
+                <button
+                  key={btn.label}
+                  className="p-2.5 flex flex-col items-center justify-center gap-1 text-[11px] font-medium transition-all shadow-xs cursor-pointer"
+                  style={{
+                    backgroundColor: btn.active ? accentColor : notifCardBg,
+                    color: btn.active ? '#ffffff' : isLightMode ? '#111827' : '#f3f4f6',
+                    borderRadius: `${Math.max(4, cornerRadius - 4)}px`,
+                    border: !btn.active ? `1px solid ${accentColor}33` : undefined,
+                  }}
+                >
+                  <span className="text-base leading-none">{btn.icon}</span>
+                  <span className="truncate text-[10px]">{btn.label}</span>
+                </button>
+              ))}
             </div>
 
-            {/* Notifications List */}
-            <div className="p-3.5 flex-1 flex flex-col gap-2.5 overflow-y-auto">
-              <div
-                className="p-3 text-left shadow-sm"
-                style={{
-                  backgroundColor: notifCardBg,
-                  borderRadius: `${Math.max(4, cornerRadius - 4)}px`,
-                  border: `1px solid ${accentColor}44`,
-                  borderLeft: `3px solid ${accentColor}`,
-                }}
-              >
-                <div className="flex items-center justify-between text-[11px] mb-1">
-                  <span className={`font-semibold flex items-center gap-1.5 ${textColor}`}>
-                    🦅 Windhawk Engine
-                  </span>
-                  <span className={subTextColor}>Just now</span>
-                </div>
-                <p className={`text-xs ${textColor}`}>New Styler mod configuration applied smoothly.</p>
+            {/* Sliders: Volume & Brightness */}
+            <div className="flex flex-col gap-2.5 pt-1">
+              <div className="flex items-center gap-3">
+                <span className="text-sm">☀️</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  defaultValue="100"
+                  className="w-full accent-blue-500 cursor-pointer h-1.5 rounded-lg"
+                  style={{ accentColor }}
+                  aria-label="Display Brightness"
+                />
               </div>
-
-              <div
-                className="p-3 text-left shadow-sm"
-                style={{
-                  backgroundColor: notifCardBg,
-                  borderRadius: `${Math.max(4, cornerRadius - 4)}px`,
-                  border: `1px solid ${accentColor}44`,
-                  borderLeft: `3px solid ${accentColor}`,
-                }}
-              >
-                <div className="flex items-center justify-between text-[11px] mb-1">
-                  <span className={`font-semibold flex items-center gap-1.5 ${textColor}`}>
-                    ⚡ Windows 11
-                  </span>
-                  <span className={subTextColor}>10m ago</span>
-                </div>
-                <p className={`text-xs ${textColor}`}>32-byte AccentPalette loaded into HKCU.</p>
+              <div className="flex items-center gap-3">
+                <span className="text-sm">🔊</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  defaultValue="75"
+                  className="w-full accent-blue-500 cursor-pointer h-1.5 rounded-lg"
+                  style={{ accentColor }}
+                  aria-label="System Volume"
+                />
               </div>
+            </div>
 
-              {/* Quick Actions Panel */}
-              <div
-                className="mt-auto pt-3 border-t"
-                style={{ borderColor: `${accentColor}33` }}
-              >
-                <div className="grid grid-cols-3 gap-2 mb-3">
-                  {[
-                    { label: 'Wi-Fi', bg: accentColor, text: '#ffffff' },
-                    { label: 'Bluetooth', bg: accentColor, text: '#ffffff' },
-                    { label: 'Airplane', bg: notifCardBg, text: isLightMode ? '#000000' : '#ffffff' },
-                  ].map((btn, i) => (
-                    <button
-                      key={btn.label}
-                      className="p-2 text-center text-[10px] font-medium transition-colors shadow-sm"
-                      style={{
-                        backgroundColor: btn.bg,
-                        color: btn.text,
-                        borderRadius: `${Math.max(4, cornerRadius - 4)}px`,
-                        border: i === 2 ? `1px solid ${accentColor}33` : undefined,
-                      }}
-                    >
-                      {btn.label}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Mini Calendar */}
-                <div className="text-xs font-semibold mb-2 flex justify-between items-center">
-                  <span className={textColor}>September 2026</span>
-                  <div className={`flex gap-2 text-xs ${subTextColor}`}>
-                    <button className="hover:opacity-80">&lt;</button>
-                    <button className="hover:opacity-80">&gt;</button>
-                  </div>
-                </div>
-                <div className={`grid grid-cols-7 text-center text-[10px] gap-y-1 ${subTextColor}`}>
-                  <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
-                  {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
-                    <span
-                      key={d}
-                      className={`py-1 text-[10px] ${
-                        d === 7
-                          ? 'text-white font-bold'
-                          : 'hover:opacity-80 cursor-pointer'
-                      }`}
-                      style={{
-                        backgroundColor: d === 7 ? accentColor : undefined,
-                        borderRadius: `${Math.max(2, cornerRadius - 6)}px`,
-                      }}
-                    >
-                      {d}
-                    </span>
-                  ))}
-                </div>
+            {/* Footer: Battery & Shortcut buttons */}
+            <div className="pt-2 border-t flex justify-between items-center text-xs" style={{ borderColor: `${accentColor}33` }}>
+              <div className="flex items-center gap-1.5 font-medium">
+                <span>🔋</span>
+                <span className={textColor}>95%</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button title="Edit quick settings" className={`p-1.5 rounded hover:bg-white/10 ${subTextColor} cursor-pointer`}>
+                  ✏️
+                </button>
+                <button title="All settings" className={`p-1.5 rounded hover:bg-white/10 ${subTextColor} cursor-pointer`}>
+                  ⚙️
+                </button>
               </div>
             </div>
           </div>
@@ -512,14 +744,18 @@ export default function PreviewCanvas() {
 
         {/* Right System Tray */}
         <div className="flex items-center gap-1">
-          <div
-            className={`flex items-center gap-2 px-2 py-1.5 cursor-pointer text-xs transition-colors ${cardHover} ${textColor}`}
+          <button
+            onClick={() => setActivePane(activePane === 'quicksettings' ? null : 'quicksettings')}
+            className={`flex items-center gap-2 px-2.5 py-1.5 cursor-pointer text-xs transition-colors ${
+              activePane === 'quicksettings' ? 'bg-white/20' : cardHover
+            } ${textColor}`}
             style={{ borderRadius: `${Math.max(4, cornerRadius - 4)}px` }}
+            title="Quick Settings"
           >
             <span>🔊</span>
             <span>📶</span>
             <span>🔋</span>
-          </div>
+          </button>
 
           <button
             onClick={() => setActivePane(activePane === 'notifications' ? null : 'notifications')}

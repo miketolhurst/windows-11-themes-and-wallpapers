@@ -108,3 +108,136 @@ export function buildLinearGradientBrush(
     rgb.map((c) => c.toString(16).padStart(2, '0')).join('');
   return `<LinearGradientBrush StartPoint="${startPoint}" EndPoint="${endPoint}"><GradientStop Color="#${alphaHex}${toHex(bgRgb)}" Offset="0.0" /><GradientStop Color="#${alphaHex}${toHex(accentRgb)}" Offset="0.5" /><GradientStop Color="#${alphaHex}${toHex(secRgb)}" Offset="1.0"/></LinearGradientBrush>`;
 }
+
+function rgbToHsl(r: number, g: number, b: number): [number, number, number] {
+  r /= 255;
+  g /= 255;
+  b /= 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h = 0;
+  let s = 0;
+  const l = (max + min) / 2;
+
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r:
+        h = (g - b) / d + (g < b ? 6 : 0);
+        break;
+      case g:
+        h = (b - r) / d + 2;
+        break;
+      case b:
+        h = (r - g) / d + 4;
+        break;
+    }
+    h /= 6;
+  }
+  return [h * 360, s, l];
+}
+
+export interface ExtractedPalette {
+  primary: string;
+  secondary: string;
+}
+
+export function extractPaletteFromPixels(pixels: Uint8ClampedArray | number[]): ExtractedPalette {
+  const numBuckets = 12;
+  const buckets: { count: number; rSum: number; gSum: number; bSum: number }[] = Array.from(
+    { length: numBuckets },
+    () => ({ count: 0, rSum: 0, gSum: 0, bSum: 0 })
+  );
+
+  let totalVibrant = 0;
+  for (let i = 0; i < pixels.length; i += 4) {
+    const r = pixels[i];
+    const g = pixels[i + 1];
+    const b = pixels[i + 2];
+    const a = pixels[i + 3];
+    if (a < 128) continue;
+
+    const [h, s, l] = rgbToHsl(r, g, b);
+
+    if (s > 0.25 && l > 0.18 && l < 0.85) {
+      const bucketIdx = Math.floor((h % 360) / 30);
+      buckets[bucketIdx].count++;
+      buckets[bucketIdx].rSum += r;
+      buckets[bucketIdx].gSum += g;
+      buckets[bucketIdx].bSum += b;
+      totalVibrant++;
+    }
+  }
+
+  if (totalVibrant === 0) {
+    return { primary: '#0078D4', secondary: '#005A9E' };
+  }
+
+  const sorted = buckets
+    .map((b, idx) => ({ ...b, idx }))
+    .filter((b) => b.count > 0)
+    .sort((a, b) => b.count - a.count);
+
+  const topBucket = sorted[0];
+  const primaryRgb: RGB = [
+    Math.round(topBucket.rSum / topBucket.count),
+    Math.round(topBucket.gSum / topBucket.count),
+    Math.round(topBucket.bSum / topBucket.count),
+  ];
+  const primary = rgbToHex(primaryRgb);
+
+  const distinctSecondaryBucket = sorted.slice(1).find((b) => {
+    const diff = Math.abs(b.idx - topBucket.idx);
+    const circularDiff = Math.min(diff, numBuckets - diff);
+    return circularDiff >= 2;
+  });
+
+  let secondary: string;
+  if (distinctSecondaryBucket) {
+    const secRgb: RGB = [
+      Math.round(distinctSecondaryBucket.rSum / distinctSecondaryBucket.count),
+      Math.round(distinctSecondaryBucket.gSum / distinctSecondaryBucket.count),
+      Math.round(distinctSecondaryBucket.bSum / distinctSecondaryBucket.count),
+    ];
+    secondary = rgbToHex(secRgb);
+  } else {
+    const secRgb = blend(primaryRgb, [0, 0, 0], 0.35);
+    secondary = rgbToHex(secRgb);
+  }
+
+  return { primary, secondary };
+}
+
+export async function extractPaletteFromImageUrl(imageUrl: string): Promise<ExtractedPalette> {
+  if (typeof window === 'undefined') {
+    return { primary: '#0078D4', secondary: '#005A9E' };
+  }
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          return resolve({ primary: '#0078D4', secondary: '#005A9E' });
+        }
+        canvas.width = 64;
+        canvas.height = 64;
+        ctx.drawImage(img, 0, 0, 64, 64);
+        const imageData = ctx.getImageData(0, 0, 64, 64);
+        const palette = extractPaletteFromPixels(imageData.data);
+        resolve(palette);
+      } catch {
+        resolve({ primary: '#0078D4', secondary: '#005A9E' });
+      }
+    };
+    img.onerror = () => {
+      resolve({ primary: '#0078D4', secondary: '#005A9E' });
+    };
+    img.src = imageUrl;
+  });
+}
+

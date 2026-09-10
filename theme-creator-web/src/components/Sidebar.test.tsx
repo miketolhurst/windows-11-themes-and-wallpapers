@@ -29,3 +29,24 @@ test('renders Border Thickness slider and updates store', () => {
   fireEvent.change(borderSlider, { target: { value: '4' } });
   expect(useThemeStore.getState().borderThickness).toBe(4);
 });
+
+test('renders Material Style label and sticky Download button', () => {
+  render(<Sidebar />);
+  expect(screen.getByText(/Material Style/i)).toBeTruthy();
+  expect(screen.getByText(/Download Theme \(\.zip\)/i)).toBeTruthy();
+});
+
+test('toggles sidebar collapse and handles undo button', () => {
+  useThemeStore.setState({ isSidebarCollapsed: false, past: [] });
+  render(<Sidebar />);
+
+  // Undo button should be disabled when past is empty
+  const undoBtn = screen.getByTitle(/Undo \(Ctrl\+Z\)/i) as HTMLButtonElement;
+  expect(undoBtn.disabled).toBe(true);
+
+  // Collapse button
+  const collapseBtn = screen.getByTitle(/Collapse sidebar/i);
+  fireEvent.click(collapseBtn);
+  expect(useThemeStore.getState().isSidebarCollapsed).toBe(true);
+});
+

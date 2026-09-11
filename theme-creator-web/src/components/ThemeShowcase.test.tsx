@@ -1,4 +1,4 @@
-﻿import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { ThemeShowcase } from "./ThemeShowcase";
 import { FEATURED_THEMES } from "../data/featuredThemes";
@@ -34,5 +34,22 @@ describe("ThemeShowcase component", () => {
 
     fireEvent.click(previewButtons[0]);
     expect(handleSelect).toHaveBeenCalledWith(FEATURED_THEMES[0]);
+  });
+
+  it("filters themes when clicking category filter pills", () => {
+    const handleSelect = vi.fn();
+    render(<ThemeShowcase onSelectTheme={handleSelect} />);
+
+    // Click "Australiana" filter
+    const australianaBtn = screen.getByRole("button", { name: /^Australiana$/i });
+    fireEvent.click(australianaBtn);
+
+    // Australiana themes should be present
+    expect(screen.getByText("Uluru Red Centre Ochre")).toBeDefined();
+    expect(screen.getByText("Sydney Harbour & Southern Cross")).toBeDefined();
+    expect(screen.getByText("Great Barrier Reef & Whitsundays")).toBeDefined();
+
+    // Cyberpunk theme should not be shown
+    expect(screen.queryByText("Cyberpunk 2077 Night City")).toBeNull();
   });
 });

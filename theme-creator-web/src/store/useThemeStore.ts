@@ -1,4 +1,16 @@
 import { create } from 'zustand';
+import { ColorHarmonyType } from '../lib/paletteEngine';
+export type { ColorHarmonyType };
+
+export type MaterialStyle = 'fluent-acrylic' | 'pure-black-neon' | 'linear-gradient' | 'matte-slate';
+export type RunningIndicatorStyle = 'bar' | 'standard' | 'dot' | 'glow' | 'hidden';
+
+export interface SavedTheme {
+  id: string;
+  name: string;
+  date: string;
+  config: ThemeConfigSnapshot;
+}
 
 export interface ThemeConfigSnapshot {
   themeName: string;
@@ -6,6 +18,7 @@ export interface ThemeConfigSnapshot {
   secondaryAccent: string;
   isLightMode: boolean;
   taskbarMode: 'blur' | 'gradient';
+  materialStyle: MaterialStyle;
   cornerRadius: number;
   borderThickness: number;
   wallpaperUrl: string | null;
@@ -22,6 +35,12 @@ export interface ThemeConfigSnapshot {
   taskbarOpacity: number;
   startMenuOpacity: number;
   notificationOpacity: number;
+  noiseOpacity: number;
+  tintSaturation: number;
+  dockMode: boolean;
+  dockMargin: number;
+  runningIndicatorStyle: RunningIndicatorStyle;
+  colorHarmony: ColorHarmonyType;
 }
 
 export interface ThemeState extends ThemeConfigSnapshot {
@@ -34,6 +53,9 @@ export interface ThemeState extends ThemeConfigSnapshot {
   isSidebarCollapsed: boolean;
   showDownloadModal: boolean;
 
+  // Saved themes library
+  savedThemes: SavedTheme[];
+
   // History for Undo / Redo
   past: ThemeConfigSnapshot[];
   future: ThemeConfigSnapshot[];
@@ -44,6 +66,7 @@ export interface ThemeState extends ThemeConfigSnapshot {
   setSecondaryAccent: (c: string) => void;
   setIsLightMode: (v: boolean) => void;
   setTaskbarMode: (m: 'blur' | 'gradient') => void;
+  setMaterialStyle: (m: MaterialStyle) => void;
   setCornerRadius: (r: number) => void;
   setBorderThickness: (t: number) => void;
   setWallpaper: (url: string | null, data?: Uint8Array | null) => void;
@@ -58,6 +81,12 @@ export interface ThemeState extends ThemeConfigSnapshot {
   setTaskbarOpacity: (o: number) => void;
   setStartMenuOpacity: (o: number) => void;
   setNotificationOpacity: (o: number) => void;
+  setNoiseOpacity: (n: number) => void;
+  setTintSaturation: (s: number) => void;
+  setDockMode: (d: boolean) => void;
+  setDockMargin: (m: number) => void;
+  setRunningIndicatorStyle: (i: RunningIndicatorStyle) => void;
+  setColorHarmony: (h: ColorHarmonyType) => void;
   setActivePane: (pane: 'start' | 'notifications' | 'quicksettings' | null) => void;
 
   // Preview & UI Actions
@@ -66,6 +95,11 @@ export interface ThemeState extends ThemeConfigSnapshot {
   setIsSidebarCollapsed: (v: boolean) => void;
   toggleSidebar: () => void;
   setShowDownloadModal: (v: boolean) => void;
+
+  // Saved Themes Actions
+  saveCurrentTheme: (name?: string) => void;
+  loadSavedTheme: (id: string) => void;
+  deleteSavedTheme: (id: string) => void;
 
   // History Actions
   undo: () => void;
@@ -84,6 +118,7 @@ export const takeSnapshot = (state: ThemeState): ThemeConfigSnapshot => ({
   secondaryAccent: state.secondaryAccent,
   isLightMode: state.isLightMode,
   taskbarMode: state.taskbarMode,
+  materialStyle: state.materialStyle,
   cornerRadius: state.cornerRadius,
   borderThickness: state.borderThickness,
   wallpaperUrl: state.wallpaperUrl,
@@ -100,7 +135,34 @@ export const takeSnapshot = (state: ThemeState): ThemeConfigSnapshot => ({
   taskbarOpacity: state.taskbarOpacity,
   startMenuOpacity: state.startMenuOpacity,
   notificationOpacity: state.notificationOpacity,
+  noiseOpacity: state.noiseOpacity,
+  tintSaturation: state.tintSaturation,
+  dockMode: state.dockMode,
+  dockMargin: state.dockMargin,
+  runningIndicatorStyle: state.runningIndicatorStyle,
+  colorHarmony: state.colorHarmony,
 });
+
+const STORAGE_KEY = 'windhawk_saved_themes';
+
+function getInitialSavedThemes(): SavedTheme[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function persistSavedThemes(themes: SavedTheme[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(themes));
+  } catch {
+    // ignore
+  }
+}
 
 const DEFAULT_THEME_STATE = {
   themeName: 'Custom Theme',
@@ -108,6 +170,7 @@ const DEFAULT_THEME_STATE = {
   secondaryAccent: '#005A9E',
   isLightMode: false,
   taskbarMode: 'blur' as const,
+  materialStyle: 'fluent-acrylic' as MaterialStyle,
   cornerRadius: 8,
   borderThickness: 2,
   wallpaperUrl: null,
@@ -124,11 +187,18 @@ const DEFAULT_THEME_STATE = {
   taskbarOpacity: 97,
   startMenuOpacity: 97,
   notificationOpacity: 97,
+  noiseOpacity: 0.04,
+  tintSaturation: 0.85,
+  dockMode: false,
+  dockMargin: 12,
+  runningIndicatorStyle: 'bar' as RunningIndicatorStyle,
+  colorHarmony: 'custom' as ColorHarmonyType,
   activePane: 'start' as const,
   showDesktopIcons: true,
   showWindowPreview: false,
   isSidebarCollapsed: false,
   showDownloadModal: false,
+  savedThemes: [] as SavedTheme[],
   past: [] as ThemeConfigSnapshot[],
   future: [] as ThemeConfigSnapshot[],
 };
@@ -153,7 +223,16 @@ export const useThemeStore = create<ThemeState>((set, get) => {
     setAccentColor: (c: string) => withHistory(() => ({ accentColor: c })),
     setSecondaryAccent: (c: string) => withHistory(() => ({ secondaryAccent: c })),
     setIsLightMode: (v: boolean) => withHistory(() => ({ isLightMode: v })),
-    setTaskbarMode: (m: 'blur' | 'gradient') => withHistory(() => ({ taskbarMode: m })),
+    setTaskbarMode: (m: 'blur' | 'gradient') =>
+      withHistory(() => ({
+        taskbarMode: m,
+        materialStyle: m === 'gradient' ? 'linear-gradient' : 'fluent-acrylic',
+      })),
+    setMaterialStyle: (m: MaterialStyle) =>
+      withHistory(() => ({
+        materialStyle: m,
+        taskbarMode: m === 'linear-gradient' ? 'gradient' : 'blur',
+      })),
     setCornerRadius: (r: number) => withHistory(() => ({ cornerRadius: r })),
     setBorderThickness: (t: number) => withHistory(() => ({ borderThickness: t })),
     setWallpaper: (url: string | null, data: Uint8Array | null = null) =>
@@ -171,6 +250,39 @@ export const useThemeStore = create<ThemeState>((set, get) => {
     setTaskbarOpacity: (o: number) => withHistory(() => ({ taskbarOpacity: o })),
     setStartMenuOpacity: (o: number) => withHistory(() => ({ startMenuOpacity: o })),
     setNotificationOpacity: (o: number) => withHistory(() => ({ notificationOpacity: o })),
+    setNoiseOpacity: (n: number) => withHistory(() => ({ noiseOpacity: n })),
+    setTintSaturation: (s: number) => withHistory(() => ({ tintSaturation: s })),
+    setDockMode: (d: boolean) => withHistory(() => ({ dockMode: d })),
+    setDockMargin: (m: number) => withHistory(() => ({ dockMargin: m })),
+    setRunningIndicatorStyle: (i: RunningIndicatorStyle) => withHistory(() => ({ runningIndicatorStyle: i })),
+    setColorHarmony: (h: ColorHarmonyType) => withHistory(() => ({ colorHarmony: h })),
+
+    // Saved Themes Library
+    saveCurrentTheme: (name?: string) => {
+      const snap = takeSnapshot(get());
+      const themeId = `theme_${Date.now()}`;
+      const themeName = name || snap.themeName || 'My Custom Theme';
+      const newSaved: SavedTheme = {
+        id: themeId,
+        name: themeName,
+        date: new Date().toLocaleDateString(),
+        config: { ...snap, themeName },
+      };
+      const updated = [newSaved, ...get().savedThemes.filter((t) => t.name !== themeName)].slice(0, 20);
+      persistSavedThemes(updated);
+      set({ savedThemes: updated });
+    },
+    loadSavedTheme: (id: string) => {
+      const theme = get().savedThemes.find((t) => t.id === id);
+      if (theme) {
+        get().applyThemeConfig(theme.config);
+      }
+    },
+    deleteSavedTheme: (id: string) => {
+      const updated = get().savedThemes.filter((t) => t.id !== id);
+      persistSavedThemes(updated);
+      set({ savedThemes: updated });
+    },
 
     // Flyout & preview navigation (does not pollute history)
     setActivePane: (pane: 'start' | 'notifications' | 'quicksettings' | null) => set({ activePane: pane }),

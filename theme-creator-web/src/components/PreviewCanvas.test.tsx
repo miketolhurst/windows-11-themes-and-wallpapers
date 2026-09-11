@@ -154,4 +154,88 @@ test('renders desktop icons and mock window preview when enabled', () => {
   expect(container.textContent).toContain('Search Home');
 });
 
+test('renders floating dock mode with island margin, pill radius, and border', () => {
+  useThemeStore.setState({
+    dockMode: true,
+    dockMargin: 20,
+    borderThickness: 2,
+    accentColor: '#3b82f6',
+  });
+
+  const { container } = render(<PreviewCanvas />);
+  const taskbar = container.querySelector('.h-12.w-full') as HTMLElement;
+
+  expect(taskbar).toBeTruthy();
+  expect(taskbar.style.margin).toBe('0px 20px 8px');
+  expect(taskbar.style.width).toBe('calc(100% - 40px)');
+  expect(taskbar.style.borderTop).toContain('2px solid rgb(59, 130, 246)');
+});
+
+test('renders different running indicator styles correctly', () => {
+  // Test dot indicator
+  useThemeStore.setState({
+    runningIndicatorStyle: 'dot',
+    accentColor: '#ff0055',
+  });
+  const { container: dotContainer } = render(<PreviewCanvas />);
+  const dots = dotContainer.querySelectorAll('[data-testid="indicator-dot"]');
+  expect(dots.length).toBe(3);
+
+  cleanup();
+
+  // Test glow indicator
+  useThemeStore.setState({
+    runningIndicatorStyle: 'glow',
+    accentColor: '#00ffcc',
+  });
+  const { container: glowContainer } = render(<PreviewCanvas />);
+  const glows = glowContainer.querySelectorAll('[data-testid="indicator-glow"]');
+  expect(glows.length).toBe(3);
+
+  cleanup();
+
+  // Test hidden indicator
+  useThemeStore.setState({
+    runningIndicatorStyle: 'hidden',
+  });
+  const { container: hiddenContainer } = render(<PreviewCanvas />);
+  expect(hiddenContainer.querySelector('[data-testid^="indicator-"]')).toBeNull();
+});
+
+test('renders pure-black-neon material with deep black surface and neon glow', () => {
+  useThemeStore.setState({
+    materialStyle: 'pure-black-neon',
+    accentColor: '#00ff88',
+    activePane: 'start',
+    isLightMode: false,
+  });
+
+  const { container } = render(<PreviewCanvas />);
+  const startMenu = container.querySelector('.w-\\[580px\\]') as HTMLElement;
+  expect(startMenu).toBeTruthy();
+  expect(startMenu.style.background).toBe('rgba(0, 0, 0, 0.98)');
+  expect(startMenu.style.boxShadow).toContain('#00ff88');
+});
+
+test('allows user to interact with Quick Settings Volume and Brightness sliders', () => {
+  useThemeStore.setState({
+    activePane: 'quicksettings',
+  });
+
+  const { getByLabelText } = render(<PreviewCanvas />);
+  const brightnessInput = getByLabelText(/Display Brightness/i) as HTMLInputElement;
+  const volumeInput = getByLabelText(/System Volume/i) as HTMLInputElement;
+
+  expect(brightnessInput.value).toBe('100');
+  expect(volumeInput.value).toBe('75');
+
+  // Change sliders
+  brightnessInput.value = '50';
+  brightnessInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+  volumeInput.value = '0';
+  volumeInput.dispatchEvent(new Event('change', { bubbles: true }));
+});
+
+
 

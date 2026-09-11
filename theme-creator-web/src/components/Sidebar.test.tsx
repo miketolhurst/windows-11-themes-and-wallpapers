@@ -5,6 +5,11 @@ import { useThemeStore } from '../store/useThemeStore';
 
 afterEach(() => {
   cleanup();
+  useThemeStore.setState({
+    isSidebarCollapsed: false,
+    dockMode: false,
+    materialStyle: 'fluent-acrylic',
+  });
 });
 
 test('renders sliders and updates store in blur mode', () => {
@@ -48,5 +53,43 @@ test('toggles sidebar collapse and handles undo button', () => {
   const collapseBtn = screen.getByTitle(/Collapse sidebar/i);
   fireEvent.click(collapseBtn);
   expect(useThemeStore.getState().isSidebarCollapsed).toBe(true);
+});
+
+test('toggles floating dock mode and adjusts dock margin', () => {
+  useThemeStore.setState({ dockMode: false, dockMargin: 12 });
+  render(<Sidebar />);
+
+  const dockCheckbox = screen.getByLabelText(/Floating Dock Mode/i) as HTMLInputElement;
+  expect(dockCheckbox.checked).toBe(false);
+
+  fireEvent.click(dockCheckbox);
+  expect(useThemeStore.getState().dockMode).toBe(true);
+
+  // Now dock margin slider should be visible
+  const marginSlider = screen.getByLabelText(/Dock Margin/i) as HTMLInputElement;
+  fireEvent.change(marginSlider, { target: { value: '24' } });
+  expect(useThemeStore.getState().dockMargin).toBe(24);
+});
+
+test('updates running indicator style when indicator buttons are clicked', () => {
+  useThemeStore.setState({ runningIndicatorStyle: 'standard' });
+  render(<Sidebar />);
+
+  const dotBtn = screen.getByLabelText(/Indicator Dot/i);
+  fireEvent.click(dotBtn);
+  expect(useThemeStore.getState().runningIndicatorStyle).toBe('dot');
+
+  const glowBtn = screen.getByLabelText(/Indicator Glow/i);
+  fireEvent.click(glowBtn);
+  expect(useThemeStore.getState().runningIndicatorStyle).toBe('glow');
+});
+
+test('updates material style when material buttons are clicked', () => {
+  useThemeStore.setState({ materialStyle: 'fluent-acrylic' });
+  render(<Sidebar />);
+
+  const neonBtn = screen.getByText(/OLED Neon/i);
+  fireEvent.click(neonBtn);
+  expect(useThemeStore.getState().materialStyle).toBe('pure-black-neon');
 });
 

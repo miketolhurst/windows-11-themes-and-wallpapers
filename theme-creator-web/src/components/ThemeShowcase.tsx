@@ -9,27 +9,53 @@ interface ThemeShowcaseProps {
 }
 
 export function ThemeShowcase({ onSelectTheme }: ThemeShowcaseProps) {
+  const [selectedCategory, setSelectedCategory] = React.useState<string>("All");
   const [heroTheme, ...otherThemes] = FEATURED_THEMES;
   const basePath = "/theme-creator";
+
+  const categories = ["All", "Australiana", "Cyberpunk", "Nature & Ethereal", "Minimalist", "Retro & Aero"] as const;
+
+  const displayedThemes = selectedCategory === "All"
+    ? otherThemes
+    : FEATURED_THEMES.filter((t) => t.category === selectedCategory);
+
+  const showHero = selectedCategory === "All" || heroTheme.category === selectedCategory;
 
   return (
     <section id="showcase" className="py-24 px-4 sm:px-6 lg:px-8 bg-neutral-950 relative">
       <div className="max-w-7xl mx-auto">
         {/* Section Heading */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
+        <div className="text-center max-w-3xl mx-auto mb-12">
           <span className="text-blue-400 text-xs sm:text-sm font-semibold tracking-wider uppercase">
             Curated Aesthetics
           </span>
           <h2 className="text-3xl sm:text-5xl font-bold text-white tracking-tight mt-2 mb-4">
             Featured Themes Gallery
           </h2>
-          <p className="text-neutral-400 text-sm sm:text-base leading-relaxed">
+          <p className="text-neutral-400 text-sm sm:text-base leading-relaxed mb-6">
             Click any theme to inspect high-resolution desktop mockups, download the complete installer package, or open it directly in the Theme Studio to customize every detail.
           </p>
+
+          {/* Category Filter Pills */}
+          <div className="flex items-center justify-center gap-2 flex-wrap">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                  selectedCategory === cat
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/25 scale-105"
+                    : "bg-neutral-900 text-neutral-400 hover:text-white hover:bg-neutral-800 border border-white/10"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* PRIMARY HERO THEME: Google Assistant Wave */}
-        {heroTheme && (
+        {showHero && heroTheme && (
           <div className="mb-12 bg-gradient-to-br from-neutral-900 via-neutral-950 to-neutral-900 border-2 border-blue-500/40 hover:border-blue-400 rounded-3xl p-6 sm:p-10 shadow-2xl transition-all relative overflow-hidden group">
             <div className="absolute -right-20 -top-20 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-red-600/10 rounded-full blur-3xl pointer-events-none" />
@@ -126,7 +152,7 @@ export function ThemeShowcase({ onSelectTheme }: ThemeShowcaseProps) {
 
         {/* REMAINING THEMES GRID */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {otherThemes.map((theme) => (
+          {displayedThemes.map((theme) => (
             <div
               key={theme.id}
               className="bg-neutral-900/60 hover:bg-neutral-900 border border-white/10 hover:border-white/20 rounded-2xl p-5 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 shadow-lg group"
@@ -143,10 +169,18 @@ export function ThemeShowcase({ onSelectTheme }: ThemeShowcaseProps) {
                     alt={theme.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                  <div className="absolute top-2.5 left-2.5">
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-black/60 text-white backdrop-blur border border-white/10">
+                  <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-black/70 text-white backdrop-blur border border-white/10">
+                      {theme.category}
+                    </span>
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-600/80 text-white backdrop-blur">
                       {theme.tag}
                     </span>
+                    {theme.config.dockMode && (
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-600/80 text-white backdrop-blur">
+                        Dock
+                      </span>
+                    )}
                   </div>
                 </div>
 

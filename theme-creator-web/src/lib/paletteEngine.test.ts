@@ -6,6 +6,9 @@ import {
   computeAccentPalette,
   buildLinearGradientBrush,
   extractPaletteFromPixels,
+  computeColorHarmonies,
+  calculateContrastRatio,
+  getContrastGrade,
 } from './paletteEngine';
 
 describe('paletteEngine', () => {
@@ -90,11 +93,49 @@ describe('paletteEngine', () => {
     expect(secondary.toLowerCase()).toBe('#ff0080');
   });
 
-  it('returns valid fallback colors for monochrome image data', () => {
-    const pixels = [0, 0, 0, 255, 255, 255, 255, 255, 50, 50, 50, 255];
-    const { primary, secondary } = extractPaletteFromPixels(pixels);
-    expect(primary).toMatch(/^#[0-9a-fA-F]{6}$/);
-    expect(secondary).toMatch(/^#[0-9a-fA-F]{6}$/);
+  it('computes color harmonies accurately (analogous, complementary, triadic, monochromatic)', () => {
+    const base = '#0078D4'; // Blue
+    const comp = computeColorHarmonies(base, 'complementary');
+    expect(comp.primary).toBe(base);
+    expect(comp.secondary).toMatch(/^#[0-9a-fA-F]{6}$/);
+
+    const analogous = computeColorHarmonies(base, 'analogous');
+    expect(analogous.secondary).toBeDefined();
+    expect(analogous.tertiary).toBeDefined();
+
+    const triadic = computeColorHarmonies(base, 'triadic');
+    expect(triadic.secondary).toBeDefined();
+    expect(triadic.tertiary).toBeDefined();
+
+    const mono = computeColorHarmonies(base, 'monochromatic');
+    expect(mono.secondary).toBeDefined();
+  });
+
+  it('calculates WCAG contrast ratios and grades properly', () => {
+    const white: [number, number, number] = [255, 255, 255];
+    const black: [number, number, number] = [0, 0, 0];
+    const ratio = calculateContrastRatio(white, black);
+    expect(ratio).toBeCloseTo(21, 1);
+
+    const grade = getContrastGrade(ratio);
+    expect(grade.grade).toBe('AAA');
+
+    const lowRatio = calculateContrastRatio([255, 255, 255], [240, 240, 240]);
+    expect(getContrastGrade(lowRatio).grade).toBe('FAIL');
+  });
+
+  it('extracts multi-swatch palette including surfaces and vibrant accents', () => {
+    const pixels: number[] = [];
+    for (let i = 0; i < 60; i++) pixels.push(0, 240, 255, 255); // Cyan
+    for (let i = 0; i < 40; i++) pixels.push(255, 0, 128, 255); // Magenta
+    for (let i = 0; i < 40; i++) pixels.push(20, 20, 30, 255);  // Dark base
+    for (let i = 0; i < 40; i++) pixels.push(240, 240, 250, 255); // Light surface
+
+    const palette = extractPaletteFromPixels(pixels);
+    expect(palette.swatches).toBeDefined();
+    expect(palette.swatches!.length).toBeGreaterThanOrEqual(2);
+    expect(palette.darkSurface).toMatch(/^#[0-9a-fA-F]{6}$/);
+    expect(palette.lightSurface).toMatch(/^#[0-9a-fA-F]{6}$/);
   });
 });
 

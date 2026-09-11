@@ -1,4 +1,5 @@
-import { ThemeState } from '../store/useThemeStore';
+import { ThemeState, MaterialStyle, RunningIndicatorStyle } from '../store/useThemeStore';
+import { ColorHarmonyType } from './paletteEngine';
 
 export interface SharedThemePayload {
   name: string;
@@ -18,6 +19,13 @@ export interface SharedThemePayload {
   tbOp: number;
   smOp: number;
   ncOp: number;
+  mat?: MaterialStyle;
+  noise?: number;
+  sat?: number;
+  dock?: boolean;
+  dockM?: number;
+  ind?: RunningIndicatorStyle;
+  harm?: ColorHarmonyType;
 }
 
 export function encodeThemeToUrl(state: Partial<ThemeState> & { accentColor: string }): string {
@@ -39,6 +47,13 @@ export function encodeThemeToUrl(state: Partial<ThemeState> & { accentColor: str
     tbOp: typeof state.taskbarOpacity === 'number' ? state.taskbarOpacity : 97,
     smOp: typeof state.startMenuOpacity === 'number' ? state.startMenuOpacity : 97,
     ncOp: typeof state.notificationOpacity === 'number' ? state.notificationOpacity : 97,
+    mat: state.materialStyle || (state.taskbarMode === 'gradient' ? 'linear-gradient' : 'fluent-acrylic'),
+    noise: typeof state.noiseOpacity === 'number' ? state.noiseOpacity : 0.04,
+    sat: typeof state.tintSaturation === 'number' ? state.tintSaturation : 0.85,
+    dock: Boolean(state.dockMode),
+    dockM: typeof state.dockMargin === 'number' ? state.dockMargin : 12,
+    ind: state.runningIndicatorStyle || 'bar',
+    harm: state.colorHarmony || 'custom',
   };
 
   const jsonStr = JSON.stringify(payload);
@@ -72,12 +87,15 @@ export function decodeThemeFromUrl(searchStringOrUrl: string): Partial<ThemeStat
     const payload = JSON.parse(jsonStr) as Partial<SharedThemePayload>;
     if (!payload.accent) return null;
 
+    const materialStyle: MaterialStyle = payload.mat || (payload.mode === 'gradient' ? 'linear-gradient' : 'fluent-acrylic');
+
     return {
       themeName: payload.name || 'Shared Theme',
       accentColor: payload.accent,
       secondaryAccent: payload.sec || '#005A9E',
       isLightMode: Boolean(payload.light),
-      taskbarMode: payload.mode === 'gradient' ? 'gradient' : 'blur',
+      taskbarMode: materialStyle === 'linear-gradient' ? 'gradient' : 'blur',
+      materialStyle,
       cornerRadius: typeof payload.rad === 'number' ? payload.rad : 8,
       borderThickness: typeof payload.bord === 'number' ? payload.bord : 2,
       hideRecommended: Boolean(payload.hideRec),
@@ -90,6 +108,12 @@ export function decodeThemeFromUrl(searchStringOrUrl: string): Partial<ThemeStat
       taskbarOpacity: typeof payload.tbOp === 'number' ? payload.tbOp : 97,
       startMenuOpacity: typeof payload.smOp === 'number' ? payload.smOp : 97,
       notificationOpacity: typeof payload.ncOp === 'number' ? payload.ncOp : 97,
+      noiseOpacity: typeof payload.noise === 'number' ? payload.noise : 0.04,
+      tintSaturation: typeof payload.sat === 'number' ? payload.sat : 0.85,
+      dockMode: Boolean(payload.dock),
+      dockMargin: typeof payload.dockM === 'number' ? payload.dockM : 12,
+      runningIndicatorStyle: payload.ind || 'bar',
+      colorHarmony: payload.harm || 'custom',
     };
   } catch {
     return null;

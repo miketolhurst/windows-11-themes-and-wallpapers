@@ -68,11 +68,19 @@ export function ThemeLightbox({ theme, onClose }: ThemeLightboxProps) {
         taskbarOpacity: theme.config.taskbarOpacity,
         startMenuOpacity: 97,
         notificationOpacity: 97,
+        materialStyle: theme.config.materialStyle ?? "fluent-acrylic",
+        noiseOpacity: 0.05,
+        tintSaturation: 0.85,
+        dockMode: theme.config.dockMode ?? false,
+        dockMargin: theme.config.dockMargin ?? 12,
+        runningIndicatorStyle: theme.config.runningIndicatorStyle ?? "bar",
+        colorHarmony: "custom",
         activePane: null,
         showDesktopIcons: false,
         showWindowPreview: false,
         isSidebarCollapsed: false,
         showDownloadModal: false,
+        savedThemes: [],
         past: [],
         future: [],
         setThemeName: () => {},
@@ -80,6 +88,13 @@ export function ThemeLightbox({ theme, onClose }: ThemeLightboxProps) {
         setSecondaryAccent: () => {},
         setIsLightMode: () => {},
         setTaskbarMode: () => {},
+        setMaterialStyle: () => {},
+        setNoiseOpacity: () => {},
+        setTintSaturation: () => {},
+        setDockMode: () => {},
+        setDockMargin: () => {},
+        setRunningIndicatorStyle: () => {},
+        setColorHarmony: () => {},
         setCornerRadius: () => {},
         setBorderThickness: () => {},
         setWallpaper: () => {},
@@ -100,6 +115,9 @@ export function ThemeLightbox({ theme, onClose }: ThemeLightboxProps) {
         setIsSidebarCollapsed: () => {},
         toggleSidebar: () => {},
         setShowDownloadModal: () => {},
+        saveCurrentTheme: () => {},
+        loadSavedTheme: () => {},
+        deleteSavedTheme: () => {},
         undo: () => {},
         redo: () => {},
         canUndo: () => false,
@@ -193,7 +211,7 @@ export function ThemeLightbox({ theme, onClose }: ThemeLightboxProps) {
         </div>
 
         {/* Color Details & Specs */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
           <div className="bg-neutral-950/80 border border-white/10 rounded-xl p-3 text-center">
             <span className="text-[11px] font-semibold text-neutral-400 block mb-1">Primary Accent</span>
             <div className="flex items-center justify-center gap-2">
@@ -217,14 +235,26 @@ export function ThemeLightbox({ theme, onClose }: ThemeLightboxProps) {
           </div>
 
           <div className="bg-neutral-950/80 border border-white/10 rounded-xl p-3 text-center">
-            <span className="text-[11px] font-semibold text-neutral-400 block mb-1">Taskbar Blur</span>
-            <span className="text-xs font-mono text-white font-bold">{theme.config.taskbarBlur}px (WinUI 3)</span>
+            <span className="text-[11px] font-semibold text-neutral-400 block mb-1">Material Style</span>
+            <span className="text-xs font-semibold text-white capitalize">
+              {theme.config.materialStyle?.replace(/-/g, ' ') ?? "Fluent Acrylic"}
+            </span>
           </div>
 
           <div className="bg-neutral-950/80 border border-white/10 rounded-xl p-3 text-center">
-            <span className="text-[11px] font-semibold text-neutral-400 block mb-1">Corner Radius</span>
-            <span className="text-xs font-mono text-white font-bold">{theme.config.taskbarRadius}px</span>
+            <span className="text-[11px] font-semibold text-neutral-400 block mb-1">Layout Mode</span>
+            <span className="text-xs font-semibold text-white">
+              {theme.config.dockMode ? "Floating Dock" : "Standard"}
+            </span>
           </div>
+        </div>
+
+        {/* Package info banner */}
+        <div className="mb-6 p-3 bg-neutral-950/60 border border-white/10 rounded-xl text-xs text-neutral-400 flex items-center gap-2.5">
+          <span className="text-base">📦</span>
+          <span className="leading-relaxed">
+            Includes elevated installer (<code className="text-blue-400 font-mono">Install_Theme.ps1</code>), <code className="text-neutral-300 font-mono">Apply_Theme.bat</code>, Windhawk Styler backups, and instant rollback (<code className="text-emerald-400 font-mono">Restore_Defaults.ps1</code>).
+          </span>
         </div>
 
         {/* Modal CTAs */}

@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { generateRegFileString, generatePs1Script, generateZipPayload } from './exportEngine';
+import JSZip from 'jszip';
+import {
+  generateRegFileString,
+  generatePs1Script,
+  generateRestorePs1Script,
+  generateRestoreBatString,
+  buildWindhawkJsonBackups,
+  generateZipPayload,
+} from './exportEngine';
 import { ThemeState } from '../store/useThemeStore';
 
 describe('exportEngine', () => {
@@ -9,6 +17,10 @@ describe('exportEngine', () => {
     secondaryAccent: '#005A9E',
     isLightMode: false,
     taskbarMode: 'gradient',
+    materialStyle: 'linear-gradient',
+    dockMode: false,
+    dockMargin: 12,
+    runningIndicatorStyle: 'standard',
     cornerRadius: 12,
     borderThickness: 3,
     wallpaperUrl: 'data:image/png;base64,123',
@@ -46,19 +58,104 @@ describe('exportEngine', () => {
     expect(reg).toContain('Color=\\"#cc');
   });
 
-  it('generates PowerShell script with Explorer restart and broadcast messages', () => {
+  it('supports floating dock mode and margin in registry export', () => {
+    const dockState = {
+      ...mockState,
+      dockMode: true,
+      dockMargin: 18,
+    } as unknown as ThemeState;
+    const reg = generateRegFileString(dockState);
+    expect(reg).toContain('Taskbar.TaskbarBackground#BackgroundControl');
+    expect(reg).toContain('Margin=18,0,18,8');
+  });
+
+  it('supports running indicator styles: dot, hidden, and glow', () => {
+    const dotState = { ...mockState, runningIndicatorStyle: 'dot' } as unknown as ThemeState;
+    const dotReg = generateRegFileString(dotState);
+    expect(dotReg).toContain('Width=5');
+    expect(dotReg).toContain('CornerRadius=5');
+
+    const hiddenState = { ...mockState, runningIndicatorStyle: 'hidden' } as unknown as ThemeState;
+    const hiddenReg = generateRegFileString(hiddenState);
+    expect(hiddenReg).toContain('Visibility=Collapsed');
+
+    const glowState = { ...mockState, runningIndicatorStyle: 'glow' } as unknown as ThemeState;
+    const glowReg = generateRegFileString(glowState);
+    expect(glowReg).toContain('LinearGradientBrush');
+  });
+
+  it('supports material styles: fluent-acrylic and pure-black-neon', () => {
+    const acrylicState = {
+      ...mockState,
+      materialStyle: 'fluent-acrylic',
+      noiseOpacity: 0.05,
+      tintSaturation: 0.9,
+    } as unknown as ThemeState;
+    const acrylicReg = generateRegFileString(acrylicState);
+    expect(acrylicReg).toContain('WindhawkBlur');
+    expect(acrylicReg).toContain('NoiseOpacity=\\"0.05\\"');
+    expect(acrylicReg).toContain('TintSaturation=\\"0.90\\"');
+
+    const oledState = {
+      ...mockState,
+      materialStyle: 'pure-black-neon',
+    } as unknown as ThemeState;
+    const oledReg = generateRegFileString(oledState);
+    expect(oledReg).toContain('SolidColorBrush Color=\\"#000000\\"');
+  });
+
+  it('generates PowerShell script with single consolidated UAC prompt and Explorer restart', () => {
     const ps1 = generatePs1Script(mockState);
     expect(ps1).toContain('SystemParametersInfo');
     expect(ps1).toContain('SendMessageTimeout');
     expect(ps1).toContain('Stop-Process -Name explorer -Force');
-    expect(ps1).toContain('Start-Process explorer');
+    expect(ps1).toContain('reg import');
     expect(ps1).toContain('SettingsChangeTime');
+    // Ensure only one Start-Process with -Verb RunAs
+    const runAsCount = (ps1.match(/-Verb RunAs/g) || []).length;
+    expect(runAsCount).toBe(1);
   });
 
-  it('generates zip blob containing reg, ps1, bat, and wallpaper files', async () => {
+  it('generates restore scripts for reverting Windows 11 and Windhawk defaults', () => {
+    const restorePs1 = generateRestorePs1Script();
+    expect(restorePs1).toContain('Restoring Windows 11 & Windhawk Defaults');
+    expect(restorePs1).toContain('reg delete \'HKLM\\SOFTWARE\\Windhawk\\Engine\\Mods\\windows-11-taskbar-styler\\Settings\' /f');
+    expect(restorePs1).toContain('Stop-Process -Name explorer -Force');
+
+    const restoreBat = generateRestoreBatString();
+    expect(restoreBat).toContain('Restore_Defaults.ps1');
+  });
+
+  it('builds Windhawk JSON backups for taskbar, start menu, and notification center', () => {
+    const backups = buildWindhawkJsonBackups(mockState);
+    expect(backups.taskbarBackup).toContain('controlStyles:');
+    expect(backups.taskbarBackup).toContain('Taskbar.TaskbarBackground#BackgroundControl');
+
+    expect(backups.startMenuBackup).toContain('controlStyles:');
+    expect(backups.startMenuBackup).toContain('Border#AcrylicBorder');
+    expect(backups.startMenuBackup).toContain('SystemAccentColor=');
+
+    expect(backups.notificationCenterBackup).toContain('controlStyles:');
+    expect(backups.notificationCenterBackup).toContain('Grid#NotificationCenterGrid');
+    expect(backups.notificationCenterBackup).toContain('ToggleSwitchFillOn=');
+  });
+
+  it('generates zip blob containing all theme files, restore scripts, and Windhawk backups', async () => {
     const blob = await generateZipPayload(mockState);
     expect(blob).toBeDefined();
     expect(blob.size).toBeGreaterThan(0);
+
+    // Inspect zip contents
+    const zip = await JSZip.loadAsync(blob);
+    expect(zip.file('theme.reg')).not.toBeNull();
+    expect(zip.file('Apply_Theme.ps1')).not.toBeNull();
+    expect(zip.file('Apply_Theme.bat')).not.toBeNull();
+    expect(zip.file('Restore_Defaults.ps1')).not.toBeNull();
+    expect(zip.file('Restore_Default_Windows11.bat')).not.toBeNull();
+    expect(zip.file('taskbar_backup.json')).not.toBeNull();
+    expect(zip.file('start_menu_backup.json')).not.toBeNull();
+    expect(zip.file('notification_center_backup.json')).not.toBeNull();
+    expect(zip.file('wallpaper.jpg')).not.toBeNull();
   });
 
   it('includes custom start icon in theme.reg, Apply_Theme.ps1, and zip payload', async () => {
@@ -78,7 +175,7 @@ describe('exportEngine', () => {
     expect(ps1).toContain('Windhawk_start_icon.png');
 
     const blob = await generateZipPayload(iconState);
-    expect(blob).toBeDefined();
-    expect(blob.size).toBeGreaterThan(0);
+    const zip = await JSZip.loadAsync(blob);
+    expect(zip.file('start_icon.png')).not.toBeNull();
   });
 });

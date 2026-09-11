@@ -1,10 +1,19 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { useThemeStore } from '../store/useThemeStore';
-import { THEME_PRESETS } from '../lib/presets';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
+import { useThemeStore, MaterialStyle, RunningIndicatorStyle, ColorHarmonyType } from '../store/useThemeStore';
+import { THEME_PRESETS, PRESET_CATEGORIES, PresetCategory } from '../lib/presets';
 import { parseRegFile } from '../lib/regParser';
 import { generateZipPayload } from '../lib/exportEngine';
 import { copyShareLink } from '../lib/urlSharing';
-import { extractPaletteFromImageUrl } from '../lib/paletteEngine';
+import {
+  extractPaletteFromImageUrl,
+  hexToRgb,
+  rgbToHex,
+  blend,
+  computeColorHarmonies,
+  calculateContrastRatio,
+  getContrastGrade,
+  RGB,
+} from '../lib/paletteEngine';
 
 export default function Sidebar() {
   const state = useThemeStore();
@@ -19,6 +28,24 @@ export default function Sidebar() {
     setIsLightMode,
     taskbarMode,
     setTaskbarMode,
+    materialStyle,
+    setMaterialStyle,
+    noiseOpacity,
+    setNoiseOpacity,
+    tintSaturation,
+    setTintSaturation,
+    dockMode,
+    setDockMode,
+    dockMargin,
+    setDockMargin,
+    runningIndicatorStyle,
+    setRunningIndicatorStyle,
+    colorHarmony,
+    setColorHarmony,
+    savedThemes,
+    saveCurrentTheme,
+    loadSavedTheme,
+    deleteSavedTheme,
     cornerRadius,
     setCornerRadius,
     borderThickness,
@@ -72,6 +99,34 @@ export default function Sidebar() {
   const [extractedSuccess, setExtractedSuccess] = useState(false);
   const [copiedShare, setCopiedShare] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<PresetCategory>('All');
+  const [newThemeName, setNewThemeName] = useState('');
+  const [isSavedDrawerOpen, setIsSavedDrawerOpen] = useState(false);
+  const [extractedSwatches, setExtractedSwatches] = useState<string[]>([]);
+
+  // Real-time WCAG Contrast calculation against surface background
+  const contrastInfo = useMemo(() => {
+    const aRgb = hexToRgb(accentColor);
+    const bgRgb: RGB = isLightMode ? [240, 240, 245] : [16, 18, 22];
+    const ratio = calculateContrastRatio(aRgb, bgRgb);
+    return getContrastGrade(ratio);
+  }, [accentColor, isLightMode]);
+
+  // Derived 5-swatch palette display
+  const displayedSwatches = useMemo(() => {
+    if (extractedSwatches.length >= 5) {
+      return extractedSwatches.slice(0, 5);
+    }
+    const aRgb = hexToRgb(accentColor);
+    const sRgb = hexToRgb(secondaryAccent);
+    return [
+      accentColor,
+      secondaryAccent,
+      rgbToHex(blend(aRgb, [255, 255, 255], 0.35)),
+      rgbToHex(blend(aRgb, [0, 0, 0], 0.35)),
+      rgbToHex(blend(sRgb, [255, 255, 255], 0.3)),
+    ];
+  }, [extractedSwatches, accentColor, secondaryAccent]);
 
   // Global Keyboard Shortcuts for Undo/Redo
   useEffect(() => {
@@ -122,6 +177,9 @@ export default function Sidebar() {
         accentColor: palette.primary,
         secondaryAccent: palette.secondary,
       });
+      if (palette.swatches && palette.swatches.length > 0) {
+        setExtractedSwatches(palette.swatches);
+      }
       setExtractedSuccess(true);
       setTimeout(() => setExtractedSuccess(false), 2000);
     } catch {
@@ -277,11 +335,107 @@ export default function Sidebar() {
           </button>
         </div>
 
-        {/* Preset Chips */}
+        {/* My Saved Themes */}
+        <div className="pt-2 border-t border-neutral-800">
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs font-semibold uppercase text-neutral-400">My Saved Themes</label>
+            <button
+              onClick={() => setIsSavedDrawerOpen(!isSavedDrawerOpen)}
+              className="text-xs text-blue-400 hover:text-blue-300 transition-colors cursor-pointer"
+            >
+              {isSavedDrawerOpen ? 'Hide' : `Show (${savedThemes.length})`}
+            </button>
+          </div>
+
+          {isSavedDrawerOpen && (
+            <div className="bg-neutral-900/90 border border-neutral-800 rounded-lg p-2.5 flex flex-col gap-2 mb-2">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Save current theme as..."
+                  value={newThemeName}
+                  onChange={(e) => setNewThemeName(e.target.value)}
+                  className="flex-1 bg-neutral-800 px-2.5 py-1 text-xs text-white rounded border border-neutral-700 focus:outline-none focus:border-blue-500"
+                />
+                <button
+                  onClick={() => {
+                    saveCurrentTheme(newThemeName.trim() || themeName);
+                    setNewThemeName('');
+                  }}
+                  className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-medium cursor-pointer"
+                >
+                  Save
+                </button>
+              </div>
+
+              {savedThemes.length === 0 ? (
+                <p className="text-[11px] text-neutral-500 py-1 text-center">No saved themes yet.</p>
+              ) : (
+                <div className="flex flex-col gap-1.5 max-h-36 overflow-y-auto pr-1">
+                  {savedThemes.map((saved) => (
+                    <div
+                      key={saved.id}
+                      className="flex items-center justify-between p-1.5 rounded bg-neutral-800/80 border border-neutral-700/60 text-xs"
+                    >
+                      <div className="flex items-center gap-2 truncate">
+                        <span
+                          className="w-3 h-3 rounded-full shrink-0"
+                          style={{ backgroundColor: saved.config.accentColor }}
+                        />
+                        <span className="truncate text-neutral-200">{saved.name}</span>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={() => loadSavedTheme(saved.id)}
+                          className="px-2 py-0.5 rounded bg-neutral-700 hover:bg-blue-600 text-neutral-200 hover:text-white text-[10px] cursor-pointer"
+                        >
+                          Load
+                        </button>
+                        <button
+                          onClick={() => deleteSavedTheme(saved.id)}
+                          className="px-1.5 py-0.5 rounded text-neutral-400 hover:text-red-400 hover:bg-neutral-700 text-[10px] cursor-pointer"
+                          title="Delete saved theme"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Curated Presets with Category Tabs */}
         <div>
-          <label className="text-xs font-semibold uppercase text-neutral-400 mb-2 block">Curated Presets</label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs font-semibold uppercase text-neutral-400">Curated Presets</label>
+            <span className="text-[11px] text-neutral-500 font-mono">{THEME_PRESETS.length} Themes</span>
+          </div>
+
+          {/* Category Filter Tabs */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-2 no-scrollbar">
+            {PRESET_CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-2 py-0.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-colors cursor-pointer ${
+                  selectedCategory === cat
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'bg-neutral-800 text-neutral-400 hover:text-neutral-200 hover:bg-neutral-700'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
           <div className="grid grid-cols-2 gap-2">
-            {THEME_PRESETS.map((preset) => (
+            {(selectedCategory === 'All'
+              ? THEME_PRESETS
+              : THEME_PRESETS.filter((p) => p.category === selectedCategory)
+            ).map((preset) => (
               <button
                 key={preset.id}
                 onClick={() => {
@@ -291,11 +445,17 @@ export default function Sidebar() {
                     secondaryAccent: preset.secondaryAccent,
                     isLightMode: preset.isLightMode,
                     taskbarMode: preset.taskbarMode,
+                    materialStyle: preset.materialStyle ?? (preset.taskbarMode === 'gradient' ? 'linear-gradient' : 'fluent-acrylic'),
+                    dockMode: preset.dockMode ?? false,
+                    dockMargin: preset.dockMargin ?? 12,
+                    runningIndicatorStyle: preset.runningIndicatorStyle ?? 'standard',
                     cornerRadius: preset.cornerRadius,
                     borderThickness: preset.borderThickness ?? 2,
                     taskbarBlur: preset.taskbarBlur,
                     startMenuBlur: preset.startMenuBlur,
                     notificationBlur: preset.notificationBlur,
+                    noiseOpacity: preset.noiseOpacity ?? 0.04,
+                    tintSaturation: preset.tintSaturation ?? 0.85,
                     hideRecommended: preset.hideRecommended,
                     compactSearch: preset.compactSearch,
                     dynamicNotificationHeight: preset.dynamicNotificationHeight,
@@ -354,7 +514,14 @@ export default function Sidebar() {
                 <input
                   type="color"
                   value={accentColor}
-                  onChange={(e) => setAccentColor(e.target.value)}
+                  onChange={(e) => {
+                    const c = e.target.value;
+                    setAccentColor(c);
+                    if (colorHarmony && colorHarmony !== 'custom') {
+                      const h = computeColorHarmonies(c, colorHarmony);
+                      setSecondaryAccent(h.secondary);
+                    }
+                  }}
                   className="w-7 h-7 rounded cursor-pointer border-0 bg-transparent"
                 />
                 <span className="text-xs font-mono text-neutral-200 uppercase truncate">{accentColor}</span>
@@ -374,31 +541,150 @@ export default function Sidebar() {
             </div>
           </div>
 
-          {/* Material Style (Renamed from Taskbar Material) */}
+          {/* Color Harmony Selector with WCAG Grade Badge */}
+          <div className="mb-3">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs text-neutral-400">Color Harmony</span>
+              <div
+                className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider text-white"
+                style={{
+                  backgroundColor:
+                    contrastInfo.grade === 'AAA'
+                      ? '#059669'
+                      : contrastInfo.grade === 'AA'
+                      ? '#2563eb'
+                      : '#dc2626',
+                }}
+                title={`Contrast ratio: ${contrastInfo.ratio}:1 against surface (${contrastInfo.grade})`}
+              >
+                WCAG {contrastInfo.grade} ({contrastInfo.ratio}:1)
+              </div>
+            </div>
+            <select
+              value={colorHarmony ?? 'custom'}
+              onChange={(e) => {
+                const h = e.target.value as ColorHarmonyType;
+                setColorHarmony(h);
+                if (h !== 'custom') {
+                  const result = computeColorHarmonies(accentColor, h);
+                  setSecondaryAccent(result.secondary);
+                }
+              }}
+              className="w-full bg-neutral-800 px-2.5 py-1.5 rounded text-xs text-white border border-neutral-700 focus:outline-none focus:border-blue-500 cursor-pointer"
+            >
+              <option value="custom">Custom (Independent)</option>
+              <option value="complementary">Complementary (High Contrast)</option>
+              <option value="analogous">Analogous (Harmonious Neighbor)</option>
+              <option value="triadic">Triadic (Balanced Vibrant Trio)</option>
+              <option value="split-complementary">Split-Complementary (Nuanced Contrast)</option>
+              <option value="monochromatic">Monochromatic (Shades & Tints)</option>
+            </select>
+          </div>
+
+          {/* 5-Swatch Extracted Chips */}
+          <div className="mb-3">
+            <span className="text-xs text-neutral-400 block mb-1">
+              Extracted Swatches <span className="text-[10px] text-neutral-500">(Click: Primary, Shift-Click: Secondary)</span>
+            </span>
+            <div className="flex items-center justify-between gap-1 p-1.5 bg-neutral-800 rounded border border-neutral-700">
+              {displayedSwatches.map((hex, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={(e) => {
+                    if (e.shiftKey) {
+                      setSecondaryAccent(hex);
+                    } else {
+                      setAccentColor(hex);
+                      if (colorHarmony && colorHarmony !== 'custom') {
+                        const h = computeColorHarmonies(hex, colorHarmony);
+                        setSecondaryAccent(h.secondary);
+                      }
+                    }
+                  }}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    setSecondaryAccent(hex);
+                  }}
+                  className="w-7 h-7 rounded-full border border-white/20 shadow-xs hover:scale-110 transition-transform cursor-pointer relative"
+                  style={{ backgroundColor: hex }}
+                  title={`${hex} - Left-click for Primary, Shift-click for Secondary`}
+                >
+                  {(hex.toLowerCase() === accentColor.toLowerCase() || hex.toLowerCase() === secondaryAccent.toLowerCase()) && (
+                    <span className="absolute inset-0 flex items-center justify-center text-[10px] text-white font-bold drop-shadow">
+                      {hex.toLowerCase() === accentColor.toLowerCase() ? 'P' : 'S'}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 4-Tier Material Style Selector */}
           <div className="mb-3">
             <span className="text-xs text-neutral-400 block mb-1">Material Style</span>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => setTaskbarMode('blur')}
-                className={`py-1 px-2 rounded text-xs font-medium border transition-colors cursor-pointer ${
-                  taskbarMode === 'blur'
-                    ? 'bg-blue-600 text-white border-blue-500 shadow-sm'
-                    : 'bg-neutral-800 text-neutral-300 border-neutral-700 hover:bg-neutral-700'
-                }`}
-              >
-                Frosted Glass
-              </button>
-              <button
-                onClick={() => setTaskbarMode('gradient')}
-                className={`py-1 px-2 rounded text-xs font-medium border transition-colors cursor-pointer ${
-                  taskbarMode === 'gradient'
-                    ? 'bg-blue-600 text-white border-blue-500 shadow-sm'
-                    : 'bg-neutral-800 text-neutral-300 border-neutral-700 hover:bg-neutral-700'
-                }`}
-              >
-                Linear Gradient
-              </button>
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              {[
+                { id: 'fluent-acrylic', label: 'Acrylic Glass' },
+                { id: 'pure-black-neon', label: 'OLED Neon' },
+                { id: 'linear-gradient', label: 'Linear Gradient' },
+                { id: 'matte-slate', label: 'Matte Slate' },
+              ].map((mat) => {
+                const isSelected =
+                  (materialStyle ?? (taskbarMode === 'gradient' ? 'linear-gradient' : 'fluent-acrylic')) === mat.id;
+                return (
+                  <button
+                    key={mat.id}
+                    onClick={() => {
+                      setMaterialStyle(mat.id as MaterialStyle);
+                    }}
+                    className={`py-1.5 px-2 rounded text-xs font-medium border transition-colors cursor-pointer ${
+                      isSelected
+                        ? 'bg-blue-600 text-white border-blue-500 shadow-sm'
+                        : 'bg-neutral-800 text-neutral-300 border-neutral-700 hover:bg-neutral-700'
+                    }`}
+                  >
+                    {mat.label}
+                  </button>
+                );
+              })}
             </div>
+
+            {/* Advanced Acrylic Tuning */}
+            {(materialStyle ?? (taskbarMode === 'gradient' ? 'linear-gradient' : 'fluent-acrylic')) === 'fluent-acrylic' && (
+              <div className="bg-neutral-900/80 border border-neutral-800 rounded-lg p-2.5 flex flex-col gap-2 mt-2">
+                <div>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-neutral-400">Noise Texture</span>
+                    <span className="text-blue-400 font-mono">{Math.round((noiseOpacity ?? 0.04) * 100)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="15"
+                    value={Math.round((noiseOpacity ?? 0.04) * 100)}
+                    onChange={(e) => setNoiseOpacity(parseInt(e.target.value, 10) / 100)}
+                    className="w-full accent-blue-500 cursor-pointer"
+                    aria-label="Noise Texture"
+                  />
+                </div>
+                <div>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-neutral-400">Tint Saturation</span>
+                    <span className="text-blue-400 font-mono">{Math.round((tintSaturation ?? 0.85) * 100)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="50"
+                    max="150"
+                    value={Math.round((tintSaturation ?? 0.85) * 100)}
+                    onChange={(e) => setTintSaturation(parseInt(e.target.value, 10) / 100)}
+                    className="w-full accent-blue-500 cursor-pointer"
+                    aria-label="Tint Saturation"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Custom Start Icon */}
@@ -534,6 +820,65 @@ export default function Sidebar() {
               className="w-full accent-blue-500 cursor-pointer"
               aria-label="Border Thickness"
             />
+          </div>
+
+          {/* Floating Dock Mode */}
+          <div className="mb-3">
+            <label className="flex items-center justify-between text-xs text-neutral-300 cursor-pointer hover:text-white mb-1.5">
+              <span className="font-medium">Floating Dock (Island Taskbar)</span>
+              <input
+                type="checkbox"
+                checked={dockMode}
+                onChange={(e) => setDockMode(e.target.checked)}
+                className="rounded bg-neutral-800 border-neutral-700 text-blue-600 focus:ring-0 w-4 h-4 cursor-pointer"
+                aria-label="Floating Dock Mode"
+              />
+            </label>
+            {dockMode && (
+              <div className="mt-2 pl-2 border-l-2 border-blue-500/40">
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-neutral-300">Dock Margin</span>
+                  <span className="text-blue-400 font-mono">{dockMargin}px</span>
+                </div>
+                <input
+                  type="range"
+                  min="4"
+                  max="48"
+                  step="2"
+                  value={dockMargin}
+                  onChange={(e) => setDockMargin(parseInt(e.target.value, 10))}
+                  className="w-full accent-blue-500 cursor-pointer"
+                  aria-label="Dock Margin"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Running App Indicator Style */}
+          <div className="mb-3">
+            <label className="text-xs text-neutral-300 block mb-1.5">Running App Indicator</label>
+            <div className="grid grid-cols-4 gap-1">
+              {[
+                { id: 'standard', label: 'Line' },
+                { id: 'dot', label: 'Dot' },
+                { id: 'glow', label: 'Glow' },
+                { id: 'hidden', label: 'Off' },
+              ].map((ind) => (
+                <button
+                  key={ind.id}
+                  type="button"
+                  onClick={() => setRunningIndicatorStyle(ind.id as any)}
+                  className={`py-1 px-1.5 rounded text-[11px] font-medium border transition-colors cursor-pointer text-center ${
+                    runningIndicatorStyle === ind.id
+                      ? 'bg-blue-600 text-white border-blue-500 shadow-xs'
+                      : 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:text-neutral-200'
+                  }`}
+                  aria-label={`Indicator ${ind.label}`}
+                >
+                  {ind.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Tweak Checkboxes */}

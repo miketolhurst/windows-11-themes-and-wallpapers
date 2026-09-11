@@ -109,7 +109,7 @@ export function buildLinearGradientBrush(
   return `<LinearGradientBrush StartPoint="${startPoint}" EndPoint="${endPoint}"><GradientStop Color="#${alphaHex}${toHex(bgRgb)}" Offset="0.0" /><GradientStop Color="#${alphaHex}${toHex(accentRgb)}" Offset="0.5" /><GradientStop Color="#${alphaHex}${toHex(secRgb)}" Offset="1.0"/></LinearGradientBrush>`;
 }
 
-function rgbToHsl(r: number, g: number, b: number): [number, number, number] {
+export function rgbToHsl(r: number, g: number, b: number): [number, number, number] {
   r /= 255;
   g /= 255;
   b /= 255;
@@ -138,9 +138,116 @@ function rgbToHsl(r: number, g: number, b: number): [number, number, number] {
   return [h * 360, s, l];
 }
 
+export function hslToRgb(h: number, s: number, l: number): RGB {
+  h = ((h % 360) + 360) % 360;
+  s = Math.max(0, Math.min(1, s));
+  l = Math.max(0, Math.min(1, l));
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = l - c / 2;
+  let r = 0, g = 0, b = 0;
+  if (h < 60) { r = c; g = x; b = 0; }
+  else if (h < 120) { r = x; g = c; b = 0; }
+  else if (h < 180) { r = 0; g = c; b = x; }
+  else if (h < 240) { r = 0; g = x; b = c; }
+  else if (h < 300) { r = x; g = 0; b = c; }
+  else { r = c; g = 0; b = x; }
+  return [
+    Math.max(0, Math.min(255, Math.round((r + m) * 255))),
+    Math.max(0, Math.min(255, Math.round((g + m) * 255))),
+    Math.max(0, Math.min(255, Math.round((b + m) * 255))),
+  ];
+}
+
+export type ColorHarmonyType = 'custom' | 'analogous' | 'complementary' | 'triadic' | 'monochromatic';
+
+export interface ColorHarmonyResult {
+  primary: string;
+  secondary: string;
+  tertiary?: string;
+  accent?: string;
+}
+
+export function computeColorHarmonies(accentHex: string, harmony: ColorHarmonyType): ColorHarmonyResult {
+  const baseRgb = hexToRgb(accentHex);
+  const [h, s, l] = rgbToHsl(baseRgb[0], baseRgb[1], baseRgb[2]);
+
+  switch (harmony) {
+    case 'analogous': {
+      const secH = (h + 30) % 360;
+      const tertH = (h - 30 + 360) % 360;
+      return {
+        primary: accentHex,
+        secondary: rgbToHex(hslToRgb(secH, s, l)),
+        tertiary: rgbToHex(hslToRgb(tertH, s, l)),
+      };
+    }
+    case 'complementary': {
+      const secH = (h + 180) % 360;
+      return {
+        primary: accentHex,
+        secondary: rgbToHex(hslToRgb(secH, s, l)),
+        tertiary: rgbToHex(hslToRgb((secH + 25) % 360, Math.max(0.2, s * 0.8), l)),
+      };
+    }
+    case 'triadic': {
+      const secH = (h + 120) % 360;
+      const tertH = (h + 240) % 360;
+      return {
+        primary: accentHex,
+        secondary: rgbToHex(hslToRgb(secH, s, l)),
+        tertiary: rgbToHex(hslToRgb(tertH, s, l)),
+      };
+    }
+    case 'monochromatic': {
+      const secL = l > 0.5 ? Math.max(0.2, l - 0.3) : Math.min(0.85, l + 0.3);
+      const tertL = l > 0.5 ? Math.max(0.15, l - 0.45) : Math.min(0.9, l + 0.45);
+      return {
+        primary: accentHex,
+        secondary: rgbToHex(hslToRgb(h, Math.max(0.2, s * 0.8), secL)),
+        tertiary: rgbToHex(hslToRgb(h, Math.max(0.15, s * 0.6), tertL)),
+      };
+    }
+    case 'custom':
+    default:
+      return {
+        primary: accentHex,
+        secondary: accentHex,
+      };
+  }
+}
+
+export function calculateLuminance(rgb: RGB): number {
+  const [r, g, b] = rgb.map((c) => {
+    const s = c / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+export function calculateContrastRatio(rgb1: RGB, rgb2: RGB): number {
+  const l1 = calculateLuminance(rgb1);
+  const l2 = calculateLuminance(rgb2);
+  const lighter = Math.max(l1, l2);
+  const darker = Math.min(l1, l2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+export function getContrastGrade(ratio: number): { grade: 'AAA' | 'AA' | 'FAIL'; ratio: number } {
+  return {
+    ratio: Math.round(ratio * 10) / 10,
+    grade: ratio >= 7 ? 'AAA' : ratio >= 4.5 ? 'AA' : 'FAIL',
+  };
+}
+
 export interface ExtractedPalette {
   primary: string;
   secondary: string;
+  dominant?: string;
+  vibrant?: string;
+  darkSurface?: string;
+  lightSurface?: string;
+  swatches?: string[];
 }
 
 export function extractPaletteFromPixels(pixels: Uint8ClampedArray | number[]): ExtractedPalette {
@@ -150,7 +257,10 @@ export function extractPaletteFromPixels(pixels: Uint8ClampedArray | number[]): 
     () => ({ count: 0, rSum: 0, gSum: 0, bSum: 0 })
   );
 
+  let darkR = 0, darkG = 0, darkB = 0, darkCount = 0;
+  let lightR = 0, lightG = 0, lightB = 0, lightCount = 0;
   let totalVibrant = 0;
+
   for (let i = 0; i < pixels.length; i += 4) {
     const r = pixels[i];
     const g = pixels[i + 1];
@@ -159,6 +269,12 @@ export function extractPaletteFromPixels(pixels: Uint8ClampedArray | number[]): 
     if (a < 128) continue;
 
     const [h, s, l] = rgbToHsl(r, g, b);
+
+    if (l < 0.25) {
+      darkR += r; darkG += g; darkB += b; darkCount++;
+    } else if (l > 0.8) {
+      lightR += r; lightG += g; lightB += b; lightCount++;
+    }
 
     if (s > 0.25 && l > 0.18 && l < 0.85) {
       const bucketIdx = Math.floor((h % 360) / 30);
@@ -170,8 +286,24 @@ export function extractPaletteFromPixels(pixels: Uint8ClampedArray | number[]): 
     }
   }
 
+  const darkSurface = darkCount > 0
+    ? rgbToHex([Math.round(darkR / darkCount), Math.round(darkG / darkCount), Math.round(darkB / darkCount)])
+    : '#12141a';
+
+  const lightSurface = lightCount > 0
+    ? rgbToHex([Math.round(lightR / lightCount), Math.round(lightG / lightCount), Math.round(lightB / lightCount)])
+    : '#f5f5fa';
+
   if (totalVibrant === 0) {
-    return { primary: '#0078D4', secondary: '#005A9E' };
+    return {
+      primary: '#0078D4',
+      secondary: '#005A9E',
+      dominant: '#0078D4',
+      vibrant: '#0078D4',
+      darkSurface,
+      lightSurface,
+      swatches: ['#0078D4', '#005A9E', '#2B88D8', darkSurface, lightSurface],
+    };
   }
 
   const sorted = buckets
@@ -206,12 +338,42 @@ export function extractPaletteFromPixels(pixels: Uint8ClampedArray | number[]): 
     secondary = rgbToHex(secRgb);
   }
 
-  return { primary, secondary };
+  const swatches: string[] = [primary, secondary];
+  sorted.slice(1).forEach((b) => {
+    const hex = rgbToHex([
+      Math.round(b.rSum / b.count),
+      Math.round(b.gSum / b.count),
+      Math.round(b.bSum / b.count),
+    ]);
+    if (!swatches.includes(hex) && swatches.length < 5) {
+      swatches.push(hex);
+    }
+  });
+  if (swatches.length < 5 && !swatches.includes(darkSurface)) swatches.push(darkSurface);
+  if (swatches.length < 5 && !swatches.includes(lightSurface)) swatches.push(lightSurface);
+
+  return {
+    primary,
+    secondary,
+    dominant: primary,
+    vibrant: primary,
+    darkSurface,
+    lightSurface,
+    swatches,
+  };
 }
 
 export async function extractPaletteFromImageUrl(imageUrl: string): Promise<ExtractedPalette> {
   if (typeof window === 'undefined') {
-    return { primary: '#0078D4', secondary: '#005A9E' };
+    return {
+      primary: '#0078D4',
+      secondary: '#005A9E',
+      dominant: '#0078D4',
+      vibrant: '#0078D4',
+      darkSurface: '#12141a',
+      lightSurface: '#f5f5fa',
+      swatches: ['#0078D4', '#005A9E', '#2B88D8', '#12141a', '#f5f5fa'],
+    };
   }
 
   return new Promise((resolve) => {
@@ -222,7 +384,15 @@ export async function extractPaletteFromImageUrl(imageUrl: string): Promise<Extr
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         if (!ctx) {
-          return resolve({ primary: '#0078D4', secondary: '#005A9E' });
+          return resolve({
+            primary: '#0078D4',
+            secondary: '#005A9E',
+            dominant: '#0078D4',
+            vibrant: '#0078D4',
+            darkSurface: '#12141a',
+            lightSurface: '#f5f5fa',
+            swatches: ['#0078D4', '#005A9E'],
+          });
         }
         canvas.width = 64;
         canvas.height = 64;
@@ -231,13 +401,30 @@ export async function extractPaletteFromImageUrl(imageUrl: string): Promise<Extr
         const palette = extractPaletteFromPixels(imageData.data);
         resolve(palette);
       } catch {
-        resolve({ primary: '#0078D4', secondary: '#005A9E' });
+        resolve({
+          primary: '#0078D4',
+          secondary: '#005A9E',
+          dominant: '#0078D4',
+          vibrant: '#0078D4',
+          darkSurface: '#12141a',
+          lightSurface: '#f5f5fa',
+          swatches: ['#0078D4', '#005A9E'],
+        });
       }
     };
     img.onerror = () => {
-      resolve({ primary: '#0078D4', secondary: '#005A9E' });
+      resolve({
+        primary: '#0078D4',
+        secondary: '#005A9E',
+        dominant: '#0078D4',
+        vibrant: '#0078D4',
+        darkSurface: '#12141a',
+        lightSurface: '#f5f5fa',
+        swatches: ['#0078D4', '#005A9E'],
+      });
     };
     img.src = imageUrl;
   });
 }
+
 

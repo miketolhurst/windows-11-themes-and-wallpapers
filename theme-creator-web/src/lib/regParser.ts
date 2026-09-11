@@ -34,18 +34,71 @@ export function parseRegFile(content: string): Partial<ThemeState> {
     result.borderThickness = Math.round(parseFloat(borderThicknessMatch[1]));
   }
 
-  // Check taskbar mode: if LinearGradientBrush is present in settings
-  if (content.includes('LinearGradientBrush')) {
+  // Check taskbar mode and material style
+  if (content.includes('NoiseOpacity') || content.includes('WindhawkBlur')) {
+    result.materialStyle = 'fluent-acrylic';
+    result.taskbarMode = 'blur';
+  } else if (content.includes('LinearGradientBrush')) {
+    result.materialStyle = 'linear-gradient';
     result.taskbarMode = 'gradient';
-  } else if (content.includes('WindhawkBlur') || content.includes('BackgroundElement')) {
+  } else if (content.includes('#000000') && (content.includes('pure-black') || content.includes('BackgroundFill'))) {
+    result.materialStyle = 'pure-black-neon';
+    result.taskbarMode = 'blur';
+  } else if (content.includes('SolidColorBrush')) {
+    result.materialStyle = 'matte-slate';
     result.taskbarMode = 'blur';
   }
 
-  // Check layout tweaks
-  if (content.includes('disableNewStartMenuLayout') || content.includes('HideRecommended') || content.includes('CompactSearch')) {
-    if (/hideRecommended|disableNewStartMenuLayout/i.test(content)) {
-      result.hideRecommended = true;
+  // Extract NoiseOpacity & TintSaturation if present
+  const noiseMatch = content.match(/NoiseOpacity="([0-9.]+)"/i);
+  if (noiseMatch) {
+    result.noiseOpacity = parseFloat(noiseMatch[1]);
+  }
+  const satMatch = content.match(/TintSaturation="([0-9.]+)"/i);
+  if (satMatch) {
+    result.tintSaturation = parseFloat(satMatch[1]);
+  }
+
+  // Check dock mode
+  const marginMatch = content.match(/Margin=(\d+),\s*\d+,\s*\d+,\s*\d+/i);
+  if (marginMatch) {
+    result.dockMode = true;
+    result.dockMargin = parseInt(marginMatch[1], 10);
+  }
+
+  // Check running indicator style
+  if (content.includes('Rectangle#RunningIndicator')) {
+    if (content.includes('Width=5') && content.includes('CornerRadius=5')) {
+      result.runningIndicatorStyle = 'dot';
+    } else if (content.includes('Visibility=Collapsed')) {
+      result.runningIndicatorStyle = 'hidden';
+    } else if (content.includes('LinearGradientBrush')) {
+      result.runningIndicatorStyle = 'glow';
+    } else {
+      result.runningIndicatorStyle = 'bar';
     }
+  }
+
+  // Check layout tweaks
+  if (
+    content.includes('Grid#TopLevelSuggestionsContainer') ||
+    content.includes('TopLevelSuggestions') ||
+    content.includes('disableNewStartMenuLayout') ||
+    content.includes('HideRecommended')
+  ) {
+    result.hideRecommended = true;
+  }
+
+  if (content.includes('SearchBoxToggleButton') && content.includes('Height=0')) {
+    result.compactSearch = true;
+  }
+
+  if (content.includes('NotificationCenterGrid') && content.includes('VerticalAlignment=2')) {
+    result.dynamicNotificationHeight = true;
+  }
+
+  if (content.includes('Shadow:=')) {
+    result.removeDropShadows = true;
   }
 
   return result;

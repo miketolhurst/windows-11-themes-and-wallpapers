@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { describe, it, expect, test, beforeEach } from 'vitest';
 import { useThemeStore } from './useThemeStore';
 
 test('store initializes with default values', () => {
@@ -96,5 +96,92 @@ test('supports saving, loading, and deleting custom themes', () => {
   useThemeStore.getState().deleteSavedTheme(theme!.id);
   expect(useThemeStore.getState().savedThemes.find((t) => t.id === theme!.id)).toBeUndefined();
 });
+
+describe('Phase 1 useThemeStore extensions', () => {
+  beforeEach(() => {
+    useThemeStore.getState().resetToDefaults();
+  });
+
+  it('initializes with default Phase 1 properties', () => {
+    const state = useThemeStore.getState();
+    expect(state.globalGradient.type).toBe('linear');
+    expect(state.globalGradient.stops.length).toBeGreaterThanOrEqual(2);
+    expect(state.taskbarOverride.enabled).toBe(false);
+    expect(state.startMenuOverride.enabled).toBe(false);
+    expect(state.flyoutOverride.enabled).toBe(false);
+    expect(state.typography.fontFamily).toBe('Segoe UI Variable');
+    expect(state.animations.speed).toBe('default');
+  });
+
+  it('updates global gradient and component overrides with history tracking', () => {
+    const store = useThemeStore.getState();
+    store.setGlobalGradient({
+      type: 'linear',
+      angle: 180,
+      stops: [
+        { id: '1', color: '#FF0000', offset: 0 },
+        { id: '2', color: '#0000FF', offset: 100 },
+      ],
+    });
+    expect(useThemeStore.getState().globalGradient.angle).toBe(180);
+    expect(useThemeStore.getState().canUndo()).toBe(true);
+
+    store.setTaskbarOverride({ enabled: true, materialStyle: 'mica' });
+    expect(useThemeStore.getState().taskbarOverride.enabled).toBe(true);
+    expect(useThemeStore.getState().taskbarOverride.materialStyle).toBe('mica');
+
+    store.setStartMenuOverride({ enabled: true, customColor: '#123456' });
+    expect(useThemeStore.getState().startMenuOverride.enabled).toBe(true);
+    expect(useThemeStore.getState().startMenuOverride.customColor).toBe('#123456');
+
+    store.setFlyoutOverride({ enabled: true, blur: 20 });
+    expect(useThemeStore.getState().flyoutOverride.enabled).toBe(true);
+    expect(useThemeStore.getState().flyoutOverride.blur).toBe(20);
+
+    store.setTypography({ fontFamily: 'JetBrains Mono', fontWeight: '600', characterSpacing: 20 });
+    expect(useThemeStore.getState().typography.fontFamily).toBe('JetBrains Mono');
+
+    store.setAnimations({ speed: 'snappy', durationMs: 150, easing: 'decelerate' });
+    expect(useThemeStore.getState().animations.speed).toBe('snappy');
+    expect(useThemeStore.getState().animations.durationMs).toBe(150);
+  });
+
+  it('supports undo and redo for Phase 1 properties', () => {
+    const store = useThemeStore.getState();
+    store.setTypography({ fontFamily: 'Cascadia Code', fontWeight: '700', characterSpacing: 10 });
+    expect(useThemeStore.getState().typography.fontFamily).toBe('Cascadia Code');
+
+    store.undo();
+    expect(useThemeStore.getState().typography.fontFamily).toBe('Segoe UI Variable');
+
+    store.redo();
+    expect(useThemeStore.getState().typography.fontFamily).toBe('Cascadia Code');
+  });
+
+  it('supports mica and mica-alt material styles', () => {
+    const store = useThemeStore.getState();
+    store.setMaterialStyle('mica');
+    expect(useThemeStore.getState().materialStyle).toBe('mica');
+
+    store.setMaterialStyle('mica-alt');
+    expect(useThemeStore.getState().materialStyle).toBe('mica-alt');
+  });
+
+  it('correctly applies Phase 1 partial theme configs and resets to defaults', () => {
+    const store = useThemeStore.getState();
+    store.applyThemeConfig({
+      typography: { fontFamily: 'Consolas', fontWeight: '500', characterSpacing: 5 },
+      taskbarOverride: { enabled: true, materialStyle: 'mica-alt' },
+    });
+    expect(useThemeStore.getState().typography.fontFamily).toBe('Consolas');
+    expect(useThemeStore.getState().taskbarOverride.enabled).toBe(true);
+    expect(useThemeStore.getState().taskbarOverride.materialStyle).toBe('mica-alt');
+
+    store.resetToDefaults();
+    expect(useThemeStore.getState().typography.fontFamily).toBe('Segoe UI Variable');
+    expect(useThemeStore.getState().taskbarOverride.enabled).toBe(false);
+  });
+});
+
 
 

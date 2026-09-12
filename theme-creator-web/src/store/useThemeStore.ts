@@ -2,8 +2,41 @@ import { create } from 'zustand';
 import { ColorHarmonyType } from '../lib/paletteEngine';
 export type { ColorHarmonyType };
 
-export type MaterialStyle = 'fluent-acrylic' | 'pure-black-neon' | 'linear-gradient' | 'matte-slate';
+export type MaterialStyle = 'fluent-acrylic' | 'pure-black-neon' | 'linear-gradient' | 'matte-slate' | 'mica' | 'mica-alt';
 export type RunningIndicatorStyle = 'bar' | 'standard' | 'dot' | 'glow' | 'hidden';
+
+export interface GradientStop {
+  id: string;
+  color: string;
+  offset: number;
+}
+
+export interface GradientConfig {
+  type: 'linear' | 'radial';
+  angle: number;
+  stops: GradientStop[];
+}
+
+export interface ComponentOverride {
+  enabled: boolean;
+  materialStyle?: MaterialStyle;
+  customColor?: string;
+  gradient?: GradientConfig;
+  opacity?: number;
+  blur?: number;
+}
+
+export interface TypographyConfig {
+  fontFamily: string;
+  fontWeight: '300' | '400' | '500' | '600' | '700';
+  characterSpacing: number;
+}
+
+export interface AnimationConfig {
+  speed: 'instant' | 'snappy' | 'default' | 'smooth';
+  durationMs: number;
+  easing: 'fluent-spring' | 'decelerate' | 'linear';
+}
 
 export interface SavedTheme {
   id: string;
@@ -41,6 +74,12 @@ export interface ThemeConfigSnapshot {
   dockMargin: number;
   runningIndicatorStyle: RunningIndicatorStyle;
   colorHarmony: ColorHarmonyType;
+  globalGradient: GradientConfig;
+  taskbarOverride: ComponentOverride;
+  startMenuOverride: ComponentOverride;
+  flyoutOverride: ComponentOverride;
+  typography: TypographyConfig;
+  animations: AnimationConfig;
 }
 
 export interface ThemeState extends ThemeConfigSnapshot {
@@ -89,6 +128,14 @@ export interface ThemeState extends ThemeConfigSnapshot {
   setColorHarmony: (h: ColorHarmonyType) => void;
   setActivePane: (pane: 'start' | 'notifications' | 'quicksettings' | null) => void;
 
+  // Phase 1 Actions
+  setGlobalGradient: (g: GradientConfig) => void;
+  setTaskbarOverride: (o: Partial<ComponentOverride>) => void;
+  setStartMenuOverride: (o: Partial<ComponentOverride>) => void;
+  setFlyoutOverride: (o: Partial<ComponentOverride>) => void;
+  setTypography: (t: Partial<TypographyConfig>) => void;
+  setAnimations: (a: Partial<AnimationConfig>) => void;
+
   // Preview & UI Actions
   setShowDesktopIcons: (v: boolean) => void;
   setShowWindowPreview: (v: boolean) => void;
@@ -111,6 +158,93 @@ export interface ThemeState extends ThemeConfigSnapshot {
   applyThemeConfig: (config: Partial<ThemeState>) => void;
   resetToDefaults: () => void;
 }
+
+const STORAGE_KEY = 'windhawk_saved_themes';
+
+function getInitialSavedThemes(): SavedTheme[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function persistSavedThemes(themes: SavedTheme[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(themes));
+  } catch {
+    // ignore
+  }
+}
+
+export const DEFAULT_THEME_STATE = {
+  themeName: 'Custom Theme',
+  accentColor: '#0078D4',
+  secondaryAccent: '#005A9E',
+  isLightMode: false,
+  taskbarMode: 'blur' as const,
+  materialStyle: 'fluent-acrylic' as MaterialStyle,
+  cornerRadius: 8,
+  borderThickness: 2,
+  wallpaperUrl: null,
+  wallpaperData: null,
+  customStartIconUrl: null,
+  customStartIconData: null,
+  hideRecommended: false,
+  compactSearch: false,
+  dynamicNotificationHeight: false,
+  removeDropShadows: false,
+  taskbarBlur: 10,
+  startMenuBlur: 15,
+  notificationBlur: 15,
+  taskbarOpacity: 97,
+  startMenuOpacity: 97,
+  notificationOpacity: 97,
+  noiseOpacity: 0.04,
+  tintSaturation: 0.85,
+  dockMode: false,
+  dockMargin: 12,
+  runningIndicatorStyle: 'bar' as RunningIndicatorStyle,
+  colorHarmony: 'custom' as ColorHarmonyType,
+  globalGradient: {
+    type: 'linear' as const,
+    angle: 90,
+    stops: [
+      { id: '1', color: '#0078D4', offset: 0 },
+      { id: '2', color: '#005A9E', offset: 100 },
+    ],
+  } as GradientConfig,
+  taskbarOverride: {
+    enabled: false,
+  } as ComponentOverride,
+  startMenuOverride: {
+    enabled: false,
+  } as ComponentOverride,
+  flyoutOverride: {
+    enabled: false,
+  } as ComponentOverride,
+  typography: {
+    fontFamily: 'Segoe UI Variable',
+    fontWeight: '400' as const,
+    characterSpacing: 0,
+  } as TypographyConfig,
+  animations: {
+    speed: 'default' as const,
+    durationMs: 250,
+    easing: 'fluent-spring' as const,
+  } as AnimationConfig,
+  activePane: 'start' as const,
+  showDesktopIcons: true,
+  showWindowPreview: false,
+  isSidebarCollapsed: false,
+  showDownloadModal: false,
+  savedThemes: [] as SavedTheme[],
+  past: [] as ThemeConfigSnapshot[],
+  future: [] as ThemeConfigSnapshot[],
+};
 
 export const takeSnapshot = (state: ThemeState): ThemeConfigSnapshot => ({
   themeName: state.themeName,
@@ -141,67 +275,18 @@ export const takeSnapshot = (state: ThemeState): ThemeConfigSnapshot => ({
   dockMargin: state.dockMargin,
   runningIndicatorStyle: state.runningIndicatorStyle,
   colorHarmony: state.colorHarmony,
+  globalGradient: state.globalGradient
+    ? {
+        ...state.globalGradient,
+        stops: state.globalGradient.stops ? state.globalGradient.stops.map((s) => ({ ...s })) : [],
+      }
+    : { ...DEFAULT_THEME_STATE.globalGradient, stops: DEFAULT_THEME_STATE.globalGradient.stops.map((s) => ({ ...s })) },
+  taskbarOverride: state.taskbarOverride ? { ...state.taskbarOverride } : { ...DEFAULT_THEME_STATE.taskbarOverride },
+  startMenuOverride: state.startMenuOverride ? { ...state.startMenuOverride } : { ...DEFAULT_THEME_STATE.startMenuOverride },
+  flyoutOverride: state.flyoutOverride ? { ...state.flyoutOverride } : { ...DEFAULT_THEME_STATE.flyoutOverride },
+  typography: state.typography ? { ...state.typography } : { ...DEFAULT_THEME_STATE.typography },
+  animations: state.animations ? { ...state.animations } : { ...DEFAULT_THEME_STATE.animations },
 });
-
-const STORAGE_KEY = 'windhawk_saved_themes';
-
-function getInitialSavedThemes(): SavedTheme[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function persistSavedThemes(themes: SavedTheme[]) {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(themes));
-  } catch {
-    // ignore
-  }
-}
-
-const DEFAULT_THEME_STATE = {
-  themeName: 'Custom Theme',
-  accentColor: '#0078D4',
-  secondaryAccent: '#005A9E',
-  isLightMode: false,
-  taskbarMode: 'blur' as const,
-  materialStyle: 'fluent-acrylic' as MaterialStyle,
-  cornerRadius: 8,
-  borderThickness: 2,
-  wallpaperUrl: null,
-  wallpaperData: null,
-  customStartIconUrl: null,
-  customStartIconData: null,
-  hideRecommended: false,
-  compactSearch: false,
-  dynamicNotificationHeight: false,
-  removeDropShadows: false,
-  taskbarBlur: 10,
-  startMenuBlur: 15,
-  notificationBlur: 15,
-  taskbarOpacity: 97,
-  startMenuOpacity: 97,
-  notificationOpacity: 97,
-  noiseOpacity: 0.04,
-  tintSaturation: 0.85,
-  dockMode: false,
-  dockMargin: 12,
-  runningIndicatorStyle: 'bar' as RunningIndicatorStyle,
-  colorHarmony: 'custom' as ColorHarmonyType,
-  activePane: 'start' as const,
-  showDesktopIcons: true,
-  showWindowPreview: false,
-  isSidebarCollapsed: false,
-  showDownloadModal: false,
-  savedThemes: [] as SavedTheme[],
-  past: [] as ThemeConfigSnapshot[],
-  future: [] as ThemeConfigSnapshot[],
-};
 
 export const useThemeStore = create<ThemeState>((set, get) => {
   const withHistory = (update: (state: ThemeState) => Partial<ThemeState>) => {
@@ -256,6 +341,20 @@ export const useThemeStore = create<ThemeState>((set, get) => {
     setDockMargin: (m: number) => withHistory(() => ({ dockMargin: m })),
     setRunningIndicatorStyle: (i: RunningIndicatorStyle) => withHistory(() => ({ runningIndicatorStyle: i })),
     setColorHarmony: (h: ColorHarmonyType) => withHistory(() => ({ colorHarmony: h })),
+
+    // Phase 1 Actions
+    setGlobalGradient: (g: GradientConfig) =>
+      withHistory(() => ({ globalGradient: g })),
+    setTaskbarOverride: (o: Partial<ComponentOverride>) =>
+      withHistory((state) => ({ taskbarOverride: { ...state.taskbarOverride, ...o } })),
+    setStartMenuOverride: (o: Partial<ComponentOverride>) =>
+      withHistory((state) => ({ startMenuOverride: { ...state.startMenuOverride, ...o } })),
+    setFlyoutOverride: (o: Partial<ComponentOverride>) =>
+      withHistory((state) => ({ flyoutOverride: { ...state.flyoutOverride, ...o } })),
+    setTypography: (t: Partial<TypographyConfig>) =>
+      withHistory((state) => ({ typography: { ...state.typography, ...t } })),
+    setAnimations: (a: Partial<AnimationConfig>) =>
+      withHistory((state) => ({ animations: { ...state.animations, ...a } })),
 
     // Saved Themes Library
     saveCurrentTheme: (name?: string) => {
@@ -330,6 +429,29 @@ export const useThemeStore = create<ThemeState>((set, get) => {
         return {
           ...state,
           ...config,
+          globalGradient: config.globalGradient
+            ? {
+                ...config.globalGradient,
+                stops: config.globalGradient.stops
+                  ? config.globalGradient.stops.map((s) => ({ ...s }))
+                  : state.globalGradient.stops,
+              }
+            : state.globalGradient,
+          taskbarOverride: config.taskbarOverride
+            ? { ...state.taskbarOverride, ...config.taskbarOverride }
+            : state.taskbarOverride,
+          startMenuOverride: config.startMenuOverride
+            ? { ...state.startMenuOverride, ...config.startMenuOverride }
+            : state.startMenuOverride,
+          flyoutOverride: config.flyoutOverride
+            ? { ...state.flyoutOverride, ...config.flyoutOverride }
+            : state.flyoutOverride,
+          typography: config.typography
+            ? { ...state.typography, ...config.typography }
+            : state.typography,
+          animations: config.animations
+            ? { ...state.animations, ...config.animations }
+            : state.animations,
           past: [...state.past, snap].slice(-30),
           future: [],
         };
@@ -340,6 +462,15 @@ export const useThemeStore = create<ThemeState>((set, get) => {
         const snap = takeSnapshot(state);
         return {
           ...DEFAULT_THEME_STATE,
+          globalGradient: {
+            ...DEFAULT_THEME_STATE.globalGradient,
+            stops: DEFAULT_THEME_STATE.globalGradient.stops.map((s) => ({ ...s })),
+          },
+          taskbarOverride: { ...DEFAULT_THEME_STATE.taskbarOverride },
+          startMenuOverride: { ...DEFAULT_THEME_STATE.startMenuOverride },
+          flyoutOverride: { ...DEFAULT_THEME_STATE.flyoutOverride },
+          typography: { ...DEFAULT_THEME_STATE.typography },
+          animations: { ...DEFAULT_THEME_STATE.animations },
           past: [...state.past, snap].slice(-30),
           future: [],
         };

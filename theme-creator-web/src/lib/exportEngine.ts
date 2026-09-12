@@ -166,25 +166,28 @@ export function getModRawStyles(state: ThemeConfigSnapshot | ThemeState): ModRaw
       if (override.customColor) {
         const op = override.opacity ?? defaultOpacity;
         const alphaHex = opacityToAlphaHex(op).toUpperCase();
-        const cleanHex = override.customColor.replace(/^#/, '').toUpperCase();
+        let cleanHex = override.customColor.replace(/^#/, '').trim().toUpperCase();
+        if (cleanHex.length === 8) {
+          cleanHex = cleanHex.slice(2);
+        } else if (cleanHex.length === 3) {
+          cleanHex = cleanHex.split('').map((c) => c + c).join('');
+        }
         return `<SolidColorBrush Color="#${alphaHex}${cleanHex}"/>`;
       }
       if (override.gradient) {
         return generateGradientBrushXaml(override.gradient, override.opacity ?? defaultOpacity);
       }
-      if (override.materialStyle) {
-        return buildSurfaceFill(
-          override.materialStyle,
-          override.blur ?? defaultBlur,
-          baseBgRgb,
-          accentRgb,
-          secRgb,
-          override.opacity ?? defaultOpacity,
-          noise,
-          sat,
-          defaultCoords
-        );
-      }
+      return buildSurfaceFill(
+        override.materialStyle ?? defaultMaterial,
+        override.blur ?? defaultBlur,
+        baseBgRgb,
+        accentRgb,
+        secRgb,
+        override.opacity ?? defaultOpacity,
+        noise,
+        sat,
+        defaultCoords
+      );
     }
     if (defaultMaterial === 'linear-gradient' && state.globalGradient) {
       return generateGradientBrushXaml(state.globalGradient, defaultOpacity);
@@ -676,7 +679,7 @@ export function generateWindhawkStylerMod(
     taskbarStyles: backups.taskbarBackup,
     startMenuStyles: backups.startMenuBackup,
     notificationCenterStyles: backups.notificationCenterBackup,
-    themeVariables: [...themeVarsCommon, ...ncThemeVars],
+    themeVariables: Array.from(new Set([...themeVarsCommon, ...ncThemeVars])),
   };
 }
 

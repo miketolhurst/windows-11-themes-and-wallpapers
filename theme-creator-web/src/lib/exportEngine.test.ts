@@ -283,5 +283,39 @@ describe('exportEngine Phase 1 extensions', () => {
     expect(pkg.taskbarStyles).toContain('FontWeight=SemiBold');
     expect(pkg.taskbarStyles).toContain('CharacterSpacing=25');
   });
+
+  it('preserves default material style and applies overridden blur and opacity when materialStyle is omitted', () => {
+    const state = {
+      ...useThemeStore.getState(),
+      materialStyle: 'fluent-acrylic' as const,
+      taskbarOverride: {
+        enabled: true,
+        blur: 32,
+        opacity: 75,
+      },
+    };
+    const pkg = generateWindhawkStylerMod(state);
+    expect(pkg.taskbarStyles).toContain('BlurAmount="32"');
+    expect(pkg.taskbarStyles).toContain('TintOpacity="0.75"');
+  });
+
+  it('strips existing 8-digit alpha from customColor override before applying alpha hex', () => {
+    const state = {
+      ...useThemeStore.getState(),
+      taskbarOverride: {
+        enabled: true,
+        customColor: '#88FF0055',
+        opacity: 80,
+      },
+    };
+    const pkg = generateWindhawkStylerMod(state);
+    expect(pkg.taskbarStyles).toContain('#CCFF0055');
+  });
+
+  it('deduplicates themeVariables in package export', () => {
+    const pkg = generateWindhawkStylerMod(useThemeStore.getState());
+    const uniqueCount = new Set(pkg.themeVariables).size;
+    expect(pkg.themeVariables.length).toBe(uniqueCount);
+  });
 });
 

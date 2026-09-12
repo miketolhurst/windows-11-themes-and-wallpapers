@@ -7,12 +7,14 @@ import { copyShareLink } from '../lib/urlSharing';
 import ComponentIsolationSection from './ComponentIsolationSection';
 import TypographyAnimationSection from './TypographyAnimationSection';
 import GradientEditorModal from './GradientEditorModal';
+import ColorPickerPopover from './ColorPickerPopover';
 import {
   extractPaletteFromImageUrl,
   hexToRgb,
   rgbToHex,
   blend,
   computeColorHarmonies,
+  computeHarmonicSwatches,
   RGB,
 } from '../lib/paletteEngine';
 
@@ -157,19 +159,14 @@ export default function Sidebar() {
 
   // Derived 5-swatch palette display
   const displayedSwatches = useMemo(() => {
+    if (colorHarmony && colorHarmony !== 'custom') {
+      return computeHarmonicSwatches(accentColor, secondaryAccent, colorHarmony);
+    }
     if (extractedSwatches.length >= 5) {
       return extractedSwatches.slice(0, 5);
     }
-    const aRgb = hexToRgb(accentColor);
-    const sRgb = hexToRgb(secondaryAccent);
-    return [
-      accentColor,
-      secondaryAccent,
-      rgbToHex(blend(aRgb, [255, 255, 255], 0.35)),
-      rgbToHex(blend(aRgb, [0, 0, 0], 0.35)),
-      rgbToHex(blend(sRgb, [255, 255, 255], 0.3)),
-    ];
-  }, [extractedSwatches, accentColor, secondaryAccent]);
+    return computeHarmonicSwatches(accentColor, secondaryAccent, 'custom');
+  }, [extractedSwatches, accentColor, secondaryAccent, colorHarmony]);
 
   // Global Keyboard Shortcuts for Undo/Redo
   useEffect(() => {
@@ -431,7 +428,10 @@ export default function Sidebar() {
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
                         <button
-                          onClick={() => loadSavedTheme(saved.id)}
+                          onClick={() => {
+                            setExtractedSwatches([]);
+                            loadSavedTheme(saved.id);
+                          }}
                           className="px-2 py-0.5 rounded bg-neutral-700 hover:bg-blue-600 text-neutral-200 hover:text-white text-[10px] cursor-pointer"
                         >
                           Load
@@ -502,6 +502,7 @@ export default function Sidebar() {
                   <button
                     key={preset.id}
                     onClick={() => {
+                      setExtractedSwatches([]);
                       applyThemeConfig({
                         themeName: preset.name,
                         accentColor: preset.accentColor,
@@ -578,34 +579,27 @@ export default function Sidebar() {
           <div className="grid grid-cols-2 gap-3 mb-3">
             <div>
               <span className="text-xs text-neutral-400 block mb-1">Primary Accent</span>
-              <div className="flex items-center gap-2 bg-neutral-800 p-1.5 rounded border border-neutral-700">
-                <input
-                  type="color"
-                  value={accentColor}
-                  onChange={(e) => {
-                    const c = e.target.value;
-                    setAccentColor(c);
-                    if (colorHarmony && colorHarmony !== 'custom') {
-                      const h = computeColorHarmonies(c, colorHarmony);
-                      setSecondaryAccent(h.secondary);
-                    }
-                  }}
-                  className="w-7 h-7 rounded cursor-pointer border-0 bg-transparent"
-                />
-                <span className="text-xs font-mono text-neutral-200 uppercase truncate">{accentColor}</span>
-              </div>
+              <ColorPickerPopover
+                id="primary-accent-picker"
+                label="Primary Accent"
+                value={accentColor}
+                onChange={(c) => {
+                  setAccentColor(c);
+                  if (colorHarmony && colorHarmony !== 'custom') {
+                    const h = computeColorHarmonies(c, colorHarmony);
+                    setSecondaryAccent(h.secondary);
+                  }
+                }}
+              />
             </div>
             <div>
               <span className="text-xs text-neutral-400 block mb-1">Secondary Accent</span>
-              <div className="flex items-center gap-2 bg-neutral-800 p-1.5 rounded border border-neutral-700">
-                <input
-                  type="color"
-                  value={secondaryAccent}
-                  onChange={(e) => setSecondaryAccent(e.target.value)}
-                  className="w-7 h-7 rounded cursor-pointer border-0 bg-transparent"
-                />
-                <span className="text-xs font-mono text-neutral-200 uppercase truncate">{secondaryAccent}</span>
-              </div>
+              <ColorPickerPopover
+                id="secondary-accent-picker"
+                label="Secondary Accent"
+                value={secondaryAccent}
+                onChange={(c) => setSecondaryAccent(c)}
+              />
             </div>
           </div>
 

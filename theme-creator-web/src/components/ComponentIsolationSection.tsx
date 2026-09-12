@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ColorPickerPopover from './ColorPickerPopover';
 import {
   useThemeStore,
   MaterialStyle,
@@ -189,18 +190,12 @@ export function ComponentIsolationSection({
           {/* Solid Color Picker */}
           <div>
             <span className="text-xs text-neutral-400 block mb-1.5">Custom Fill Color</span>
-            <div className="flex items-center gap-2 bg-neutral-800 p-1.5 rounded border border-neutral-700">
-              <input
-                type="color"
-                aria-label="Component Custom Color"
-                value={currentColor}
-                onChange={(e) => setOverride({ customColor: e.target.value })}
-                className="w-7 h-7 rounded cursor-pointer border-0 bg-transparent"
-              />
-              <span className="text-xs font-mono text-neutral-200 uppercase truncate">
-                {currentColor}
-              </span>
-            </div>
+            <ColorPickerPopover
+              id={`component-color-picker-${activeTab}`}
+              label="Component Custom Color"
+              value={currentColor}
+              onChange={(c) => setOverride({ customColor: c })}
+            />
           </div>
 
           {/* Edit Gradient Button (Only when material is linear-gradient) */}

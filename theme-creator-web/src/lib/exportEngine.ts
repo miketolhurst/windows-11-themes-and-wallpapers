@@ -20,7 +20,10 @@ function escapeRegStr(str: string): string {
   return str.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 }
 
-export function calculateGradientPoints(angleDeg: number): { start: string; end: string } {
+export function calculateGradientPoints(
+  angleDeg: number,
+  expansionFactor: number = 1.2
+): { start: string; end: string } {
   const norm = ((angleDeg % 360) + 360) % 360;
   const rad = (norm * Math.PI) / 180;
   // 0deg = bottom-to-top (dx=0, dy=-1)
@@ -30,10 +33,13 @@ export function calculateGradientPoints(angleDeg: number): { start: string; end:
   const dx = Math.sin(rad);
   const dy = -Math.cos(rad);
 
-  const startX = 0.5 - 0.5 * dx;
-  const startY = 0.5 - 0.5 * dy;
-  const endX = 0.5 + 0.5 * dx;
-  const endY = 0.5 + 0.5 * dy;
+  const maxD = Math.max(Math.abs(dx), Math.abs(dy));
+  const scale = (maxD > 0 ? 0.5 / maxD : 0.5) * expansionFactor;
+
+  const startX = 0.5 - scale * dx;
+  const startY = 0.5 - scale * dy;
+  const endX = 0.5 + scale * dx;
+  const endY = 0.5 + scale * dy;
 
   const formatCoord = (n: number): string => {
     const val = Math.abs(n) < 1e-6 ? 0 : n;
@@ -275,7 +281,7 @@ export function getModRawStyles(state: ThemeConfigSnapshot | ThemeState): ModRaw
   taskbarControlStyles.push({
     target:
       'Taskbar.TaskbarBackground#BackgroundControl > Windows.UI.Xaml.Controls.Grid > Windows.UI.Xaml.Shapes.Rectangle#BackgroundStroke',
-    styles: [`Fill=${cNormal}`, `Height=${thickness}`, `BorderThickness=${thickness}`],
+    styles: [`Fill=${cNormal}`, `Height=${thickness}`],
   });
 
   // Running indicator
@@ -443,17 +449,41 @@ export function getModRawStyles(state: ThemeConfigSnapshot | ThemeState): ModRaw
       `FontWeight=${mappedWeight}`,
       `CharacterSpacing=${state.typography.characterSpacing}`,
     ];
+    // Taskbar desktop text (labeled buttons, clock, and date)
     taskbarControlStyles.push({
-      target: 'TextBlock',
+      target:
+        'TextBlock#LabelControl, SystemTray.ClockButton * > TextBlock, TextBlock#TimeTextBlock, TextBlock#DateTextBlock',
       styles: typoStyles,
     });
+    // Protect Taskbar system tray icon glyphs (WiFi, volume, battery, action center, etc.)
+    taskbarControlStyles.push({
+      target: 'SystemTray.TextIconContent > * > TextBlock',
+      styles: ['FontFamily=Segoe Fluent Icons', 'CharacterSpacing=0'],
+    });
+
+    // Start Menu desktop text (pinned items, all apps list, search box, section headers, user profile name)
     startMenuControlStyles.push({
-      target: 'TextBlock',
+      target:
+        'StartMenu.PinnedList TextBlock, StartMenu.AllAppsList TextBlock, StartDocked.SearchBoxToggleButton TextBlock, Grid#TopLevelSuggestionsContainer TextBlock, StartDocked.UserProfileButton TextBlock',
       styles: typoStyles,
     });
+    // Protect Start Menu power and shutdown icons
+    startMenuControlStyles.push({
+      target: 'StartDocked.PowerOptionsView TextBlock, Button#PowerButton TextBlock',
+      styles: ['FontFamily=Segoe Fluent Icons', 'CharacterSpacing=0'],
+    });
+
+    // Notification Center & Calendar desktop text (notification title/body, calendar dates)
     ncControlStyles.push({
-      target: 'TextBlock',
+      target:
+        'Grid#NotificationCenterGrid TextBlock#Header, Grid#NotificationCenterGrid TextBlock#Body, CalendarView TextBlock',
       styles: typoStyles,
+    });
+    // Protect Focus Session (+, -, Focus buttons) and Quick Settings toggle icons
+    ncControlStyles.push({
+      target:
+        'ActionCenter.FocusSessionControl TextBlock, QuickActions.AccessibleToggleButton TextBlock',
+      styles: ['FontFamily=Segoe Fluent Icons', 'CharacterSpacing=0'],
     });
   }
 

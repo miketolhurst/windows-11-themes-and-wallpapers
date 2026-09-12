@@ -159,7 +159,7 @@ export function hslToRgb(h: number, s: number, l: number): RGB {
   ];
 }
 
-export type ColorHarmonyType = 'custom' | 'analogous' | 'complementary' | 'triadic' | 'monochromatic';
+export type ColorHarmonyType = 'custom' | 'analogous' | 'complementary' | 'triadic' | 'split-complementary' | 'monochromatic';
 
 export interface ColorHarmonyResult {
   primary: string;
@@ -199,6 +199,15 @@ export function computeColorHarmonies(accentHex: string, harmony: ColorHarmonyTy
         tertiary: rgbToHex(hslToRgb(tertH, s, l)),
       };
     }
+    case 'split-complementary': {
+      const secH = (h + 150) % 360;
+      const tertH = (h + 210) % 360;
+      return {
+        primary: accentHex,
+        secondary: rgbToHex(hslToRgb(secH, s, l)),
+        tertiary: rgbToHex(hslToRgb(tertH, s, l)),
+      };
+    }
     case 'monochromatic': {
       const secL = l > 0.5 ? Math.max(0.2, l - 0.3) : Math.min(0.85, l + 0.3);
       const tertL = l > 0.5 ? Math.max(0.15, l - 0.45) : Math.min(0.9, l + 0.45);
@@ -215,6 +224,35 @@ export function computeColorHarmonies(accentHex: string, harmony: ColorHarmonyTy
         secondary: accentHex,
       };
   }
+}
+
+export function computeHarmonicSwatches(
+  primary: string,
+  secondary: string,
+  harmony?: ColorHarmonyType
+): string[] {
+  if (harmony && harmony !== 'custom') {
+    const res = computeColorHarmonies(primary, harmony);
+    const pRgb = hexToRgb(res.primary);
+    const sRgb = hexToRgb(res.secondary);
+    const tRgb = res.tertiary ? hexToRgb(res.tertiary) : sRgb;
+    return [
+      res.primary,
+      res.secondary,
+      res.tertiary || rgbToHex(blend(pRgb, [255, 255, 255], 0.3)),
+      rgbToHex(blend(pRgb, [0, 0, 0], 0.35)),
+      rgbToHex(blend(tRgb, [255, 255, 255], 0.3)),
+    ];
+  }
+  const aRgb = hexToRgb(primary);
+  const sRgb = hexToRgb(secondary);
+  return [
+    primary,
+    secondary,
+    rgbToHex(blend(aRgb, [255, 255, 255], 0.35)),
+    rgbToHex(blend(aRgb, [0, 0, 0], 0.35)),
+    rgbToHex(blend(sRgb, [255, 255, 255], 0.3)),
+  ];
 }
 
 

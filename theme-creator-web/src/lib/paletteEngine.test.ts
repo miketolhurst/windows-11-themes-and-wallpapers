@@ -7,6 +7,7 @@ import {
   buildLinearGradientBrush,
   extractPaletteFromPixels,
   computeColorHarmonies,
+  computeHarmonicSwatches,
 } from './paletteEngine';
 
 describe('paletteEngine', () => {
@@ -91,11 +92,18 @@ describe('paletteEngine', () => {
     expect(secondary.toLowerCase()).toBe('#ff0080');
   });
 
-  it('computes color harmonies accurately (analogous, complementary, triadic, monochromatic)', () => {
+  it('computes color harmonies accurately (analogous, complementary, triadic, split-complementary, monochromatic)', () => {
     const base = '#0078D4'; // Blue
     const comp = computeColorHarmonies(base, 'complementary');
     expect(comp.primary).toBe(base);
     expect(comp.secondary).toMatch(/^#[0-9a-fA-F]{6}$/);
+
+    const splitComp = computeColorHarmonies(base, 'split-complementary');
+    expect(splitComp.primary).toBe(base);
+    expect(splitComp.secondary).toMatch(/^#[0-9a-fA-F]{6}$/);
+    expect(splitComp.tertiary).toMatch(/^#[0-9a-fA-F]{6}$/);
+    expect(splitComp.secondary).not.toBe(splitComp.tertiary);
+    expect(splitComp.secondary).not.toBe(base);
 
     const analogous = computeColorHarmonies(base, 'analogous');
     expect(analogous.secondary).toBeDefined();
@@ -122,6 +130,18 @@ describe('paletteEngine', () => {
     expect(palette.swatches!.length).toBeGreaterThanOrEqual(2);
     expect(palette.darkSurface).toMatch(/^#[0-9a-fA-F]{6}$/);
     expect(palette.lightSurface).toMatch(/^#[0-9a-fA-F]{6}$/);
+  });
+
+  it('generates 5 harmonic swatches for harmony modes and custom fallback', () => {
+    const swatches = computeHarmonicSwatches('#0078D4', '#2AA198', 'split-complementary');
+    expect(swatches.length).toBe(5);
+    expect(swatches[0]).toBe('#0078D4');
+    expect(swatches.every((s) => /^#[0-9a-fA-F]{6}$/.test(s))).toBe(true);
+
+    const customSwatches = computeHarmonicSwatches('#0078D4', '#2AA198', 'custom');
+    expect(customSwatches.length).toBe(5);
+    expect(customSwatches[0]).toBe('#0078D4');
+    expect(customSwatches[1]).toBe('#2AA198');
   });
 });
 

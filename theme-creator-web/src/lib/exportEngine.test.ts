@@ -59,6 +59,14 @@ describe('exportEngine', () => {
     expect(reg).toContain('"BorderThickness=3"');
     expect(reg).toContain('"Height=3"');
     expect(reg).toContain('Color=\\"#cc');
+
+    // Assert Taskbar BackgroundStroke omits BorderThickness
+    const backups = buildWindhawkJsonBackups(mockState);
+    const bgStrokeSection = backups.taskbarBackup.slice(
+      backups.taskbarBackup.indexOf('Rectangle#BackgroundStroke')
+    );
+    expect(bgStrokeSection).toContain('Height=3');
+    expect(bgStrokeSection).not.toContain('BorderThickness');
   });
 
   it('supports floating dock mode and margin in registry export', () => {
@@ -197,14 +205,18 @@ describe('exportEngine', () => {
 });
 
 describe('exportEngine Phase 1 extensions', () => {
-  it('calculates normalized gradient start and end coordinates from degrees', () => {
+  it('calculates normalized gradient start and end coordinates with softening expansion', () => {
     const right = calculateGradientPoints(90);
-    expect(right.start).toBe('0,0.5');
-    expect(right.end).toBe('1,0.5');
+    expect(right.start).toBe('-0.1,0.5');
+    expect(right.end).toBe('1.1,0.5');
 
     const down = calculateGradientPoints(180);
-    expect(down.start).toBe('0.5,0');
-    expect(down.end).toBe('0.5,1');
+    expect(down.start).toBe('0.5,-0.1');
+    expect(down.end).toBe('0.5,1.1');
+
+    const diagonal = calculateGradientPoints(45);
+    expect(diagonal.start).toBe('-0.1,1.1');
+    expect(diagonal.end).toBe('1.1,-0.1');
   });
 
   it('generates multi-stop LinearGradientBrush XAML', () => {
@@ -218,7 +230,7 @@ describe('exportEngine Phase 1 extensions', () => {
       ],
     });
     expect(xaml).toContain('<LinearGradientBrush');
-    expect(xaml).toContain('StartPoint="0,0.5" EndPoint="1,0.5"');
+    expect(xaml).toContain('StartPoint="-0.1,0.5" EndPoint="1.1,0.5"');
     expect(xaml).toContain('<GradientStop Color="#FF0078D4" Offset="0"/>');
     expect(xaml).toContain('<GradientStop Color="#FFEC4899" Offset="0.5"/>');
     expect(xaml).toContain('<GradientStop Color="#FF8B5CF6" Offset="1"/>');
@@ -282,6 +294,12 @@ describe('exportEngine Phase 1 extensions', () => {
     expect(pkg.taskbarStyles).toContain('FontFamily=Inter');
     expect(pkg.taskbarStyles).toContain('FontWeight=SemiBold');
     expect(pkg.taskbarStyles).toContain('CharacterSpacing=25');
+    // Ensure icon preservation rules are emitted
+    expect(pkg.taskbarStyles).toContain('FontFamily=Segoe Fluent Icons');
+    expect(pkg.startMenuStyles).toContain('StartDocked.PowerOptionsView');
+    expect(pkg.notificationCenterStyles).toContain('ActionCenter.FocusSessionControl');
+    // Ensure generic unscoped TextBlock is not emitted
+    expect(pkg.taskbarStyles).not.toMatch(/target:\s*TextBlock\s*\n/);
   });
 
   it('preserves default material style and applies overridden blur and opacity when materialStyle is omitted', () => {

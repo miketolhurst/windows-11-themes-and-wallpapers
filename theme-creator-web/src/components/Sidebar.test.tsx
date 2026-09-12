@@ -1,5 +1,6 @@
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { test, expect, afterEach } from 'vitest';
+import '@testing-library/jest-dom/vitest';
 import Sidebar from './Sidebar';
 import { useThemeStore } from '../store/useThemeStore';
 
@@ -136,5 +137,37 @@ test('opens GradientEditorModal when Edit Gradient is clicked in global styling'
   fireEvent.click(editGradientBtn);
   expect(screen.getByText(/Edit Global Gradient/i)).toBeTruthy();
 });
+
+test('supports HEX-only color editing and updates accent colors', () => {
+  render(<Sidebar />);
+
+  const primaryHexInput = screen.getByRole('textbox', { name: /Primary Accent/i });
+  expect(primaryHexInput).toHaveAttribute('maxLength', '7');
+  fireEvent.change(primaryHexInput, { target: { value: '#FF0055' } });
+  expect(useThemeStore.getState().accentColor.toUpperCase()).toBe('#FF0055');
+
+  const secondaryHexInput = screen.getByRole('textbox', { name: /Secondary Accent/i });
+  fireEvent.change(secondaryHexInput, { target: { value: '#00F3FF' } });
+  expect(useThemeStore.getState().secondaryAccent.toUpperCase()).toBe('#00F3FF');
+});
+
+test('selecting split-complementary color harmony updates secondary accent and swatches', () => {
+  useThemeStore.setState({ accentColor: '#0078D4', colorHarmony: 'custom' });
+  render(<Sidebar />);
+
+  const harmonySelect = screen.getByRole('combobox');
+  fireEvent.change(harmonySelect, { target: { value: 'split-complementary' } });
+
+  expect(useThemeStore.getState().colorHarmony).toBe('split-complementary');
+  expect(useThemeStore.getState().secondaryAccent).not.toBe('#0078D4');
+  expect(useThemeStore.getState().secondaryAccent).toMatch(/^#[0-9A-Fa-f]{6}$/);
+
+  // Clicking an extracted swatch chip updates primary accent
+  const swatchChips = screen.getAllByTitle(/Left-click for Primary/i);
+  expect(swatchChips.length).toBe(5);
+  fireEvent.click(swatchChips[1]);
+  expect(useThemeStore.getState().accentColor).toBeDefined();
+});
+
 
 

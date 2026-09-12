@@ -97,7 +97,7 @@ describe('ComponentIsolationSection', () => {
     render(<ComponentIsolationSection onOpenGradientEditor={() => {}} />);
     const colorPicker = screen.getByLabelText(/Component Custom Color/i);
     fireEvent.change(colorPicker, { target: { value: '#ff5500' } });
-    expect(useThemeStore.getState().taskbarOverride.customColor).toBe('#ff5500');
+    expect(useThemeStore.getState().taskbarOverride.customColor?.toLowerCase()).toBe('#ff5500');
   });
 
   it('shows Edit Gradient button only when linear-gradient is selected and calls onOpenGradientEditor', () => {

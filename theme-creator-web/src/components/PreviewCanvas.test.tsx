@@ -335,3 +335,30 @@ test('sets flyout duration to 0ms when animation speed is instant', () => {
   expect(canvas.style.getPropertyValue('--flyout-duration')).toBe('0ms');
   expect(canvas.style.getPropertyValue('--flyout-easing')).toBe('linear');
 });
+
+test('renders globalGradient when materialStyle is linear-gradient and globalGradient is configured', () => {
+  useThemeStore.setState({
+    taskbarMode: 'blur',
+    materialStyle: 'linear-gradient',
+    globalGradient: {
+      type: 'linear',
+      angle: 45,
+      stops: [
+        { id: '1', color: '#112233', offset: 0 },
+        { id: '2', color: '#445566', offset: 100 },
+      ],
+    },
+  });
+
+  render(<PreviewCanvas />);
+  const taskbar = screen.getByTestId('taskbar-container');
+  expect(taskbar.style.background).toContain('linear-gradient(45deg');
+  expect(taskbar.style.background).toContain('rgba(17, 34, 51');
+  expect(taskbar.style.background).toContain('rgba(68, 85, 102');
+
+  const startMenu = screen.getByTestId('start-menu-container');
+  expect(startMenu.style.background).toContain('linear-gradient(45deg');
+  expect(startMenu.style.background).toContain('rgba(17, 34, 51');
+  expect(startMenu.style.background).toContain('rgba(68, 85, 102');
+});
+

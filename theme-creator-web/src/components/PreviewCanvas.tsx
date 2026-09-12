@@ -16,6 +16,7 @@ function colorToRgba(color: string, opacity: number): string {
 }
 
 function buildGradientCss(gradient: GradientConfig, opacity: number, fallbackAngle: number = 90): string {
+  if (!gradient?.stops || gradient.stops.length === 0) return 'transparent';
   const angle = gradient.angle ?? fallbackAngle;
   const sortedStops = [...(gradient.stops || [])].sort((a, b) => a.offset - b.offset);
   const cssStops = sortedStops
@@ -41,6 +42,7 @@ function resolveComponentStyle({
   override,
   materialStyle,
   taskbarMode,
+  globalGradient,
   defaultBlur,
   defaultOpacity,
   accentColor,
@@ -51,6 +53,7 @@ function resolveComponentStyle({
   override?: ComponentOverride;
   materialStyle?: MaterialStyle;
   taskbarMode?: 'blur' | 'gradient';
+  globalGradient?: GradientConfig;
   defaultBlur: number;
   defaultOpacity: number;
   accentColor: string;
@@ -121,12 +124,26 @@ function resolveComponentStyle({
     }
   } else if (mat === 'linear-gradient') {
     backdropFilter = 'none';
-    if (component === 'taskbar') {
-      background = `linear-gradient(90deg, rgba(${secRgb[0]}, ${secRgb[1]}, ${secRgb[2]}, ${op}) 0%, rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, ${op}) 50%, rgba(${bgRgb[0]}, ${bgRgb[1]}, ${bgRgb[2]}, ${op}) 100%)`;
-    } else if (component === 'startMenu') {
-      background = `linear-gradient(135deg, rgba(${bgRgb[0]}, ${bgRgb[1]}, ${bgRgb[2]}, ${op}) 0%, rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, ${op}) 50%, rgba(${secRgb[0]}, ${secRgb[1]}, ${secRgb[2]}, ${op}) 100%)`;
+    if (override?.gradient) {
+      background = buildGradientCss(override.gradient, op);
+    } else if (taskbarMode === 'gradient') {
+      if (component === 'taskbar') {
+        background = `linear-gradient(90deg, rgba(${secRgb[0]}, ${secRgb[1]}, ${secRgb[2]}, ${op}) 0%, rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, ${op}) 50%, rgba(${bgRgb[0]}, ${bgRgb[1]}, ${bgRgb[2]}, ${op}) 100%)`;
+      } else if (component === 'startMenu') {
+        background = `linear-gradient(135deg, rgba(${bgRgb[0]}, ${bgRgb[1]}, ${bgRgb[2]}, ${op}) 0%, rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, ${op}) 50%, rgba(${secRgb[0]}, ${secRgb[1]}, ${secRgb[2]}, ${op}) 100%)`;
+      } else {
+        background = `linear-gradient(315deg, rgba(${bgRgb[0]}, ${bgRgb[1]}, ${bgRgb[2]}, ${op}) 0%, rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, ${op}) 50%, rgba(${secRgb[0]}, ${secRgb[1]}, ${secRgb[2]}, ${op}) 100%)`;
+      }
+    } else if (globalGradient) {
+      background = buildGradientCss(globalGradient, op);
     } else {
-      background = `linear-gradient(315deg, rgba(${bgRgb[0]}, ${bgRgb[1]}, ${bgRgb[2]}, ${op}) 0%, rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, ${op}) 50%, rgba(${secRgb[0]}, ${secRgb[1]}, ${secRgb[2]}, ${op}) 100%)`;
+      if (component === 'taskbar') {
+        background = `linear-gradient(90deg, rgba(${secRgb[0]}, ${secRgb[1]}, ${secRgb[2]}, ${op}) 0%, rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, ${op}) 50%, rgba(${bgRgb[0]}, ${bgRgb[1]}, ${bgRgb[2]}, ${op}) 100%)`;
+      } else if (component === 'startMenu') {
+        background = `linear-gradient(135deg, rgba(${bgRgb[0]}, ${bgRgb[1]}, ${bgRgb[2]}, ${op}) 0%, rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, ${op}) 50%, rgba(${secRgb[0]}, ${secRgb[1]}, ${secRgb[2]}, ${op}) 100%)`;
+      } else {
+        background = `linear-gradient(315deg, rgba(${bgRgb[0]}, ${bgRgb[1]}, ${bgRgb[2]}, ${op}) 0%, rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, ${op}) 50%, rgba(${secRgb[0]}, ${secRgb[1]}, ${secRgb[2]}, ${op}) 100%)`;
+      }
     }
   } else {
     // fluent-acrylic (default)
@@ -168,6 +185,7 @@ export default function PreviewCanvas() {
     isLightMode,
     taskbarMode,
     materialStyle,
+    globalGradient,
     noiseOpacity,
     dockMode,
     dockMargin,
@@ -208,6 +226,7 @@ export default function PreviewCanvas() {
     override: taskbarOverride,
     materialStyle,
     taskbarMode,
+    globalGradient,
     defaultBlur: taskbarBlur ?? 10,
     defaultOpacity: taskbarOpacity ?? 97,
     accentColor,
@@ -220,6 +239,7 @@ export default function PreviewCanvas() {
     override: startMenuOverride,
     materialStyle,
     taskbarMode,
+    globalGradient,
     defaultBlur: startMenuBlur ?? 15,
     defaultOpacity: startMenuOpacity ?? 97,
     accentColor,
@@ -232,6 +252,7 @@ export default function PreviewCanvas() {
     override: flyoutOverride,
     materialStyle,
     taskbarMode,
+    globalGradient,
     defaultBlur: notificationBlur ?? 15,
     defaultOpacity: notificationOpacity ?? 97,
     accentColor,

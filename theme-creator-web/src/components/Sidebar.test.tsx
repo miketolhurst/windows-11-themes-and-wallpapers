@@ -93,3 +93,48 @@ test('updates material style when material buttons are clicked', () => {
   expect(useThemeStore.getState().materialStyle).toBe('pure-black-neon');
 });
 
+test('updates material style to mica and mica-alt when buttons are clicked', () => {
+  useThemeStore.setState({ materialStyle: 'fluent-acrylic' });
+  render(<Sidebar />);
+
+  const micaBtn = screen.getByRole('button', { name: /^Mica$/i });
+  fireEvent.click(micaBtn);
+  expect(useThemeStore.getState().materialStyle).toBe('mica');
+
+  const micaAltBtn = screen.getByRole('button', { name: /^Mica Alt$/i });
+  fireEvent.click(micaAltBtn);
+  expect(useThemeStore.getState().materialStyle).toBe('mica-alt');
+});
+
+test('renders Component Isolation and Typography & Animations accordions', () => {
+  render(<Sidebar />);
+  const isolationAccordionBtn = screen.getByRole('button', { name: /Component Isolation/i });
+  expect(isolationAccordionBtn).toBeTruthy();
+
+  // Clicking it expands Component Isolation
+  fireEvent.click(isolationAccordionBtn);
+  expect(screen.getByText('Taskbar')).toBeTruthy();
+  expect(screen.getByText('Start Menu')).toBeTruthy();
+  expect(screen.getByText('Flyouts')).toBeTruthy();
+
+  const typoAccordionBtn = screen.getByRole('button', { name: /Typography & Animations/i });
+  expect(typoAccordionBtn).toBeTruthy();
+
+  // Clicking it expands Typography & Animations
+  fireEvent.click(typoAccordionBtn);
+  expect(screen.getByLabelText(/Font Family/i)).toBeTruthy();
+  expect(screen.getByRole('button', { name: /Preview Flyout Animation/i })).toBeTruthy();
+});
+
+test('opens GradientEditorModal when Edit Gradient is clicked in global styling', () => {
+  useThemeStore.setState({ materialStyle: 'linear-gradient' });
+  render(<Sidebar />);
+
+  const editGradientBtn = screen.getByRole('button', { name: /Edit Gradient/i });
+  expect(editGradientBtn).toBeTruthy();
+
+  fireEvent.click(editGradientBtn);
+  expect(screen.getByText(/Edit Global Gradient/i)).toBeTruthy();
+});
+
+

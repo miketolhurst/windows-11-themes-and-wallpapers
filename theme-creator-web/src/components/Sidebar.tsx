@@ -1,9 +1,12 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
-import { useThemeStore, MaterialStyle, RunningIndicatorStyle, ColorHarmonyType } from '../store/useThemeStore';
+import { useThemeStore, MaterialStyle, RunningIndicatorStyle, ColorHarmonyType, GradientConfig } from '../store/useThemeStore';
 import { THEME_PRESETS, PRESET_CATEGORIES, PresetCategory } from '../lib/presets';
 import { parseRegFile } from '../lib/regParser';
 import { generateZipPayload } from '../lib/exportEngine';
 import { copyShareLink } from '../lib/urlSharing';
+import ComponentIsolationSection from './ComponentIsolationSection';
+import TypographyAnimationSection from './TypographyAnimationSection';
+import GradientEditorModal from './GradientEditorModal';
 import {
   extractPaletteFromImageUrl,
   hexToRgb,
@@ -81,6 +84,18 @@ export default function Sidebar() {
     isSidebarCollapsed,
     toggleSidebar,
     setShowDownloadModal,
+    globalGradient,
+    setGlobalGradient,
+    taskbarOverride,
+    setTaskbarOverride,
+    startMenuOverride,
+    setStartMenuOverride,
+    flyoutOverride,
+    setFlyoutOverride,
+    typography,
+    setTypography,
+    animations,
+    setAnimations,
     past,
     future,
     undo,
@@ -101,6 +116,42 @@ export default function Sidebar() {
   const [newThemeName, setNewThemeName] = useState('');
   const [isSavedDrawerOpen, setIsSavedDrawerOpen] = useState(false);
   const [isPresetsExpanded, setIsPresetsExpanded] = useState(false);
+  const [isIsolationExpanded, setIsIsolationExpanded] = useState(false);
+  const [isTypographyExpanded, setIsTypographyExpanded] = useState(false);
+  const [isGradientModalOpen, setIsGradientModalOpen] = useState(false);
+  const [gradientTarget, setGradientTarget] = useState<'global' | 'taskbar' | 'startMenu' | 'flyout'>('global');
+
+  const handleOpenGradientModal = (target: 'global' | 'taskbar' | 'startMenu' | 'flyout') => {
+    setGradientTarget(target);
+    setIsGradientModalOpen(true);
+  };
+
+  const getGradientForTarget = (target: 'global' | 'taskbar' | 'startMenu' | 'flyout'): GradientConfig => {
+    if (target === 'taskbar') return taskbarOverride?.gradient || globalGradient;
+    if (target === 'startMenu') return startMenuOverride?.gradient || globalGradient;
+    if (target === 'flyout') return flyoutOverride?.gradient || globalGradient;
+    return globalGradient;
+  };
+
+  const getModalTitleForTarget = (target: 'global' | 'taskbar' | 'startMenu' | 'flyout') => {
+    if (target === 'taskbar') return 'Edit Taskbar Gradient';
+    if (target === 'startMenu') return 'Edit Start Menu Gradient';
+    if (target === 'flyout') return 'Edit Flyout Gradient';
+    return 'Edit Global Gradient';
+  };
+
+  const handleSaveGradient = (config: GradientConfig) => {
+    if (gradientTarget === 'taskbar') {
+      setTaskbarOverride({ gradient: config });
+    } else if (gradientTarget === 'startMenu') {
+      setStartMenuOverride({ gradient: config });
+    } else if (gradientTarget === 'flyout') {
+      setFlyoutOverride({ gradient: config });
+    } else {
+      setGlobalGradient(config);
+    }
+  };
+
   const [extractedSwatches, setExtractedSwatches] = useState<string[]>([]);
   const basePath = typeof window !== 'undefined' && window.location.pathname.startsWith('/theme-creator') ? '/theme-creator' : '/theme-creator';
 
@@ -623,12 +674,14 @@ export default function Sidebar() {
             </div>
           </div>
 
-          {/* 4-Tier Material Style Selector */}
+          {/* Material Style Selector */}
           <div className="mb-3">
             <span className="text-xs text-neutral-400 block mb-1">Material Style</span>
             <div className="grid grid-cols-2 gap-2 mb-2">
               {[
                 { id: 'fluent-acrylic', label: 'Acrylic Glass' },
+                { id: 'mica', label: 'Mica' },
+                { id: 'mica-alt', label: 'Mica Alt' },
                 { id: 'pure-black-neon', label: 'OLED Neon' },
                 { id: 'linear-gradient', label: 'Linear Gradient' },
                 { id: 'matte-slate', label: 'Matte Slate' },
@@ -652,6 +705,30 @@ export default function Sidebar() {
                 );
               })}
             </div>
+
+            {/* Edit Global Gradient Button */}
+            {(materialStyle ?? (taskbarMode === 'gradient' ? 'linear-gradient' : 'fluent-acrylic')) === 'linear-gradient' && (
+              <div className="mt-2 mb-2">
+                <button
+                  type="button"
+                  onClick={() => handleOpenGradientModal('global')}
+                  className="w-full py-1.5 px-3 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/40 text-xs font-medium flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="4" x2="4" y1="21" y2="14" />
+                    <line x1="4" x2="4" y1="10" y2="3" />
+                    <line x1="12" x2="12" y1="21" y2="12" />
+                    <line x1="12" x2="12" y1="8" y2="3" />
+                    <line x1="20" x2="20" y1="21" y2="16" />
+                    <line x1="20" x2="20" y1="12" y2="3" />
+                    <line x1="1" x2="7" y1="14" y2="14" />
+                    <line x1="9" x2="15" y1="8" y2="8" />
+                    <line x1="17" x2="23" y1="16" y2="16" />
+                  </svg>
+                  <span>Edit Gradient</span>
+                </button>
+              </div>
+            )}
 
             {/* Advanced Acrylic Tuning */}
             {(materialStyle ?? (taskbarMode === 'gradient' ? 'linear-gradient' : 'fluent-acrylic')) === 'fluent-acrylic' && (
@@ -785,6 +862,70 @@ export default function Sidebar() {
               <span>Show File Explorer Preview</span>
             </label>
           </div>
+        </div>
+
+        {/* Component Isolation Accordion */}
+        <div className="border border-neutral-800 rounded-xl bg-neutral-900/40 p-3">
+          <button
+            type="button"
+            onClick={() => setIsIsolationExpanded(!isIsolationExpanded)}
+            className="w-full flex items-center justify-between text-left cursor-pointer group select-none"
+          >
+            <div className="flex items-center gap-2">
+              <span className={`text-[10px] text-neutral-400 transition-transform duration-200 ${isIsolationExpanded ? 'rotate-90' : ''}`}>
+                ▶
+              </span>
+              <label className="text-xs font-semibold uppercase text-neutral-300 group-hover:text-white cursor-pointer">
+                Component Isolation
+              </label>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-neutral-400 group-hover:text-neutral-200">
+                {isIsolationExpanded ? '▲' : '▼'}
+              </span>
+            </div>
+          </button>
+
+          {isIsolationExpanded && (
+            <div className="mt-3 pt-3 border-t border-neutral-800">
+              <ComponentIsolationSection
+                onOpenGradientEditor={(target) => handleOpenGradientModal(target)}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Typography & Animations Accordion */}
+        <div className="border border-neutral-800 rounded-xl bg-neutral-900/40 p-3">
+          <button
+            type="button"
+            onClick={() => setIsTypographyExpanded(!isTypographyExpanded)}
+            className="w-full flex items-center justify-between text-left cursor-pointer group select-none"
+          >
+            <div className="flex items-center gap-2">
+              <span className={`text-[10px] text-neutral-400 transition-transform duration-200 ${isTypographyExpanded ? 'rotate-90' : ''}`}>
+                ▶
+              </span>
+              <label className="text-xs font-semibold uppercase text-neutral-300 group-hover:text-white cursor-pointer">
+                Typography & Animations
+              </label>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-neutral-400 group-hover:text-neutral-200">
+                {isTypographyExpanded ? '▲' : '▼'}
+              </span>
+            </div>
+          </button>
+
+          {isTypographyExpanded && (
+            <div className="mt-3 pt-3 border-t border-neutral-800">
+              <TypographyAnimationSection
+                onTestAnimation={() => {
+                  setActivePane(activePane === 'start' ? null : 'start');
+                }}
+              />
+            </div>
+          )}
         </div>
 
         {/* Windhawk Layout & Tweaks */}
@@ -1094,6 +1235,15 @@ export default function Sidebar() {
           <span>{isDownloading ? 'Generating .zip...' : 'Download Theme (.zip)'}</span>
         </button>
       </div>
+
+      {/* Advanced Gradient Editor Modal */}
+      <GradientEditorModal
+        isOpen={isGradientModalOpen}
+        title={getModalTitleForTarget(gradientTarget)}
+        initialGradient={getGradientForTarget(gradientTarget)}
+        onSave={handleSaveGradient}
+        onClose={() => setIsGradientModalOpen(false)}
+      />
     </div>
   );
 }

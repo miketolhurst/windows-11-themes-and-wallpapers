@@ -152,17 +152,19 @@ export default function StudioPage() {
       <PostDownloadModal />
 
       {/* Theme Diff & Inspector Modal */}
-      <ThemeDiffModal
-        isOpen={isDiffModalOpen}
-        incomingConfig={incomingConfig}
-        onClose={() => {
-          setIsDiffModalOpen(false);
-          setIncomingConfig(null);
-        }}
-        onApply={(config) => {
-          applyThemeConfig(config);
-        }}
-      />
+      {isDiffModalOpen && (
+        <ThemeDiffModal
+          isOpen={isDiffModalOpen}
+          incomingConfig={incomingConfig}
+          onClose={() => {
+            setIsDiffModalOpen(false);
+            setIncomingConfig(null);
+          }}
+          onApply={(config) => {
+            applyThemeConfig(config);
+          }}
+        />
+      )}
     </main>
   );
 }

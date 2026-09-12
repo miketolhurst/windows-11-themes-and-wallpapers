@@ -57,9 +57,16 @@ export function ThemeDiffModal({
   onApply,
 }: ThemeDiffModalProps): React.JSX.Element | null {
   const themeState = useThemeStore();
-  const currentSnapshot = useMemo(() => takeSnapshot(themeState), [themeState]);
   const [searchFilter, setSearchFilter] = useState('');
   const [onlyChanged, setOnlyChanged] = useState(false);
+
+  // Reset search filter and toggle when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setSearchFilter('');
+      setOnlyChanged(false);
+    }
+  }, [isOpen]);
 
   // Close on Escape key
   useEffect(() => {
@@ -74,8 +81,10 @@ export function ThemeDiffModal({
   }, [isOpen, onClose]);
 
   const diffItems: ThemeDiffItem[] = useMemo(() => {
+    if (!isOpen) return [];
+    const currentSnapshot = takeSnapshot(themeState);
     return compareThemeConfigs(currentSnapshot, incomingConfig || {});
-  }, [currentSnapshot, incomingConfig]);
+  }, [isOpen, themeState, incomingConfig]);
 
   const changedCount = useMemo(() => {
     return diffItems.filter((d) => d.hasChanged).length;

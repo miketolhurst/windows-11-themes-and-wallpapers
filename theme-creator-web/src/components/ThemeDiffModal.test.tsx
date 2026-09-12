@@ -146,4 +146,48 @@ describe('ThemeDiffModal', () => {
     expect(screen.getByText('Accent Color')).toBeInTheDocument();
     expect(screen.queryByText('Light / Dark Mode')).not.toBeInTheDocument();
   });
+
+  it('resets search filter and changed-only toggle when reopened', () => {
+    const { rerender } = render(
+      <ThemeDiffModal
+        isOpen={true}
+        incomingConfig={{ accentColor: '#FF0055' }}
+        onClose={vi.fn()}
+        onApply={vi.fn()}
+      />
+    );
+
+    const searchInput = screen.getByPlaceholderText(/filter settings/i) as HTMLInputElement;
+    const changedOnlyToggle = screen.getByRole('checkbox', { name: /only changed/i }) as HTMLInputElement;
+
+    fireEvent.change(searchInput, { target: { value: 'Accent' } });
+    fireEvent.click(changedOnlyToggle);
+    expect(searchInput.value).toBe('Accent');
+    expect(changedOnlyToggle.checked).toBe(true);
+
+    // Close modal
+    rerender(
+      <ThemeDiffModal
+        isOpen={false}
+        incomingConfig={{ accentColor: '#FF0055' }}
+        onClose={vi.fn()}
+        onApply={vi.fn()}
+      />
+    );
+
+    // Reopen modal
+    rerender(
+      <ThemeDiffModal
+        isOpen={true}
+        incomingConfig={{ accentColor: '#FF0055' }}
+        onClose={vi.fn()}
+        onApply={vi.fn()}
+      />
+    );
+
+    const reopenedSearchInput = screen.getByPlaceholderText(/filter settings/i) as HTMLInputElement;
+    const reopenedChangedOnlyToggle = screen.getByRole('checkbox', { name: /only changed/i }) as HTMLInputElement;
+    expect(reopenedSearchInput.value).toBe('');
+    expect(reopenedChangedOnlyToggle.checked).toBe(false);
+  });
 });

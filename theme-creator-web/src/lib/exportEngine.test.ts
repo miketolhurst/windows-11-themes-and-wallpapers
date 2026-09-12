@@ -7,8 +7,11 @@ import {
   generateRestoreBatString,
   buildWindhawkJsonBackups,
   generateZipPayload,
+  generateGradientBrushXaml,
+  calculateGradientPoints,
+  generateWindhawkStylerMod,
 } from './exportEngine';
-import { ThemeState } from '../store/useThemeStore';
+import { ThemeState, useThemeStore } from '../store/useThemeStore';
 
 describe('exportEngine', () => {
   const mockState = {
@@ -192,3 +195,93 @@ describe('exportEngine', () => {
     expect(zip.file('start_icon.png')).not.toBeNull();
   });
 });
+
+describe('exportEngine Phase 1 extensions', () => {
+  it('calculates normalized gradient start and end coordinates from degrees', () => {
+    const right = calculateGradientPoints(90);
+    expect(right.start).toBe('0,0.5');
+    expect(right.end).toBe('1,0.5');
+
+    const down = calculateGradientPoints(180);
+    expect(down.start).toBe('0.5,0');
+    expect(down.end).toBe('0.5,1');
+  });
+
+  it('generates multi-stop LinearGradientBrush XAML', () => {
+    const xaml = generateGradientBrushXaml({
+      type: 'linear',
+      angle: 90,
+      stops: [
+        { id: '1', color: '#0078D4', offset: 0 },
+        { id: '2', color: '#EC4899', offset: 50 },
+        { id: '3', color: '#8B5CF6', offset: 100 },
+      ],
+    });
+    expect(xaml).toContain('<LinearGradientBrush');
+    expect(xaml).toContain('StartPoint="0,0.5" EndPoint="1,0.5"');
+    expect(xaml).toContain('<GradientStop Color="#FF0078D4" Offset="0"/>');
+    expect(xaml).toContain('<GradientStop Color="#FFEC4899" Offset="0.5"/>');
+    expect(xaml).toContain('<GradientStop Color="#FF8B5CF6" Offset="1"/>');
+  });
+
+  it('generates RadialGradientBrush XAML when type is radial', () => {
+    const xaml = generateGradientBrushXaml({
+      type: 'radial',
+      angle: 0,
+      stops: [
+        { id: '1', color: '#FFFFFF', offset: 0 },
+        { id: '2', color: '#000000', offset: 100 },
+      ],
+    });
+    expect(xaml).toContain('<RadialGradientBrush Center="0.5,0.5" RadiusX="0.5" RadiusY="0.5"');
+    expect(xaml).toContain('<GradientStop Color="#FFFFFFFF" Offset="0"/>');
+    expect(xaml).toContain('<GradientStop Color="#FF000000" Offset="1"/>');
+  });
+
+  it('exports calibrated Mica & Mica Alt WindhawkBlur rules', () => {
+    const micaState = { ...useThemeStore.getState(), materialStyle: 'mica' as const };
+    const micaPkg = generateWindhawkStylerMod(micaState);
+    expect(micaPkg.taskbarStyles).toContain('BlurAmount="38"');
+    expect(micaPkg.taskbarStyles).toContain('TintOpacity="0.9"');
+
+    const altState = { ...useThemeStore.getState(), materialStyle: 'mica-alt' as const };
+    const altPkg = generateWindhawkStylerMod(altState);
+    expect(altPkg.taskbarStyles).toContain('BlurAmount="45"');
+    expect(altPkg.taskbarStyles).toContain('TintOpacity="0.95"');
+  });
+
+  it('applies taskbar component overrides when enabled', () => {
+    const state = {
+      ...useThemeStore.getState(),
+      taskbarOverride: {
+        enabled: true,
+        materialStyle: 'pure-black-neon' as const,
+        customColor: '#FF0055',
+        opacity: 80,
+      },
+    };
+    const pkg = generateWindhawkStylerMod(state);
+    expect(pkg.taskbarStyles).toContain('#CCFF0055'); // 80% opacity in hex
+  });
+
+  it('injects typography and animation tweaks into mod styles', () => {
+    const state = {
+      ...useThemeStore.getState(),
+      typography: {
+        fontFamily: 'Inter',
+        fontWeight: '600' as const,
+        characterSpacing: 25,
+      },
+      animations: {
+        speed: 'snappy' as const,
+        durationMs: 150,
+        easing: 'decelerate' as const,
+      },
+    };
+    const pkg = generateWindhawkStylerMod(state);
+    expect(pkg.taskbarStyles).toContain('FontFamily=Inter');
+    expect(pkg.taskbarStyles).toContain('FontWeight=SemiBold');
+    expect(pkg.taskbarStyles).toContain('CharacterSpacing=25');
+  });
+});
+

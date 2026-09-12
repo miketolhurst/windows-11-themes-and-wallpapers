@@ -1,5 +1,12 @@
 import JSZip from 'jszip';
-import { ThemeState, MaterialStyle } from '../store/useThemeStore';
+import {
+  ThemeState,
+  ThemeConfigSnapshot,
+  MaterialStyle,
+  GradientConfig,
+  ComponentOverride,
+  DEFAULT_THEME_STATE,
+} from '../store/useThemeStore';
 import {
   computeAccentPalette,
   hexToRgb,
@@ -11,6 +18,71 @@ import {
 
 function escapeRegStr(str: string): string {
   return str.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+
+export function calculateGradientPoints(angleDeg: number): { start: string; end: string } {
+  const norm = ((angleDeg % 360) + 360) % 360;
+  const rad = (norm * Math.PI) / 180;
+  // 0deg = bottom-to-top (dx=0, dy=-1)
+  // 90deg = left-to-right (dx=1, dy=0)
+  // 180deg = top-to-bottom (dx=0, dy=1)
+  // 270deg = right-to-left (dx=-1, dy=0)
+  const dx = Math.sin(rad);
+  const dy = -Math.cos(rad);
+
+  const startX = 0.5 - 0.5 * dx;
+  const startY = 0.5 - 0.5 * dy;
+  const endX = 0.5 + 0.5 * dx;
+  const endY = 0.5 + 0.5 * dy;
+
+  const formatCoord = (n: number): string => {
+    const val = Math.abs(n) < 1e-6 ? 0 : n;
+    const rounded = Math.round(val * 100) / 100;
+    return Number(rounded.toFixed(2)).toString();
+  };
+
+  return {
+    start: `${formatCoord(startX)},${formatCoord(startY)}`,
+    end: `${formatCoord(endX)},${formatCoord(endY)}`,
+  };
+}
+
+export function generateGradientBrushXaml(config: GradientConfig, opacity?: number): string {
+  const formatColor = (colorStr: string): string => {
+    let clean = colorStr.replace(/^#/, '').trim();
+    if (clean.length === 3) {
+      clean = clean.split('').map((c) => c + c).join('');
+    }
+    if (opacity !== undefined) {
+      const alphaHex = opacityToAlphaHex(opacity).toUpperCase();
+      const rgbHex = clean.length === 8 ? clean.slice(2).toUpperCase() : clean.toUpperCase();
+      return `#${alphaHex}${rgbHex}`;
+    }
+    if (clean.length === 6) {
+      return `#FF${clean.toUpperCase()}`;
+    }
+    if (clean.length === 8) {
+      return `#${clean.toUpperCase()}`;
+    }
+    return `#FF${clean.toUpperCase().padStart(6, '0')}`;
+  };
+
+  const formatOffset = (offsetVal: number): string => {
+    const normalized = offsetVal / 100;
+    const rounded = Math.round(normalized * 10000) / 10000;
+    return Number(rounded.toFixed(4)).toString();
+  };
+
+  const stopsXaml = (config.stops || [])
+    .map((stop) => `<GradientStop Color="${formatColor(stop.color)}" Offset="${formatOffset(stop.offset)}"/>`)
+    .join('');
+
+  if (config.type === 'radial') {
+    return `<RadialGradientBrush Center="0.5,0.5" RadiusX="0.5" RadiusY="0.5">${stopsXaml}</RadialGradientBrush>`;
+  }
+
+  const { start, end } = calculateGradientPoints(config.angle ?? 90);
+  return `<LinearGradientBrush StartPoint="${start}" EndPoint="${end}">${stopsXaml}</LinearGradientBrush>`;
 }
 
 export function buildSurfaceFill(
@@ -29,6 +101,10 @@ export function buildSurfaceFill(
 
   if (material === 'fluent-acrylic') {
     return `<WindhawkBlur BlurAmount="${blurAmount}" TintColor="#${alphaHex}${bgHex}" TintOpacity="${(opacity / 100).toFixed(2)}" TintSaturation="${tintSaturation.toFixed(2)}" NoiseOpacity="${noiseOpacity.toFixed(2)}" NoiseDensity="1.0" FallbackColor="#${bgHex}"/>`;
+  } else if (material === 'mica') {
+    return `<WindhawkBlur BlurAmount="38" TintColor="#${alphaHex}${bgHex}" TintOpacity="0.9" TintSaturation="${tintSaturation.toFixed(2)}" NoiseOpacity="0.02" NoiseDensity="1.0" FallbackColor="#${bgHex}"/>`;
+  } else if (material === 'mica-alt') {
+    return `<WindhawkBlur BlurAmount="45" TintColor="#${alphaHex}${bgHex}" TintOpacity="0.95" TintSaturation="${tintSaturation.toFixed(2)}" NoiseOpacity="0.01" NoiseDensity="1.0" FallbackColor="#${bgHex}"/>`;
   } else if (material === 'pure-black-neon') {
     return `<SolidColorBrush Color="#000000" Opacity="0.98"/>`;
   } else if (material === 'matte-slate') {
@@ -45,6 +121,8 @@ export function buildSurfaceFill(
   }
 }
 
+export const buildMaterialBackgroundStyle = buildSurfaceFill;
+
 export interface RawControlStyle {
   target: string;
   styles: string[];
@@ -58,7 +136,7 @@ export interface ModRawStyles {
   ncThemeVars: string[];
 }
 
-export function getModRawStyles(state: ThemeState): ModRawStyles {
+export function getModRawStyles(state: ThemeConfigSnapshot | ThemeState): ModRawStyles {
   const palette = computeAccentPalette(state.accentColor, state.secondaryAccent);
   const accentRgb = hexToRgb(state.accentColor);
   const secRgb = hexToRgb(state.secondaryAccent);
@@ -77,39 +155,74 @@ export function getModRawStyles(state: ThemeState): ModRawStyles {
   const noise = state.noiseOpacity ?? 0.04;
   const sat = state.tintSaturation ?? 0.85;
 
-  const tbFill = buildSurfaceFill(
+  const resolveFill = (
+    override: ComponentOverride | undefined,
+    defaultMaterial: MaterialStyle,
+    defaultBlur: number,
+    defaultOpacity: number,
+    defaultCoords: { start: string; end: string }
+  ): string => {
+    if (override?.enabled) {
+      if (override.customColor) {
+        const op = override.opacity ?? defaultOpacity;
+        const alphaHex = opacityToAlphaHex(op).toUpperCase();
+        const cleanHex = override.customColor.replace(/^#/, '').toUpperCase();
+        return `<SolidColorBrush Color="#${alphaHex}${cleanHex}"/>`;
+      }
+      if (override.gradient) {
+        return generateGradientBrushXaml(override.gradient, override.opacity ?? defaultOpacity);
+      }
+      if (override.materialStyle) {
+        return buildSurfaceFill(
+          override.materialStyle,
+          override.blur ?? defaultBlur,
+          baseBgRgb,
+          accentRgb,
+          secRgb,
+          override.opacity ?? defaultOpacity,
+          noise,
+          sat,
+          defaultCoords
+        );
+      }
+    }
+    if (defaultMaterial === 'linear-gradient' && state.globalGradient) {
+      return generateGradientBrushXaml(state.globalGradient, defaultOpacity);
+    }
+    return buildSurfaceFill(
+      defaultMaterial,
+      defaultBlur,
+      baseBgRgb,
+      accentRgb,
+      secRgb,
+      defaultOpacity,
+      noise,
+      sat,
+      defaultCoords
+    );
+  };
+
+  const tbFill = resolveFill(
+    state.taskbarOverride,
     materialStyle,
     state.taskbarBlur ?? 10,
-    baseBgRgb,
-    accentRgb,
-    secRgb,
     state.taskbarOpacity ?? 97,
-    noise,
-    sat,
     { start: '1.4, 1.4', end: '-0.4, -0.4' }
   );
 
-  const smFill = buildSurfaceFill(
+  const smFill = resolveFill(
+    state.startMenuOverride,
     materialStyle,
     state.startMenuBlur ?? 15,
-    baseBgRgb,
-    accentRgb,
-    secRgb,
     state.startMenuOpacity ?? 97,
-    noise,
-    sat,
     { start: '1.2, -0.2', end: '-0.2, 1.2' }
   );
 
-  const ncFill = buildSurfaceFill(
+  const ncFill = resolveFill(
+    state.flyoutOverride,
     materialStyle,
     state.notificationBlur ?? 15,
-    baseBgRgb,
-    accentRgb,
-    secRgb,
     state.notificationOpacity ?? 97,
-    noise,
-    sat,
     { start: '1.2, 1.2', end: '-0.2, -0.2' }
   );
 
@@ -312,6 +425,52 @@ export function getModRawStyles(state: ThemeState): ModRawStyles {
     `SliderThumbBackground=${cNormal}`,
   ];
 
+  if (state.typography) {
+    const fontWeightMap: Record<string, string> = {
+      '300': 'Light',
+      '400': 'Normal',
+      '500': 'Medium',
+      '600': 'SemiBold',
+      '700': 'Bold',
+    };
+    const mappedWeight =
+      fontWeightMap[state.typography.fontWeight] || state.typography.fontWeight || 'Normal';
+    const typoStyles = [
+      `FontFamily=${state.typography.fontFamily}`,
+      `FontWeight=${mappedWeight}`,
+      `CharacterSpacing=${state.typography.characterSpacing}`,
+    ];
+    taskbarControlStyles.push({
+      target: 'TextBlock',
+      styles: typoStyles,
+    });
+    startMenuControlStyles.push({
+      target: 'TextBlock',
+      styles: typoStyles,
+    });
+    ncControlStyles.push({
+      target: 'TextBlock',
+      styles: typoStyles,
+    });
+  }
+
+  if (state.animations && state.animations.durationMs !== undefined) {
+    const sec = (state.animations.durationMs / 1000).toFixed(3);
+    const durationStyle = `Duration=0:0:${sec}`;
+    taskbarControlStyles.push({
+      target: 'Storyboard',
+      styles: [durationStyle],
+    });
+    startMenuControlStyles.push({
+      target: 'Storyboard',
+      styles: [durationStyle],
+    });
+    ncControlStyles.push({
+      target: 'Storyboard',
+      styles: [durationStyle],
+    });
+  }
+
   return {
     taskbarControlStyles,
     startMenuControlStyles,
@@ -429,7 +588,7 @@ export interface WindhawkBackups {
   notificationCenterBackup: string;
 }
 
-export function buildWindhawkJsonBackups(state: ThemeState): WindhawkBackups {
+export function buildWindhawkJsonBackups(state: ThemeConfigSnapshot | ThemeState): WindhawkBackups {
   const {
     taskbarControlStyles,
     startMenuControlStyles,
@@ -492,6 +651,32 @@ export function buildWindhawkJsonBackups(state: ThemeState): WindhawkBackups {
     taskbarBackup,
     startMenuBackup,
     notificationCenterBackup,
+  };
+}
+
+export interface WindhawkThemePackage {
+  taskbarStyles: string;
+  startMenuStyles: string;
+  notificationCenterStyles: string;
+  themeVariables: string[];
+}
+
+export function generateWindhawkStylerMod(
+  state: ThemeConfigSnapshot | ThemeState
+): WindhawkThemePackage {
+  const fullState = {
+    ...DEFAULT_THEME_STATE,
+    ...state,
+  } as ThemeState;
+
+  const { themeVarsCommon, ncThemeVars } = getModRawStyles(fullState);
+  const backups = buildWindhawkJsonBackups(fullState);
+
+  return {
+    taskbarStyles: backups.taskbarBackup,
+    startMenuStyles: backups.startMenuBackup,
+    notificationCenterStyles: backups.notificationCenterBackup,
+    themeVariables: [...themeVarsCommon, ...ncThemeVars],
   };
 }
 

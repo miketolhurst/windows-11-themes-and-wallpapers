@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { FeaturedTheme, getThemeStudioUrl } from "../data/featuredThemes";
 import { generateZipPayload } from "../lib/exportEngine";
-import { ThemeState } from "../store/useThemeStore";
+import { ThemeState, DEFAULT_THEME_STATE } from "../store/useThemeStore";
 
 interface ThemeLightboxProps {
   theme: FeaturedTheme | null;
@@ -47,6 +47,7 @@ export function ThemeLightbox({ theme, onClose }: ThemeLightboxProps) {
 
       // Build mock state for export engine
       const state: ThemeState = {
+        ...DEFAULT_THEME_STATE,
         themeName: theme.name,
         accentColor: theme.config.accentColor,
         secondaryAccent: theme.config.secondaryAccent,
@@ -110,6 +111,12 @@ export function ThemeLightbox({ theme, onClose }: ThemeLightboxProps) {
         setStartMenuOpacity: () => {},
         setNotificationOpacity: () => {},
         setActivePane: () => {},
+        setGlobalGradient: () => {},
+        setTaskbarOverride: () => {},
+        setStartMenuOverride: () => {},
+        setFlyoutOverride: () => {},
+        setTypography: () => {},
+        setAnimations: () => {},
         setShowDesktopIcons: () => {},
         setShowWindowPreview: () => {},
         setIsSidebarCollapsed: () => {},

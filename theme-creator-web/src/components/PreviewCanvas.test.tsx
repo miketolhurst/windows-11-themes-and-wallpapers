@@ -1,10 +1,11 @@
-import { render, cleanup } from '@testing-library/react';
+import { render, cleanup, screen } from '@testing-library/react';
 import { test, expect, afterEach } from 'vitest';
 import PreviewCanvas from './PreviewCanvas';
 import { useThemeStore } from '../store/useThemeStore';
 
 afterEach(() => {
   cleanup();
+  useThemeStore.getState().resetToDefaults();
 });
 
 test('disables backdrop blur and uses rgba gradient in gradient mode with secondary accent on left', () => {
@@ -237,5 +238,100 @@ test('allows user to interact with Quick Settings Volume and Brightness sliders'
   volumeInput.dispatchEvent(new Event('change', { bubbles: true }));
 });
 
+test('applies typography styles to the preview canvas root', () => {
+  useThemeStore.getState().setTypography({ fontFamily: 'JetBrains Mono', fontWeight: '700', characterSpacing: 25 });
+  render(<PreviewCanvas />);
+  const canvas = screen.getByTestId('preview-canvas-root');
+  expect(canvas.style.fontFamily).toContain('JetBrains Mono');
+  expect(canvas.style.fontWeight).toBe('700');
+  expect(canvas.style.letterSpacing).toBe('0.025em');
+});
 
+test('renders mica material styling on taskbar and start menu', () => {
+  useThemeStore.getState().setMaterialStyle('mica');
+  render(<PreviewCanvas />);
+  const taskbar = screen.getByTestId('taskbar-container');
+  expect(taskbar.style.backdropFilter).toContain('blur(40px)');
+  expect(taskbar.style.backdropFilter).toContain('saturate(1.15)');
 
+  const startMenu = screen.getByTestId('start-menu-container');
+  expect(startMenu.style.backdropFilter).toContain('blur(40px)');
+  expect(startMenu.style.backdropFilter).toContain('saturate(1.15)');
+});
+
+test('renders mica-alt material styling', () => {
+  useThemeStore.getState().setMaterialStyle('mica-alt');
+  render(<PreviewCanvas />);
+  const taskbar = screen.getByTestId('taskbar-container');
+  expect(taskbar.style.backdropFilter).toContain('blur(45px)');
+});
+
+test('applies taskbar component overrides when enabled', () => {
+  useThemeStore.getState().setTaskbarOverride({
+    enabled: true,
+    materialStyle: 'pure-black-neon',
+    customColor: '#FF0055',
+    opacity: 80,
+  });
+  render(<PreviewCanvas />);
+  const taskbar = screen.getByTestId('taskbar-container');
+  expect(taskbar.style.backgroundColor).toContain('rgba(255, 0, 85, 0.8)');
+});
+
+test('applies start menu component overrides when enabled', () => {
+  useThemeStore.getState().setStartMenuOverride({
+    enabled: true,
+    customColor: '#00FFCC',
+    opacity: 50,
+  });
+  render(<PreviewCanvas />);
+  const startMenu = screen.getByTestId('start-menu-container');
+  expect(startMenu.style.backgroundColor).toContain('rgba(0, 255, 204, 0.5)');
+});
+
+test('applies flyout component overrides when enabled for quick settings and notifications', () => {
+  useThemeStore.getState().setFlyoutOverride({
+    enabled: true,
+    materialStyle: 'mica',
+    opacity: 90,
+  });
+  useThemeStore.setState({ activePane: 'quicksettings' });
+  const { rerender } = render(<PreviewCanvas />);
+  const quickSettings = screen.getByTestId('flyout-quicksettings');
+  expect(quickSettings.style.backdropFilter).toContain('blur(40px)');
+
+  useThemeStore.setState({ activePane: 'notifications' });
+  rerender(<PreviewCanvas />);
+  const notifications = screen.getByTestId('flyout-notifications');
+  const notifCard = notifications.querySelector('.w-\\[360px\\]') as HTMLElement;
+  expect(notifCard).toBeTruthy();
+  expect(notifCard.style.backdropFilter).toContain('blur(40px)');
+});
+
+test('applies animation duration and easing to canvas CSS variables and flyouts', () => {
+  useThemeStore.getState().setAnimations({
+    speed: 'smooth',
+    durationMs: 400,
+    easing: 'decelerate',
+  });
+  render(<PreviewCanvas />);
+  const canvas = screen.getByTestId('preview-canvas-root');
+  expect(canvas.style.getPropertyValue('--flyout-duration')).toBe('400ms');
+  expect(canvas.style.getPropertyValue('--flyout-easing')).toBe('cubic-bezier(0.0, 0.0, 0.2, 1)');
+
+  const startMenu = screen.getByTestId('start-menu-container');
+  expect(startMenu.style.transitionDuration).toBe('var(--flyout-duration)');
+  expect(startMenu.style.transitionTimingFunction).toBe('var(--flyout-easing)');
+});
+
+test('sets flyout duration to 0ms when animation speed is instant', () => {
+  useThemeStore.getState().setAnimations({
+    speed: 'instant',
+    durationMs: 250,
+    easing: 'linear',
+  });
+  render(<PreviewCanvas />);
+  const canvas = screen.getByTestId('preview-canvas-root');
+  expect(canvas.style.getPropertyValue('--flyout-duration')).toBe('0ms');
+  expect(canvas.style.getPropertyValue('--flyout-easing')).toBe('linear');
+});

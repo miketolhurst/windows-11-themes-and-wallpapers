@@ -1,6 +1,165 @@
 import React from 'react';
-import { useThemeStore } from '../store/useThemeStore';
+import {
+  useThemeStore,
+  MaterialStyle,
+  ComponentOverride,
+  GradientConfig,
+} from '../store/useThemeStore';
 import { hexToRgb } from '../lib/paletteEngine';
+
+function colorToRgba(color: string, opacity: number): string {
+  if (color.startsWith('#')) {
+    const rgb = hexToRgb(color);
+    return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${opacity})`;
+  }
+  return color;
+}
+
+function buildGradientCss(gradient: GradientConfig, opacity: number, fallbackAngle: number = 90): string {
+  const angle = gradient.angle ?? fallbackAngle;
+  const sortedStops = [...(gradient.stops || [])].sort((a, b) => a.offset - b.offset);
+  const cssStops = sortedStops
+    .map((s) => `${colorToRgba(s.color, opacity)} ${s.offset}%`)
+    .join(', ');
+  if (gradient.type === 'radial') {
+    return `radial-gradient(circle at center, ${cssStops})`;
+  }
+  return `linear-gradient(${angle}deg, ${cssStops})`;
+}
+
+interface ResolvedComponentStyle {
+  material: MaterialStyle;
+  opacity: number;
+  blur: number;
+  backdropFilter: string;
+  background: string;
+  boxShadow?: string;
+}
+
+function resolveComponentStyle({
+  component,
+  override,
+  materialStyle,
+  taskbarMode,
+  defaultBlur,
+  defaultOpacity,
+  accentColor,
+  secondaryAccent,
+  isLightMode,
+}: {
+  component: 'taskbar' | 'startMenu' | 'flyout';
+  override?: ComponentOverride;
+  materialStyle?: MaterialStyle;
+  taskbarMode?: 'blur' | 'gradient';
+  defaultBlur: number;
+  defaultOpacity: number;
+  accentColor: string;
+  secondaryAccent: string;
+  isLightMode: boolean;
+}): ResolvedComponentStyle {
+  const isOverridden = Boolean(override?.enabled);
+  const baseMaterial =
+    taskbarMode === 'gradient'
+      ? 'linear-gradient'
+      : (materialStyle || 'fluent-acrylic');
+  const mat: MaterialStyle =
+    isOverridden && override?.materialStyle ? override.materialStyle : baseMaterial;
+
+  const op =
+    isOverridden && override?.opacity !== undefined
+      ? override.opacity / 100
+      : (defaultOpacity ?? 97) / 100;
+
+  const blur =
+    isOverridden && override?.blur !== undefined
+      ? override.blur
+      : (defaultBlur ?? (component === 'taskbar' ? 10 : 15));
+
+  const accentRgb = hexToRgb(accentColor);
+  const secRgb = hexToRgb(secondaryAccent);
+  const bgRgb = isLightMode ? [240, 240, 245] : [16, 18, 22];
+
+  let background = '';
+  let backdropFilter = 'none';
+
+  if (isOverridden && override?.customColor) {
+    const customRgb = hexToRgb(override.customColor);
+    background = `rgba(${customRgb[0]}, ${customRgb[1]}, ${customRgb[2]}, ${op})`;
+    if (mat === 'mica') {
+      backdropFilter = 'blur(40px) saturate(1.15)';
+    } else if (mat === 'mica-alt') {
+      backdropFilter = 'blur(45px) saturate(1.10)';
+    } else if (mat === 'fluent-acrylic') {
+      backdropFilter = `blur(${blur}px)`;
+    } else {
+      backdropFilter = 'none';
+    }
+  } else if (isOverridden && override?.gradient) {
+    background = buildGradientCss(override.gradient, op);
+    backdropFilter = 'none';
+  } else if (mat === 'mica') {
+    backdropFilter = 'blur(40px) saturate(1.15)';
+    const micaAlpha = Number((op * 0.88).toFixed(2));
+    background = isLightMode
+      ? `rgba(243, 243, 243, ${micaAlpha})`
+      : `rgba(32, 32, 32, ${micaAlpha})`;
+  } else if (mat === 'mica-alt') {
+    backdropFilter = 'blur(45px) saturate(1.10)';
+    const micaAltAlpha = Number((op * 0.94).toFixed(2));
+    background = isLightMode
+      ? `rgba(235, 235, 235, ${micaAltAlpha})`
+      : `rgba(24, 24, 24, ${micaAltAlpha})`;
+  } else if (mat === 'pure-black-neon') {
+    backdropFilter = 'none';
+    background = isLightMode ? 'rgba(255, 255, 255, 0.98)' : 'rgba(0, 0, 0, 0.98)';
+  } else if (mat === 'matte-slate') {
+    backdropFilter = 'none';
+    if (component === 'taskbar') {
+      background = isLightMode ? '#e2e8f0' : '#1e293b';
+    } else {
+      background = isLightMode ? '#f1f5f9' : '#0f172a';
+    }
+  } else if (mat === 'linear-gradient') {
+    backdropFilter = 'none';
+    if (component === 'taskbar') {
+      background = `linear-gradient(90deg, rgba(${secRgb[0]}, ${secRgb[1]}, ${secRgb[2]}, ${op}) 0%, rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, ${op}) 50%, rgba(${bgRgb[0]}, ${bgRgb[1]}, ${bgRgb[2]}, ${op}) 100%)`;
+    } else if (component === 'startMenu') {
+      background = `linear-gradient(135deg, rgba(${bgRgb[0]}, ${bgRgb[1]}, ${bgRgb[2]}, ${op}) 0%, rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, ${op}) 50%, rgba(${secRgb[0]}, ${secRgb[1]}, ${secRgb[2]}, ${op}) 100%)`;
+    } else {
+      background = `linear-gradient(315deg, rgba(${bgRgb[0]}, ${bgRgb[1]}, ${bgRgb[2]}, ${op}) 0%, rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, ${op}) 50%, rgba(${secRgb[0]}, ${secRgb[1]}, ${secRgb[2]}, ${op}) 100%)`;
+    }
+  } else {
+    // fluent-acrylic (default)
+    backdropFilter = `blur(${blur}px)`;
+    if (component === 'taskbar') {
+      background = isLightMode
+        ? `rgba(245, 245, 250, ${(op * 0.72).toFixed(2)})`
+        : `rgba(20, 20, 24, ${(op * 0.65).toFixed(2)})`;
+    } else if (component === 'startMenu') {
+      background = isLightMode
+        ? `radial-gradient(circle at 90% 10%, ${secondaryAccent}35 0%, transparent 65%), radial-gradient(circle at 10% 90%, ${accentColor}35 0%, transparent 65%), rgba(245, 245, 250, 0.84)`
+        : `radial-gradient(circle at 90% 10%, ${secondaryAccent}40 0%, transparent 65%), radial-gradient(circle at 10% 90%, ${accentColor}40 0%, transparent 65%), rgba(18, 20, 25, 0.84)`;
+    } else {
+      background = isLightMode
+        ? `radial-gradient(circle at 90% 90%, ${secondaryAccent}35 0%, transparent 65%), radial-gradient(circle at 10% 10%, ${accentColor}35 0%, transparent 65%), rgba(245, 245, 250, 0.84)`
+        : `radial-gradient(circle at 90% 90%, ${secondaryAccent}40 0%, transparent 65%), radial-gradient(circle at 10% 10%, ${accentColor}40 0%, transparent 65%), rgba(18, 20, 25, 0.84)`;
+    }
+  }
+
+  const boxShadow =
+    mat === 'pure-black-neon'
+      ? `0 0 24px ${accentColor}60, inset 0 0 16px ${accentColor}25`
+      : `0 0 24px -6px ${accentColor}40`;
+
+  return {
+    material: mat,
+    opacity: op,
+    blur,
+    backdropFilter,
+    background,
+    boxShadow,
+  };
+}
 
 export default function PreviewCanvas() {
   const {
@@ -10,7 +169,6 @@ export default function PreviewCanvas() {
     taskbarMode,
     materialStyle,
     noiseOpacity,
-    tintSaturation,
     dockMode,
     dockMargin,
     runningIndicatorStyle,
@@ -33,103 +191,74 @@ export default function PreviewCanvas() {
     showDesktopIcons,
     showWindowPreview,
     setShowWindowPreview,
+    taskbarOverride,
+    startMenuOverride,
+    flyoutOverride,
+    typography,
+    animations,
   } = useThemeStore();
 
   const [brightness, setBrightness] = React.useState(100);
   const [volume, setVolume] = React.useState(75);
 
   const borderThickness = rawBorderThickness ?? 2;
-  const tbOpacity = (taskbarOpacity ?? 97) / 100;
-  const smOpacity = (startMenuOpacity ?? 97) / 100;
-  const ncOpacity = (notificationOpacity ?? 97) / 100;
 
-  const accentRgb = hexToRgb(accentColor);
-  const secRgb = hexToRgb(secondaryAccent);
-  const bgRgb = isLightMode ? [240, 240, 245] : [16, 18, 22];
+  const taskbarResolved = resolveComponentStyle({
+    component: 'taskbar',
+    override: taskbarOverride,
+    materialStyle,
+    taskbarMode,
+    defaultBlur: taskbarBlur ?? 10,
+    defaultOpacity: taskbarOpacity ?? 97,
+    accentColor,
+    secondaryAccent,
+    isLightMode,
+  });
 
-  const effectiveMaterial =
-    materialStyle ?? (taskbarMode === 'gradient' ? 'linear-gradient' : 'fluent-acrylic');
+  const startMenuResolved = resolveComponentStyle({
+    component: 'startMenu',
+    override: startMenuOverride,
+    materialStyle,
+    taskbarMode,
+    defaultBlur: startMenuBlur ?? 15,
+    defaultOpacity: startMenuOpacity ?? 97,
+    accentColor,
+    secondaryAccent,
+    isLightMode,
+  });
 
-  // Dynamic flyout backgrounds matching Windhawk Styler & Material styles
-  let startMenuBg = '';
-  let notifCenterBg = '';
-  const taskbarStyle: React.CSSProperties = {};
+  const flyoutResolved = resolveComponentStyle({
+    component: 'flyout',
+    override: flyoutOverride,
+    materialStyle,
+    taskbarMode,
+    defaultBlur: notificationBlur ?? 15,
+    defaultOpacity: notificationOpacity ?? 97,
+    accentColor,
+    secondaryAccent,
+    isLightMode,
+  });
 
-  if (effectiveMaterial === 'linear-gradient' || taskbarMode === 'gradient') {
-    taskbarStyle.backdropFilter = 'none';
-    taskbarStyle.WebkitBackdropFilter = 'none';
-    taskbarStyle.background = `linear-gradient(90deg, rgba(${secRgb[0]}, ${secRgb[1]}, ${secRgb[2]}, ${tbOpacity}) 0%, rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, ${tbOpacity}) 50%, rgba(${bgRgb[0]}, ${bgRgb[1]}, ${bgRgb[2]}, ${tbOpacity}) 100%)`;
-
-    startMenuBg = `linear-gradient(135deg, rgba(${bgRgb[0]}, ${bgRgb[1]}, ${bgRgb[2]}, ${smOpacity}) 0%, rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, ${smOpacity}) 50%, rgba(${secRgb[0]}, ${secRgb[1]}, ${secRgb[2]}, ${smOpacity}) 100%)`;
-    notifCenterBg = `linear-gradient(315deg, rgba(${bgRgb[0]}, ${bgRgb[1]}, ${bgRgb[2]}, ${ncOpacity}) 0%, rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, ${ncOpacity}) 50%, rgba(${secRgb[0]}, ${secRgb[1]}, ${secRgb[2]}, ${ncOpacity}) 100%)`;
-  } else if (effectiveMaterial === 'pure-black-neon') {
-    taskbarStyle.backdropFilter = 'none';
-    taskbarStyle.WebkitBackdropFilter = 'none';
-    taskbarStyle.backgroundColor = isLightMode ? 'rgba(255, 255, 255, 0.98)' : 'rgba(0, 0, 0, 0.98)';
-
-    startMenuBg = isLightMode ? 'rgba(255, 255, 255, 0.98)' : 'rgba(0, 0, 0, 0.98)';
-    notifCenterBg = isLightMode ? 'rgba(255, 255, 255, 0.98)' : 'rgba(0, 0, 0, 0.98)';
-  } else if (effectiveMaterial === 'matte-slate') {
-    taskbarStyle.backdropFilter = 'none';
-    taskbarStyle.WebkitBackdropFilter = 'none';
-    taskbarStyle.backgroundColor = isLightMode ? '#e2e8f0' : '#1e293b';
-
-    startMenuBg = isLightMode ? '#f1f5f9' : '#0f172a';
-    notifCenterBg = isLightMode ? '#f1f5f9' : '#0f172a';
-  } else {
-    // fluent-acrylic (default)
-    taskbarStyle.backdropFilter = `blur(${taskbarBlur}px)`;
-    taskbarStyle.WebkitBackdropFilter = `blur(${taskbarBlur}px)`;
-    taskbarStyle.backgroundColor = isLightMode
-      ? `rgba(245, 245, 250, ${(tbOpacity * 0.72).toFixed(2)})`
-      : `rgba(20, 20, 24, ${(tbOpacity * 0.65).toFixed(2)})`;
-
-    startMenuBg = isLightMode
-      ? `radial-gradient(circle at 90% 10%, ${secondaryAccent}35 0%, transparent 65%), radial-gradient(circle at 10% 90%, ${accentColor}35 0%, transparent 65%), rgba(245, 245, 250, 0.84)`
-      : `radial-gradient(circle at 90% 10%, ${secondaryAccent}40 0%, transparent 65%), radial-gradient(circle at 10% 90%, ${accentColor}40 0%, transparent 65%), rgba(18, 20, 25, 0.84)`;
-
-    notifCenterBg = isLightMode
-      ? `radial-gradient(circle at 90% 90%, ${secondaryAccent}35 0%, transparent 65%), radial-gradient(circle at 10% 10%, ${accentColor}35 0%, transparent 65%), rgba(245, 245, 250, 0.84)`
-      : `radial-gradient(circle at 90% 90%, ${secondaryAccent}40 0%, transparent 65%), radial-gradient(circle at 10% 10%, ${accentColor}40 0%, transparent 65%), rgba(18, 20, 25, 0.84)`;
-  }
-
-  // Borders match Windhawk Styler (BorderBrush=c_normal, BorderThickness=2)
-  const flyoutBorder = accentColor;
   const textColor = isLightMode ? 'text-neutral-900' : 'text-white';
   const subTextColor = isLightMode ? 'text-neutral-600' : 'text-neutral-400';
-  const startCardBg =
-    taskbarMode === 'gradient' || effectiveMaterial === 'linear-gradient'
-      ? isLightMode
-        ? `rgba(255, 255, 255, ${Math.min(0.7, smOpacity * 0.7)})`
-        : `rgba(0, 0, 0, ${Math.min(0.4, smOpacity * 0.4)})`
-      : effectiveMaterial === 'pure-black-neon'
-      ? isLightMode
-        ? 'rgba(240, 240, 245, 0.9)'
-        : 'rgba(20, 20, 25, 0.9)'
-      : effectiveMaterial === 'matte-slate'
-      ? isLightMode
-        ? '#ffffff'
-        : '#1e293b'
-      : isLightMode
-      ? 'rgba(255, 255, 255, 0.65)'
-      : 'rgba(0, 0, 0, 0.35)';
 
-  const notifCardBg =
-    taskbarMode === 'gradient' || effectiveMaterial === 'linear-gradient'
-      ? isLightMode
-        ? `rgba(255, 255, 255, ${Math.min(0.7, ncOpacity * 0.7)})`
-        : `rgba(0, 0, 0, ${Math.min(0.4, ncOpacity * 0.4)})`
-      : effectiveMaterial === 'pure-black-neon'
-      ? isLightMode
-        ? 'rgba(240, 240, 245, 0.9)'
-        : 'rgba(20, 20, 25, 0.9)'
-      : effectiveMaterial === 'matte-slate'
-      ? isLightMode
-        ? '#ffffff'
-        : '#1e293b'
-      : isLightMode
-      ? 'rgba(255, 255, 255, 0.65)'
-      : 'rgba(0, 0, 0, 0.35)';
+  const getCardBg = (mat: MaterialStyle, op: number) => {
+    if (mat === 'linear-gradient') {
+      return isLightMode
+        ? `rgba(255, 255, 255, ${Math.min(0.7, op * 0.7)})`
+        : `rgba(0, 0, 0, ${Math.min(0.4, op * 0.4)})`;
+    }
+    if (mat === 'pure-black-neon') {
+      return isLightMode ? 'rgba(240, 240, 245, 0.9)' : 'rgba(20, 20, 25, 0.9)';
+    }
+    if (mat === 'matte-slate') {
+      return isLightMode ? '#ffffff' : '#1e293b';
+    }
+    return isLightMode ? 'rgba(255, 255, 255, 0.65)' : 'rgba(0, 0, 0, 0.35)';
+  };
+
+  const startCardBg = getCardBg(startMenuResolved.material, startMenuResolved.opacity);
+  const notifCardBg = getCardBg(flyoutResolved.material, flyoutResolved.opacity);
   const cardHover = isLightMode ? 'hover:bg-neutral-200/60' : 'hover:bg-white/10';
   const shadowClass = removeDropShadows
     ? 'shadow-none'
@@ -137,23 +266,8 @@ export default function PreviewCanvas() {
     ? 'shadow-[0_20px_40px_-10px_rgba(0,0,0,0.2)]'
     : 'shadow-[0_25px_50px_-12px_rgba(0,0,0,0.75)]';
 
-  const flyoutBoxShadow =
-    effectiveMaterial === 'pure-black-neon'
-      ? `0 0 24px ${accentColor}60, inset 0 0 16px ${accentColor}25`
-      : `0 0 24px -6px ${accentColor}40`;
-
-  const startMenuBackdrop =
-    effectiveMaterial === 'fluent-acrylic' && taskbarMode !== 'gradient'
-      ? `blur(${startMenuBlur}px)`
-      : 'none';
-
-  const notifCenterBackdrop =
-    effectiveMaterial === 'fluent-acrylic' && taskbarMode !== 'gradient'
-      ? `blur(${notificationBlur}px)`
-      : 'none';
-
-  const noiseOverlay =
-    effectiveMaterial === 'fluent-acrylic' && (noiseOpacity ?? 0.05) > 0 ? (
+  const renderNoiseOverlay = (mat: MaterialStyle) =>
+    mat === 'fluent-acrylic' && (noiseOpacity ?? 0.05) > 0 ? (
       <div
         className="absolute inset-0 pointer-events-none z-0 mix-blend-overlay"
         style={{
@@ -201,15 +315,30 @@ export default function PreviewCanvas() {
     : `${basePath}/wallpapers/default-dark.jpg`;
   const activeWallpaper = wallpaperUrl || defaultWallpaper;
 
+  const flyoutDuration =
+    animations?.speed === 'instant' ? '0ms' : `${animations?.durationMs ?? 250}ms`;
+  const flyoutEasing =
+    animations?.easing === 'linear'
+      ? 'linear'
+      : animations?.easing === 'decelerate'
+      ? 'cubic-bezier(0.0, 0.0, 0.2, 1)'
+      : 'cubic-bezier(0.1, 0.9, 0.2, 1)';
+
   return (
     <div
-      className="flex-1 h-full flex flex-col justify-end relative select-none overflow-hidden font-sans"
+      data-testid="preview-canvas-root"
+      className="flex-1 h-full flex flex-col justify-end relative select-none overflow-hidden"
       style={{
         backgroundColor: isLightMode ? '#f8fafc' : '#090a10',
         backgroundImage: `url("${activeWallpaper}")`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-      }}
+        fontFamily: `${typography?.fontFamily || 'Segoe UI Variable'}, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
+        fontWeight: typography?.fontWeight || '400',
+        letterSpacing: `${(typography?.characterSpacing ?? 0) / 1000}em`,
+        '--flyout-duration': flyoutDuration,
+        '--flyout-easing': flyoutEasing,
+      } as React.CSSProperties}
     >
       {/* Mobile warning overlay */}
       <div className="lg:hidden absolute top-3 left-3 right-3 z-50 bg-amber-500/90 text-neutral-950 px-3 py-2 rounded-lg text-xs font-medium shadow flex items-center gap-2">
@@ -367,21 +496,24 @@ export default function PreviewCanvas() {
       <div className="z-20 w-full h-[calc(100%-48px)] relative pointer-events-none pb-3">
         {activePane === 'start' && (
           <div
+            data-testid="start-menu-container"
             className={`w-[580px] ${
               hideRecommended ? 'h-[520px]' : 'h-[640px]'
-            } absolute left-3 bottom-3 flex flex-col pointer-events-auto transition-all duration-200 overflow-hidden ${textColor} ${shadowClass}`}
+            } absolute left-3 bottom-3 flex flex-col pointer-events-auto transition-all overflow-hidden ${textColor} ${shadowClass}`}
             style={{
-              background: startMenuBg,
-              backdropFilter: startMenuBackdrop,
-              WebkitBackdropFilter: startMenuBackdrop,
+              background: startMenuResolved.background,
+              backdropFilter: startMenuResolved.backdropFilter,
+              WebkitBackdropFilter: startMenuResolved.backdropFilter,
               borderRadius: `${cornerRadius}px`,
               border: borderThickness > 0 ? `${borderThickness}px solid ${accentColor}` : 'none',
-              boxShadow: flyoutBoxShadow,
+              boxShadow: startMenuResolved.boxShadow,
               bottom: dockMode ? `${(dockMargin ?? 12) + 4}px` : undefined,
               left: dockMode ? `${Math.max(12, dockMargin ?? 12)}px` : undefined,
+              transitionDuration: 'var(--flyout-duration)',
+              transitionTimingFunction: 'var(--flyout-easing)',
             }}
           >
-            {noiseOverlay}
+            {renderNoiseOverlay(startMenuResolved.material)}
             {/* Search Bar */}
             <div className={`p-6 ${compactSearch ? 'pb-2 pt-4' : 'pb-4'}`}>
               <div
@@ -390,10 +522,10 @@ export default function PreviewCanvas() {
                 }`}
                 style={{
                   backgroundColor:
-                    taskbarMode === 'gradient'
+                    startMenuResolved.material === 'linear-gradient' || taskbarMode === 'gradient'
                       ? isLightMode
-                        ? `rgba(255, 255, 255, ${Math.min(0.5, smOpacity * 0.4)})`
-                        : `rgba(0, 0, 0, ${Math.min(0.35, smOpacity * 0.35)})`
+                        ? `rgba(255, 255, 255, ${Math.min(0.5, startMenuResolved.opacity * 0.4)})`
+                        : `rgba(0, 0, 0, ${Math.min(0.35, startMenuResolved.opacity * 0.35)})`
                       : isLightMode
                       ? `${accentColor}10`
                       : `${accentColor}18`,
@@ -499,10 +631,10 @@ export default function PreviewCanvas() {
               className="mt-auto px-6 py-3 border-t flex items-center justify-between"
               style={{
                 backgroundColor:
-                  taskbarMode === 'gradient'
+                  startMenuResolved.material === 'linear-gradient' || taskbarMode === 'gradient'
                     ? isLightMode
-                      ? `rgba(235, 235, 240, ${smOpacity * 0.5})`
-                      : `rgba(15, 15, 18, ${smOpacity * 0.5})`
+                      ? `rgba(235, 235, 240, ${startMenuResolved.opacity * 0.5})`
+                      : `rgba(15, 15, 18, ${startMenuResolved.opacity * 0.5})`
                     : isLightMode
                     ? 'rgba(235, 235, 240, 0.92)'
                     : 'rgba(15, 15, 18, 0.92)',
@@ -541,31 +673,36 @@ export default function PreviewCanvas() {
         {/* Windows 11 Notification Center & Calendar (Separated Floating Cards) */}
         {activePane === 'notifications' && (
           <div
-            className="absolute right-4 bottom-3 flex flex-col gap-3 pointer-events-auto z-40"
-            style={
-              dockMode
+            data-testid="flyout-notifications"
+            className="absolute right-4 bottom-3 flex flex-col gap-3 pointer-events-auto z-40 transition-all"
+            style={{
+              ...(dockMode
                 ? {
                     bottom: `${(dockMargin ?? 12) + 4}px`,
                     right: `${Math.max(16, (dockMargin ?? 12) + 4)}px`,
                   }
-                : undefined
-            }
+                : {}),
+              transitionDuration: 'var(--flyout-duration)',
+              transitionTimingFunction: 'var(--flyout-easing)',
+            }}
           >
             {/* Top Card: Notifications List */}
             <div
               className={`w-[360px] ${
                 dynamicNotificationHeight ? 'max-h-[280px]' : 'h-[250px]'
-              } flex flex-col overflow-hidden ${textColor} ${shadowClass} transition-all duration-200 relative`}
+              } flex flex-col overflow-hidden ${textColor} ${shadowClass} transition-all relative`}
               style={{
-                background: notifCenterBg,
-                backdropFilter: notifCenterBackdrop,
-                WebkitBackdropFilter: notifCenterBackdrop,
+                background: flyoutResolved.background,
+                backdropFilter: flyoutResolved.backdropFilter,
+                WebkitBackdropFilter: flyoutResolved.backdropFilter,
                 borderRadius: `${cornerRadius}px`,
                 border: borderThickness > 0 ? `${borderThickness}px solid ${accentColor}` : 'none',
-                boxShadow: flyoutBoxShadow,
+                boxShadow: flyoutResolved.boxShadow,
+                transitionDuration: 'var(--flyout-duration)',
+                transitionTimingFunction: 'var(--flyout-easing)',
               }}
             >
-              {noiseOverlay}
+              {renderNoiseOverlay(flyoutResolved.material)}
               {/* Header */}
               <div
                 className="px-4 py-3 border-b flex justify-between items-center text-xs font-semibold"
@@ -625,17 +762,19 @@ export default function PreviewCanvas() {
 
             {/* Bottom Card: Calendar & Clock */}
             <div
-              className={`w-[360px] p-3.5 flex flex-col overflow-hidden ${textColor} ${shadowClass} transition-all duration-200 relative`}
+              className={`w-[360px] p-3.5 flex flex-col overflow-hidden ${textColor} ${shadowClass} transition-all relative`}
               style={{
-                background: notifCenterBg,
-                backdropFilter: notifCenterBackdrop,
-                WebkitBackdropFilter: notifCenterBackdrop,
+                background: flyoutResolved.background,
+                backdropFilter: flyoutResolved.backdropFilter,
+                WebkitBackdropFilter: flyoutResolved.backdropFilter,
                 borderRadius: `${cornerRadius}px`,
                 border: borderThickness > 0 ? `${borderThickness}px solid ${accentColor}` : 'none',
-                boxShadow: flyoutBoxShadow,
+                boxShadow: flyoutResolved.boxShadow,
+                transitionDuration: 'var(--flyout-duration)',
+                transitionTimingFunction: 'var(--flyout-easing)',
               }}
             >
-              {noiseOverlay}
+              {renderNoiseOverlay(flyoutResolved.material)}
               <div className="flex justify-between items-center mb-2 px-1">
                 <span className={`text-xs font-semibold ${textColor}`}>September 2026</span>
                 <div className={`flex gap-1 text-xs ${subTextColor}`}>
@@ -676,19 +815,22 @@ export default function PreviewCanvas() {
         {/* Windows 11 Quick Settings Flyout */}
         {activePane === 'quicksettings' && (
           <div
-            className={`w-[360px] absolute right-4 bottom-3 flex flex-col p-4 gap-3.5 pointer-events-auto transition-all duration-200 overflow-hidden ${textColor} ${shadowClass} z-40`}
+            data-testid="flyout-quicksettings"
+            className={`w-[360px] absolute right-4 bottom-3 flex flex-col p-4 gap-3.5 pointer-events-auto transition-all overflow-hidden ${textColor} ${shadowClass} z-40`}
             style={{
-              background: notifCenterBg,
-              backdropFilter: notifCenterBackdrop,
-              WebkitBackdropFilter: notifCenterBackdrop,
+              background: flyoutResolved.background,
+              backdropFilter: flyoutResolved.backdropFilter,
+              WebkitBackdropFilter: flyoutResolved.backdropFilter,
               borderRadius: `${cornerRadius}px`,
               border: borderThickness > 0 ? `${borderThickness}px solid ${accentColor}` : 'none',
-              boxShadow: flyoutBoxShadow,
+              boxShadow: flyoutResolved.boxShadow,
               bottom: dockMode ? `${(dockMargin ?? 12) + 4}px` : undefined,
               right: dockMode ? `${Math.max(16, (dockMargin ?? 12) + 4)}px` : undefined,
+              transitionDuration: 'var(--flyout-duration)',
+              transitionTimingFunction: 'var(--flyout-easing)',
             }}
           >
-            {noiseOverlay}
+            {renderNoiseOverlay(flyoutResolved.material)}
             {/* 3x2 Quick Toggles Grid */}
             <div className="grid grid-cols-3 gap-2">
               {[
@@ -768,9 +910,12 @@ export default function PreviewCanvas() {
 
       {/* Windows 11 Taskbar */}
       <div
+        data-testid="taskbar-container"
         className="h-12 w-full z-30 flex items-center justify-between px-3 transition-all duration-300 relative"
         style={{
-          ...taskbarStyle,
+          background: taskbarResolved.background,
+          backdropFilter: taskbarResolved.backdropFilter,
+          WebkitBackdropFilter: taskbarResolved.backdropFilter,
           ...(dockMode
             ? {
                 margin: `0 ${dockMargin ?? 12}px ${(dockMargin ?? 12) > 8 ? 8 : (dockMargin ?? 12)}px ${dockMargin ?? 12}px`,
@@ -779,20 +924,20 @@ export default function PreviewCanvas() {
                 border: borderThickness > 0 ? `${borderThickness}px solid ${accentColor}` : 'none',
                 borderTop: borderThickness > 0 ? `${borderThickness}px solid ${accentColor}` : 'none',
                 boxShadow:
-                  effectiveMaterial === 'pure-black-neon'
+                  taskbarResolved.material === 'pure-black-neon'
                     ? `0 0 20px ${accentColor}60, 0 8px 32px rgba(0,0,0,0.5)`
                     : `0 8px 32px 0 rgba(0, 0, 0, 0.37)`,
               }
             : {
                 borderTop: borderThickness > 0 ? `${borderThickness}px solid ${accentColor}` : 'none',
                 boxShadow:
-                  effectiveMaterial === 'pure-black-neon'
+                  taskbarResolved.material === 'pure-black-neon'
                     ? `0 -4px 16px ${accentColor}40`
                     : undefined,
               }),
         }}
       >
-        {noiseOverlay}
+        {renderNoiseOverlay(taskbarResolved.material)}
         {/* Left: Start Button & App Icons */}
         <div className="flex items-center gap-1.5 z-10">
           {/* Start Button */}

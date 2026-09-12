@@ -217,28 +217,6 @@ export function computeColorHarmonies(accentHex: string, harmony: ColorHarmonyTy
   }
 }
 
-export function calculateLuminance(rgb: RGB): number {
-  const [r, g, b] = rgb.map((c) => {
-    const s = c / 255;
-    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
-  });
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
-
-export function calculateContrastRatio(rgb1: RGB, rgb2: RGB): number {
-  const l1 = calculateLuminance(rgb1);
-  const l2 = calculateLuminance(rgb2);
-  const lighter = Math.max(l1, l2);
-  const darker = Math.min(l1, l2);
-  return (lighter + 0.05) / (darker + 0.05);
-}
-
-export function getContrastGrade(ratio: number): { grade: 'AAA' | 'AA' | 'FAIL'; ratio: number } {
-  return {
-    ratio: Math.round(ratio * 10) / 10,
-    grade: ratio >= 7 ? 'AAA' : ratio >= 4.5 ? 'AA' : 'FAIL',
-  };
-}
 
 export interface ExtractedPalette {
   primary: string;

@@ -219,7 +219,7 @@ export const FEATURED_THEMES: FeaturedTheme[] = [
     category: "Cyberpunk",
     tag: "Vibrant Glow",
     description: "High-energy electric magenta and cyan neon glow on dark obsidian glass for futuristic setups.",
-    wallpaperFileName: "default-dark.jpg",
+    wallpaperFileName: "cyberpunk-neon.jpg",
     config: {
       accentColor: "#FF007F",
       secondaryAccent: "#00F0FF",
@@ -349,7 +349,7 @@ export const FEATURED_THEMES: FeaturedTheme[] = [
     category: "Nature & Ethereal",
     tag: "Clean Minimal",
     description: "Crisp arctic ice blues and soft aurora mint highlights on an airy, frosted light-mode layout.",
-    wallpaperFileName: "default-light.jpg",
+    wallpaperFileName: "nordic-frost.jpg",
     config: {
       accentColor: "#38BDF8",
       secondaryAccent: "#10B981",

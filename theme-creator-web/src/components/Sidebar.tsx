@@ -10,8 +10,6 @@ import {
   rgbToHex,
   blend,
   computeColorHarmonies,
-  calculateContrastRatio,
-  getContrastGrade,
   RGB,
 } from '../lib/paletteEngine';
 
@@ -102,15 +100,9 @@ export default function Sidebar() {
   const [selectedCategory, setSelectedCategory] = useState<PresetCategory>('All');
   const [newThemeName, setNewThemeName] = useState('');
   const [isSavedDrawerOpen, setIsSavedDrawerOpen] = useState(false);
+  const [isPresetsExpanded, setIsPresetsExpanded] = useState(false);
   const [extractedSwatches, setExtractedSwatches] = useState<string[]>([]);
-
-  // Real-time WCAG Contrast calculation against surface background
-  const contrastInfo = useMemo(() => {
-    const aRgb = hexToRgb(accentColor);
-    const bgRgb: RGB = isLightMode ? [240, 240, 245] : [16, 18, 22];
-    const ratio = calculateContrastRatio(aRgb, bgRgb);
-    return getContrastGrade(ratio);
-  }, [accentColor, isLightMode]);
+  const basePath = typeof window !== 'undefined' && window.location.pathname.startsWith('/theme-creator') ? '/theme-creator' : '/theme-creator';
 
   // Derived 5-swatch palette display
   const displayedSwatches = useMemo(() => {
@@ -259,41 +251,43 @@ export default function Sidebar() {
       {/* Scrollable Options Section */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden pr-1 flex flex-col gap-4.5 scrollbar-thin scrollbar-thumb-neutral-700">
         {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
+        <div className="flex flex-col gap-2.5 pb-3 border-b border-neutral-800">
           <div>
             <h2 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
               <span>🎨</span> Windhawk Studio
             </h2>
-            <p className="text-xs text-neutral-400">Windows 11 Theme Generator</p>
+            <p className="text-xs text-neutral-400 mt-0.5">Windows 11 Theme Generator</p>
           </div>
           <div className="flex items-center gap-1.5">
             <button
               onClick={undo}
               disabled={past.length === 0}
               title="Undo (Ctrl+Z)"
-              className="text-xs px-2 py-1 rounded bg-neutral-800 hover:bg-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed text-neutral-300 transition-colors border border-neutral-700 cursor-pointer"
+              className="text-xs px-2.5 py-1 rounded bg-neutral-800 hover:bg-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed text-neutral-300 transition-colors border border-neutral-700 cursor-pointer flex-1 flex items-center justify-center gap-1"
             >
-              ↩
+              <span>↩</span>
+              <span>Undo</span>
             </button>
             <button
               onClick={redo}
               disabled={future.length === 0}
               title="Redo (Ctrl+Y)"
-              className="text-xs px-2 py-1 rounded bg-neutral-800 hover:bg-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed text-neutral-300 transition-colors border border-neutral-700 cursor-pointer"
+              className="text-xs px-2.5 py-1 rounded bg-neutral-800 hover:bg-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed text-neutral-300 transition-colors border border-neutral-700 cursor-pointer flex-1 flex items-center justify-center gap-1"
             >
-              ↪
+              <span>↪</span>
+              <span>Redo</span>
             </button>
             <button
               onClick={resetToDefaults}
               title="Reset to default settings"
-              className="text-xs px-2 py-1 rounded bg-neutral-800 hover:bg-neutral-700 text-neutral-300 transition-colors border border-neutral-700 cursor-pointer"
+              className="text-xs px-2.5 py-1 rounded bg-neutral-800 hover:bg-neutral-700 text-neutral-300 transition-colors border border-neutral-700 cursor-pointer flex-1 flex items-center justify-center"
             >
               Reset
             </button>
             <button
               onClick={toggleSidebar}
               title="Collapse sidebar (Full-screen preview)"
-              className="text-xs p-1.5 rounded bg-neutral-800 hover:bg-neutral-700 text-neutral-300 transition-colors border border-neutral-700 cursor-pointer ml-1"
+              className="text-xs p-1.5 rounded bg-neutral-800 hover:bg-neutral-700 text-neutral-300 transition-colors border border-neutral-700 cursor-pointer"
             >
               ◀
             </button>
@@ -407,74 +401,97 @@ export default function Sidebar() {
           )}
         </div>
 
-        {/* Curated Presets with Category Tabs */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-xs font-semibold uppercase text-neutral-400">Curated Presets</label>
-            <span className="text-[11px] text-neutral-500 font-mono">{THEME_PRESETS.length} Themes</span>
-          </div>
+        {/* Curated Presets Accordion */}
+        <div className="border border-neutral-800 rounded-xl bg-neutral-900/40 p-3">
+          <button
+            type="button"
+            onClick={() => setIsPresetsExpanded(!isPresetsExpanded)}
+            className="w-full flex items-center justify-between text-left cursor-pointer group select-none"
+          >
+            <div className="flex items-center gap-2">
+              <span className={`text-[10px] text-neutral-400 transition-transform duration-200 ${isPresetsExpanded ? 'rotate-90' : ''}`}>
+                ▶
+              </span>
+              <label className="text-xs font-semibold uppercase text-neutral-300 group-hover:text-white cursor-pointer">
+                Curated Presets
+              </label>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-neutral-500 font-mono">{THEME_PRESETS.length} Themes</span>
+              <span className="text-[10px] text-neutral-400 group-hover:text-neutral-200">
+                {isPresetsExpanded ? '▲' : '▼'}
+              </span>
+            </div>
+          </button>
 
-          {/* Category Filter Tabs */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-2 no-scrollbar">
-            {PRESET_CATEGORIES.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-2 py-0.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-colors cursor-pointer ${
-                  selectedCategory === cat
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'bg-neutral-800 text-neutral-400 hover:text-neutral-200 hover:bg-neutral-700'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
+          {isPresetsExpanded && (
+            <div className="mt-3 pt-3 border-t border-neutral-800 flex flex-col gap-2.5">
+              {/* Category Filter Tabs */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 mb-1 no-scrollbar">
+                {PRESET_CATEGORIES.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`px-2 py-0.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-colors cursor-pointer ${
+                      selectedCategory === cat
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'bg-neutral-800 text-neutral-400 hover:text-neutral-200 hover:bg-neutral-700'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            {(selectedCategory === 'All'
-              ? THEME_PRESETS
-              : THEME_PRESETS.filter((p) => p.category === selectedCategory)
-            ).map((preset) => (
-              <button
-                key={preset.id}
-                onClick={() => {
-                  applyThemeConfig({
-                    themeName: preset.name,
-                    accentColor: preset.accentColor,
-                    secondaryAccent: preset.secondaryAccent,
-                    isLightMode: preset.isLightMode,
-                    taskbarMode: preset.taskbarMode,
-                    materialStyle: preset.materialStyle ?? (preset.taskbarMode === 'gradient' ? 'linear-gradient' : 'fluent-acrylic'),
-                    dockMode: preset.dockMode ?? false,
-                    dockMargin: preset.dockMargin ?? 12,
-                    runningIndicatorStyle: preset.runningIndicatorStyle ?? 'standard',
-                    cornerRadius: preset.cornerRadius,
-                    borderThickness: preset.borderThickness ?? 2,
-                    taskbarBlur: preset.taskbarBlur,
-                    startMenuBlur: preset.startMenuBlur,
-                    notificationBlur: preset.notificationBlur,
-                    noiseOpacity: preset.noiseOpacity ?? 0.04,
-                    tintSaturation: preset.tintSaturation ?? 0.85,
-                    hideRecommended: preset.hideRecommended,
-                    compactSearch: preset.compactSearch,
-                    dynamicNotificationHeight: preset.dynamicNotificationHeight,
-                    removeDropShadows: preset.removeDropShadows,
-                    wallpaperUrl: preset.wallpaperUrl,
-                  });
-                }}
-                className="flex items-center gap-2 p-2 rounded-lg bg-neutral-800 hover:bg-neutral-700/80 border border-neutral-700 text-left transition-all group cursor-pointer shadow-xs"
-              >
-                <div
-                  className="w-4 h-4 rounded-full flex-shrink-0 shadow-sm border border-white/20"
-                  style={{ background: preset.previewGradient }}
-                />
-                <span className="text-xs font-medium text-neutral-200 truncate group-hover:text-white">
-                  {preset.name}
-                </span>
-              </button>
-            ))}
-          </div>
+              <div className="grid grid-cols-2 gap-2">
+                {(selectedCategory === 'All'
+                  ? THEME_PRESETS
+                  : THEME_PRESETS.filter((p) => p.category === selectedCategory)
+                ).map((preset) => (
+                  <button
+                    key={preset.id}
+                    onClick={() => {
+                      applyThemeConfig({
+                        themeName: preset.name,
+                        accentColor: preset.accentColor,
+                        secondaryAccent: preset.secondaryAccent,
+                        isLightMode: preset.isLightMode,
+                        taskbarMode: preset.taskbarMode,
+                        materialStyle: preset.materialStyle ?? (preset.taskbarMode === 'gradient' ? 'linear-gradient' : 'fluent-acrylic'),
+                        dockMode: preset.dockMode ?? false,
+                        dockMargin: preset.dockMargin ?? 12,
+                        runningIndicatorStyle: preset.runningIndicatorStyle ?? 'standard',
+                        cornerRadius: preset.cornerRadius,
+                        borderThickness: preset.borderThickness ?? 2,
+                        taskbarBlur: preset.taskbarBlur,
+                        startMenuBlur: preset.startMenuBlur,
+                        notificationBlur: preset.notificationBlur,
+                        noiseOpacity: preset.noiseOpacity ?? 0.04,
+                        tintSaturation: preset.tintSaturation ?? 0.85,
+                        hideRecommended: preset.hideRecommended,
+                        compactSearch: preset.compactSearch,
+                        dynamicNotificationHeight: preset.dynamicNotificationHeight,
+                        removeDropShadows: preset.removeDropShadows,
+                        wallpaperUrl: preset.wallpaperFileName
+                          ? `${basePath}/wallpapers/${preset.wallpaperFileName}`
+                          : preset.wallpaperUrl,
+                        wallpaperData: null,
+                      });
+                    }}
+                    className="flex items-center gap-2 p-2 rounded-lg bg-neutral-800 hover:bg-neutral-700/80 border border-neutral-700 text-left transition-all group cursor-pointer shadow-xs"
+                  >
+                    <div
+                      className="w-4 h-4 rounded-full flex-shrink-0 shadow-sm border border-white/20"
+                      style={{ background: preset.previewGradient }}
+                    />
+                    <span className="text-xs font-medium text-neutral-200 truncate group-hover:text-white">
+                      {preset.name}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Appearance & Mode */}
@@ -541,24 +558,10 @@ export default function Sidebar() {
             </div>
           </div>
 
-          {/* Color Harmony Selector with WCAG Grade Badge */}
+          {/* Color Harmony Selector */}
           <div className="mb-3">
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs text-neutral-400">Color Harmony</span>
-              <div
-                className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider text-white"
-                style={{
-                  backgroundColor:
-                    contrastInfo.grade === 'AAA'
-                      ? '#059669'
-                      : contrastInfo.grade === 'AA'
-                      ? '#2563eb'
-                      : '#dc2626',
-                }}
-                title={`Contrast ratio: ${contrastInfo.ratio}:1 against surface (${contrastInfo.grade})`}
-              >
-                WCAG {contrastInfo.grade} ({contrastInfo.ratio}:1)
-              </div>
             </div>
             <select
               value={colorHarmony ?? 'custom'}
@@ -1083,8 +1086,7 @@ export default function Sidebar() {
         <button
           onClick={handleDownload}
           disabled={isDownloading}
-          className="w-full py-3 px-4 rounded-xl text-white font-semibold text-sm shadow-xl flex items-center justify-center gap-2 transition-all cursor-pointer border border-blue-400/30 hover:brightness-110 active:scale-98"
-          style={{ backgroundColor: accentColor }}
+          className="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm shadow-xl shadow-blue-600/20 flex items-center justify-center gap-2 transition-all cursor-pointer border border-blue-500/40 hover:brightness-110 active:scale-98"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />

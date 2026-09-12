@@ -158,6 +158,17 @@ describe('exportEngine', () => {
     expect(zip.file('wallpaper.jpg')).not.toBeNull();
   });
 
+  it('packages default wallpaper into zip when no custom wallpaper is uploaded', async () => {
+    const noUploadState: ThemeState = {
+      ...mockState,
+      wallpaperData: null,
+      wallpaperUrl: null,
+    };
+    const blob = await generateZipPayload(noUploadState);
+    const zip = await JSZip.loadAsync(blob);
+    expect(zip.file('wallpaper.jpg')).not.toBeNull();
+  });
+
   it('includes custom start icon in theme.reg, Apply_Theme.ps1, and zip payload', async () => {
     const iconState: ThemeState = {
       ...mockState,

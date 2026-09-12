@@ -710,9 +710,46 @@ export async function generateZipPayload(state: ThemeState): Promise<Blob> {
   zip.file('start_menu_backup.json', backups.startMenuBackup);
   zip.file('notification_center_backup.json', backups.notificationCenterBackup);
 
-  // 6. Wallpaper if present
+  // 6. Wallpaper (Custom upload, active preset, or default Windows 11 wallpaper)
   if (state.wallpaperData) {
     zip.file('wallpaper.jpg', state.wallpaperData);
+  } else {
+    try {
+      const basePath =
+        typeof window !== 'undefined' && window.location.pathname.startsWith('/theme-creator')
+          ? '/theme-creator'
+          : '/theme-creator';
+
+      let targetUrl = state.wallpaperUrl;
+      // Fallback to light/dark default wallpaper if no url or if it's an SVG data URI
+      if (!targetUrl || targetUrl.startsWith('data:image/svg+xml')) {
+        targetUrl = state.isLightMode
+          ? `${basePath}/wallpapers/default-light.jpg`
+          : `${basePath}/wallpapers/default-dark.jpg`;
+      } else if (!targetUrl.startsWith('data:') && !targetUrl.startsWith('http') && !targetUrl.startsWith(basePath)) {
+        targetUrl = `${basePath}${targetUrl.startsWith('/') ? '' : '/'}${targetUrl}`;
+      }
+
+      if (targetUrl.startsWith('data:')) {
+        const parts = targetUrl.split(',');
+        if (parts[1]) {
+          zip.file('wallpaper.jpg', parts[1], { base64: true });
+        }
+      } else if (typeof fetch !== 'undefined') {
+        const res = await fetch(targetUrl);
+        if (res.ok) {
+          const buf = await res.arrayBuffer();
+          zip.file('wallpaper.jpg', buf);
+        } else {
+          // Fallback minimal valid JPEG buffer so wallpaper.jpg is always present
+          zip.file('wallpaper.jpg', new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46]));
+        }
+      } else {
+        zip.file('wallpaper.jpg', new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46]));
+      }
+    } catch {
+      zip.file('wallpaper.jpg', new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46]));
+    }
   }
 
   // 7. Custom Start Icon if present

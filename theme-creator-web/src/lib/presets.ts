@@ -35,6 +35,7 @@ export interface ThemePreset {
   compactSearch: boolean;
   dynamicNotificationHeight: boolean;
   removeDropShadows: boolean;
+  wallpaperFileName?: string;
   wallpaperUrl: string;
   previewGradient: string;
 }
@@ -70,6 +71,7 @@ export const THEME_PRESETS: ThemePreset[] = [
     compactSearch: false,
     dynamicNotificationHeight: true,
     removeDropShadows: false,
+    wallpaperFileName: 'uluru-red-centre.jpg',
     wallpaperUrl:
       'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080"><defs><linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="%23451a03"/><stop offset="60%" stop-color="%237c2d12"/><stop offset="100%" stop-color="%23c2410c"/></linearGradient><radialGradient id="sun" cx="75%" cy="35%" r="50%"><stop offset="0%" stop-color="%23f59e0b" stop-opacity="0.45"/><stop offset="100%" stop-color="%23451a03" stop-opacity="0"/></radialGradient></defs><rect width="100%" height="100%" fill="url(%23sky)"/><rect width="100%" height="100%" fill="url(%23sun)"/></svg>',
     previewGradient: 'linear-gradient(135deg, #451a03 0%, #c2410c 50%, #f59e0b 100%)',
@@ -92,6 +94,7 @@ export const THEME_PRESETS: ThemePreset[] = [
     compactSearch: false,
     dynamicNotificationHeight: true,
     removeDropShadows: false,
+    wallpaperFileName: 'sydney-harbour.jpg',
     wallpaperUrl:
       'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080"><defs><linearGradient id="harbour" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="%23020617"/><stop offset="50%" stop-color="%230f172a"/><stop offset="100%" stop-color="%231e3a8a"/></linearGradient><radialGradient id="cross" cx="50%" cy="30%" r="45%"><stop offset="0%" stop-color="%23d4af37" stop-opacity="0.35"/><stop offset="100%" stop-color="%23020617" stop-opacity="0"/></radialGradient></defs><rect width="100%" height="100%" fill="url(%23harbour)"/><rect width="100%" height="100%" fill="url(%23cross)"/></svg>',
     previewGradient: 'linear-gradient(135deg, #020617 0%, #1e3a8a 50%, #d4af37 100%)',
@@ -116,6 +119,7 @@ export const THEME_PRESETS: ThemePreset[] = [
     compactSearch: true,
     dynamicNotificationHeight: true,
     removeDropShadows: false,
+    wallpaperFileName: 'great-barrier-reef.jpg',
     wallpaperUrl:
       'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080"><defs><linearGradient id="reef" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%23083344"/><stop offset="50%" stop-color="%230284c7"/><stop offset="100%" stop-color="%2306b6d4"/></linearGradient></defs><rect width="100%" height="100%" fill="url(%23reef)"/></svg>',
     previewGradient: 'linear-gradient(135deg, #083344 0%, #0284c7 50%, #06b6d4 100%)',
@@ -138,6 +142,7 @@ export const THEME_PRESETS: ThemePreset[] = [
     compactSearch: false,
     dynamicNotificationHeight: true,
     removeDropShadows: false,
+    wallpaperFileName: 'federation-midnight.jpg',
     wallpaperUrl:
       'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080"><defs><linearGradient id="eureka" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%23030712"/><stop offset="50%" stop-color="%231d4ed8"/><stop offset="100%" stop-color="%23dc2626"/></linearGradient></defs><rect width="100%" height="100%" fill="url(%23eureka)"/></svg>',
     previewGradient: 'linear-gradient(135deg, #030712 0%, #1d4ed8 50%, #dc2626 100%)',
@@ -160,6 +165,7 @@ export const THEME_PRESETS: ThemePreset[] = [
     compactSearch: false,
     dynamicNotificationHeight: true,
     removeDropShadows: false,
+    wallpaperFileName: 'canberra-parliament.jpg',
     wallpaperUrl:
       'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080"><defs><linearGradient id="parl" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%23052e16"/><stop offset="50%" stop-color="%2300843d"/><stop offset="100%" stop-color="%23ffcd00"/></linearGradient></defs><rect width="100%" height="100%" fill="url(%23parl)"/></svg>',
     previewGradient: 'linear-gradient(135deg, #052e16 0%, #00843d 50%, #ffcd00 100%)',
@@ -182,6 +188,7 @@ export const THEME_PRESETS: ThemePreset[] = [
     compactSearch: false,
     dynamicNotificationHeight: true,
     removeDropShadows: false,
+    wallpaperFileName: 'canberra-autumn.jpg',
     wallpaperUrl:
       'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080"><defs><linearGradient id="aut" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%231c1917"/><stop offset="50%" stop-color="%2392400e"/><stop offset="100%" stop-color="%23d97706"/></linearGradient></defs><rect width="100%" height="100%" fill="url(%23aut)"/></svg>',
     previewGradient: 'linear-gradient(135deg, #1c1917 0%, #92400e 50%, #d97706 100%)',
@@ -209,6 +216,7 @@ export const THEME_PRESETS: ThemePreset[] = [
     compactSearch: true,
     dynamicNotificationHeight: true,
     removeDropShadows: true,
+    wallpaperFileName: 'cyberpunk-neon.jpg',
     wallpaperUrl:
       'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080"><defs><linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%23050508"/><stop offset="50%" stop-color="%230d0221"/><stop offset="100%" stop-color="%23190028"/></linearGradient><radialGradient id="glow" cx="70%" cy="30%" r="60%"><stop offset="0%" stop-color="%23ff007f" stop-opacity="0.35"/><stop offset="100%" stop-color="%23000000" stop-opacity="0"/></radialGradient><radialGradient id="glow2" cx="20%" cy="80%" r="50%"><stop offset="0%" stop-color="%2300f3ff" stop-opacity="0.25"/><stop offset="100%" stop-color="%23000000" stop-opacity="0"/></radialGradient></defs><rect width="100%" height="100%" fill="url(%23bg)"/><rect width="100%" height="100%" fill="url(%23glow)"/><rect width="100%" height="100%" fill="url(%23glow2)"/></svg>',
     previewGradient: 'linear-gradient(135deg, #050508 0%, #ff007f 50%, #00f3ff 100%)',
@@ -232,6 +240,7 @@ export const THEME_PRESETS: ThemePreset[] = [
     compactSearch: true,
     dynamicNotificationHeight: true,
     removeDropShadows: false,
+    wallpaperFileName: 'sunset-synthwave.jpg',
     wallpaperUrl:
       'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080"><defs><linearGradient id="synth" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%231a052e"/><stop offset="50%" stop-color="%23e91e63"/><stop offset="100%" stop-color="%23ff5722"/></linearGradient></defs><rect width="100%" height="100%" fill="url(%23synth)"/></svg>',
     previewGradient: 'linear-gradient(135deg, #1a052e 0%, #e91e63 50%, #ff5722 100%)',
@@ -255,6 +264,7 @@ export const THEME_PRESETS: ThemePreset[] = [
     compactSearch: true,
     dynamicNotificationHeight: true,
     removeDropShadows: false,
+    wallpaperFileName: 'tokyo-neon.jpg',
     wallpaperUrl:
       'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080"><defs><linearGradient id="tokyo" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%2309090b"/><stop offset="50%" stop-color="%23a855f7"/><stop offset="100%" stop-color="%23a3e635"/></linearGradient></defs><rect width="100%" height="100%" fill="url(%23tokyo)"/></svg>',
     previewGradient: 'linear-gradient(135deg, #09090b 0%, #a855f7 50%, #a3e635 100%)',
@@ -282,6 +292,7 @@ export const THEME_PRESETS: ThemePreset[] = [
     compactSearch: false,
     dynamicNotificationHeight: true,
     removeDropShadows: false,
+    wallpaperFileName: 'deep-ocean.jpg',
     wallpaperUrl:
       'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080"><defs><linearGradient id="ocean" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%23021526"/><stop offset="50%" stop-color="%2303346e"/><stop offset="100%" stop-color="%2364ffda"/></linearGradient></defs><rect width="100%" height="100%" fill="url(%23ocean)"/></svg>',
     previewGradient: 'linear-gradient(135deg, #021526 0%, #03346e 50%, #64ffda 100%)',
@@ -306,6 +317,7 @@ export const THEME_PRESETS: ThemePreset[] = [
     compactSearch: true,
     dynamicNotificationHeight: true,
     removeDropShadows: false,
+    wallpaperFileName: 'sakura.jpg',
     wallpaperUrl:
       'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080"><defs><linearGradient id="sakura" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%232e1065"/><stop offset="50%" stop-color="%23c084fc"/><stop offset="100%" stop-color="%23f472b6"/></linearGradient></defs><rect width="100%" height="100%" fill="url(%23sakura)"/></svg>',
     previewGradient: 'linear-gradient(135deg, #2e1065 0%, #c084fc 50%, #f472b6 100%)',
@@ -328,6 +340,7 @@ export const THEME_PRESETS: ThemePreset[] = [
     compactSearch: false,
     dynamicNotificationHeight: true,
     removeDropShadows: false,
+    wallpaperFileName: 'nordic-frost.jpg',
     wallpaperUrl:
       'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080"><defs><linearGradient id="nordic" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%230b132b"/><stop offset="50%" stop-color="%2338bdf8"/><stop offset="100%" stop-color="%2310b981"/></linearGradient></defs><rect width="100%" height="100%" fill="url(%23nordic)"/></svg>',
     previewGradient: 'linear-gradient(135deg, #0b132b 0%, #38bdf8 50%, #10b981 100%)',
@@ -350,6 +363,7 @@ export const THEME_PRESETS: ThemePreset[] = [
     compactSearch: false,
     dynamicNotificationHeight: true,
     removeDropShadows: false,
+    wallpaperFileName: 'forest-sage.jpg',
     wallpaperUrl:
       'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080"><defs><linearGradient id="forest" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%23061e12"/><stop offset="50%" stop-color="%232d5a43"/><stop offset="100%" stop-color="%23c9a84e"/></linearGradient></defs><rect width="100%" height="100%" fill="url(%23forest)"/></svg>',
     previewGradient: 'linear-gradient(135deg, #061e12 0%, #2d5a43 50%, #c9a84e 100%)',
@@ -377,6 +391,7 @@ export const THEME_PRESETS: ThemePreset[] = [
     compactSearch: true,
     dynamicNotificationHeight: true,
     removeDropShadows: true,
+    wallpaperFileName: 'zen.jpg',
     wallpaperUrl:
       'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080"><rect width="100%" height="100%" fill="%2318181b"/></svg>',
     previewGradient: 'linear-gradient(135deg, #18181b 0%, #27272a 50%, #8fbc8f 100%)',
@@ -399,6 +414,7 @@ export const THEME_PRESETS: ThemePreset[] = [
     compactSearch: false,
     dynamicNotificationHeight: true,
     removeDropShadows: false,
+    wallpaperFileName: 'obsidian.jpg',
     wallpaperUrl:
       'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080"><defs><linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%23000000"/><stop offset="50%" stop-color="%2378350f"/><stop offset="100%" stop-color="%23d4af37"/></linearGradient></defs><rect width="100%" height="100%" fill="url(%23gold)"/></svg>',
     previewGradient: 'linear-gradient(135deg, #000000 0%, #78350f 50%, #d4af37 100%)',
@@ -421,6 +437,7 @@ export const THEME_PRESETS: ThemePreset[] = [
     compactSearch: false,
     dynamicNotificationHeight: true,
     removeDropShadows: false,
+    wallpaperFileName: 'cobalt-porcelain.jpg',
     wallpaperUrl:
       'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080"><defs><linearGradient id="cobalt" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%23021124"/><stop offset="50%" stop-color="%230047ab"/><stop offset="100%" stop-color="%23e1ebf5"/></linearGradient></defs><rect width="100%" height="100%" fill="url(%23cobalt)"/></svg>',
     previewGradient: 'linear-gradient(135deg, #021124 0%, #0047ab 50%, #e1ebf5 100%)',
@@ -447,6 +464,7 @@ export const THEME_PRESETS: ThemePreset[] = [
     compactSearch: false,
     dynamicNotificationHeight: true,
     removeDropShadows: false,
+    wallpaperFileName: 'google-assistant-wave.jpg',
     wallpaperUrl:
       'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080"><defs><linearGradient id="wave" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%234285f4"/><stop offset="33%" stop-color="%23ea4335"/><stop offset="66%" stop-color="%23fbbc05"/><stop offset="100%" stop-color="%2334a853"/></linearGradient></defs><rect width="100%" height="100%" fill="url(%23wave)"/></svg>',
     previewGradient: 'linear-gradient(135deg, #4285f4 0%, #ea4335 33%, #fbbc05 66%, #34a853 100%)',
@@ -469,6 +487,7 @@ export const THEME_PRESETS: ThemePreset[] = [
     compactSearch: false,
     dynamicNotificationHeight: false,
     removeDropShadows: false,
+    wallpaperFileName: 'default-dark.jpg',
     wallpaperUrl:
       'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080"><defs><linearGradient id="aero" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%23004578"/><stop offset="50%" stop-color="%230078d4"/><stop offset="100%" stop-color="%2360cdff"/></linearGradient></defs><rect width="100%" height="100%" fill="url(%23aero)"/></svg>',
     previewGradient: 'linear-gradient(135deg, #004578 0%, #0078d4 50%, #60cdff 100%)',
@@ -491,6 +510,7 @@ export const THEME_PRESETS: ThemePreset[] = [
     compactSearch: false,
     dynamicNotificationHeight: true,
     removeDropShadows: false,
+    wallpaperFileName: 'crucifix-dark.jpg',
     wallpaperUrl:
       'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080"><defs><linearGradient id="crossdark" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%2303153b"/><stop offset="50%" stop-color="%23062d7c"/><stop offset="100%" stop-color="%232760a7"/></linearGradient></defs><rect width="100%" height="100%" fill="url(%23crossdark)"/></svg>',
     previewGradient: 'linear-gradient(135deg, #03153b 0%, #062d7c 50%, #2760a7 100%)',
@@ -513,6 +533,7 @@ export const THEME_PRESETS: ThemePreset[] = [
     compactSearch: false,
     dynamicNotificationHeight: true,
     removeDropShadows: false,
+    wallpaperFileName: 'crucifix-light.jpg',
     wallpaperUrl:
       'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080"><defs><linearGradient id="crosslight" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%23f0f4f8"/><stop offset="50%" stop-color="%23cfe0f5"/><stop offset="100%" stop-color="%23062d7c"/></linearGradient></defs><rect width="100%" height="100%" fill="url(%23crosslight)"/></svg>',
     previewGradient: 'linear-gradient(135deg, #f0f4f8 0%, #cfe0f5 50%, #062d7c 100%)',

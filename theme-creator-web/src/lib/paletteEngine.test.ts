@@ -7,8 +7,6 @@ import {
   buildLinearGradientBrush,
   extractPaletteFromPixels,
   computeColorHarmonies,
-  calculateContrastRatio,
-  getContrastGrade,
 } from './paletteEngine';
 
 describe('paletteEngine', () => {
@@ -111,18 +109,6 @@ describe('paletteEngine', () => {
     expect(mono.secondary).toBeDefined();
   });
 
-  it('calculates WCAG contrast ratios and grades properly', () => {
-    const white: [number, number, number] = [255, 255, 255];
-    const black: [number, number, number] = [0, 0, 0];
-    const ratio = calculateContrastRatio(white, black);
-    expect(ratio).toBeCloseTo(21, 1);
-
-    const grade = getContrastGrade(ratio);
-    expect(grade.grade).toBe('AAA');
-
-    const lowRatio = calculateContrastRatio([255, 255, 255], [240, 240, 240]);
-    expect(getContrastGrade(lowRatio).grade).toBe('FAIL');
-  });
 
   it('extracts multi-swatch palette including surfaces and vibrant accents', () => {
     const pixels: number[] = [];

@@ -120,12 +120,31 @@ describe('urlSharing', () => {
     const qs = encodeThemeToUrl(base);
     const decoded = decodeThemeFromUrl(`https://theme-creator.local/studio${qs}`);
     expect(decoded?.globalGradient?.type).toBe('radial');
+    expect(decoded?.globalGradient?.angle).toBe(0);
     expect(decoded?.globalGradient?.stops[0].color).toBe('#112233');
     expect(decoded?.startMenuOverride?.enabled).toBe(true);
     expect(decoded?.startMenuOverride?.materialStyle).toBe('pure-black-neon');
     expect(decoded?.flyoutOverride?.enabled).toBe(true);
     expect(decoded?.flyoutOverride?.opacity).toBe(50);
   });
+
+  it('preserves 0 degree gradient angles for linear gradients', () => {
+    const base: ThemeConfigSnapshot = {
+      ...DEFAULT_THEME_STATE,
+      globalGradient: {
+        type: 'linear',
+        angle: 0,
+        stops: [
+          { id: '1', color: '#111111', offset: 0 },
+          { id: '2', color: '#222222', offset: 100 },
+        ],
+      },
+    };
+    const qs = encodeThemeToUrl(base);
+    const decoded = decodeThemeFromUrl(new URLSearchParams(qs));
+    expect(decoded?.globalGradient?.angle).toBe(0);
+  });
 });
+
 
 

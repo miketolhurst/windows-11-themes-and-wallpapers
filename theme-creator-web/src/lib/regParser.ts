@@ -62,12 +62,12 @@ function formatGradient(g?: GradientConfig): string {
 
 function formatTypography(t?: TypographyConfig): string {
   if (!t) return 'Default (Segoe UI Variable)';
-  return `${t.fontFamily} (${t.fontWeight}, Spacing: ${t.characterSpacing})`;
+  return `${t.fontFamily || 'Segoe UI Variable'} (${t.fontWeight || '400'}, Spacing: ${t.characterSpacing ?? 0})`;
 }
 
 function formatAnimation(a?: AnimationConfig): string {
   if (!a) return 'Default (fluent-spring, 250ms)';
-  return `${a.speed} (${a.easing}, ${a.durationMs}ms)`;
+  return `${a.speed || 'default'} (${a.easing || 'fluent-spring'}, ${a.durationMs ?? 250}ms)`;
 }
 
 export function compareThemeConfigs(
@@ -339,13 +339,17 @@ export function parseRegFile(content: string): Partial<ThemeState> {
   }
 
   // Check taskbar mode and material style
-  if (content.includes('SystemBackdrop=MicaAlt') || content.includes('mica-alt') || content.includes('MicaAlt')) {
+  if (
+    content.includes('SystemBackdrop=MicaAlt') ||
+    content.includes('materialStyle=mica-alt') ||
+    content.includes('BlurAmount="45"')
+  ) {
     result.materialStyle = 'mica-alt';
     result.taskbarMode = 'blur';
   } else if (
     content.includes('SystemBackdrop=Mica') ||
     content.includes('materialStyle=mica') ||
-    content.includes('Mica')
+    content.includes('BlurAmount="38"')
   ) {
     result.materialStyle = 'mica';
     result.taskbarMode = 'blur';

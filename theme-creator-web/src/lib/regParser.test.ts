@@ -114,5 +114,40 @@ describe('compareThemeConfigs', () => {
     const tbDiff = diffs.find((d) => d.key === 'taskbarOverride');
     expect(tbDiff?.hasChanged).toBe(true);
   });
+
+  it('does not falsely identify mica material from arbitrary text or theme names', () => {
+    const sampleReg = `
+Windows Registry Editor Version 5.00
+; Theme Name: Mica Glow Edition
+; Author: Michael
+[HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\DWM]
+"AccentColor"=dword:ffd47800
+    `;
+    const parsed = parseRegFile(sampleReg);
+    expect(parsed.materialStyle).toBeUndefined();
+  });
+
+  it('handles partial typography and animation properties without undefined in strings', () => {
+    const current = { ...DEFAULT_THEME_STATE };
+    const incoming = {
+      typography: {
+        fontFamily: 'Consolas',
+      } as any,
+      animations: {
+        speed: 'instant',
+      } as any,
+    };
+    const diffs = compareThemeConfigs(current, incoming);
+    const typoDiff = diffs.find((d) => d.key === 'typography');
+    expect(typoDiff?.hasChanged).toBe(true);
+    expect(typoDiff?.incomingValue).not.toContain('undefined');
+    expect(typoDiff?.incomingValue).toContain('Consolas');
+
+    const animDiff = diffs.find((d) => d.key === 'animations');
+    expect(animDiff?.hasChanged).toBe(true);
+    expect(animDiff?.incomingValue).not.toContain('undefined');
+    expect(animDiff?.incomingValue).toContain('instant');
+  });
 });
+
 

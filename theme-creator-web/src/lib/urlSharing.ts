@@ -63,7 +63,8 @@ function deserializeGradient(val: string | null): GradientConfig | undefined {
     const parts = val.split(':');
     if (parts.length >= 3) {
       const type = parts[0] === 'radial' ? 'radial' : 'linear';
-      const angle = parseInt(parts[1], 10) || 90;
+      const parsedAngle = parseInt(parts[1], 10);
+      const angle = Number.isNaN(parsedAngle) ? 90 : parsedAngle;
       const stopsStr = parts.slice(2).join(':');
       const stops = stopsStr
         .split(',')
@@ -330,7 +331,10 @@ export function decodeThemeFromUrl(searchStringOrUrl: string | URLSearchParams):
 
     // Parse Phase 1 properties if present, or assign safe fallbacks
     const gradParsed = deserializeGradient(params.get('grad'));
-    result.globalGradient = gradParsed || { ...DEFAULT_THEME_STATE.globalGradient };
+    result.globalGradient = gradParsed || {
+      ...DEFAULT_THEME_STATE.globalGradient,
+      stops: DEFAULT_THEME_STATE.globalGradient.stops.map((s) => ({ ...s })),
+    };
 
     const tbOvrParsed = deserializeOverride(params.get('tbOvr'));
     result.taskbarOverride = tbOvrParsed || { ...DEFAULT_THEME_STATE.taskbarOverride };

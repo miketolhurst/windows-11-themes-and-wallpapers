@@ -337,17 +337,14 @@ test('sets flyout duration to 0ms when animation speed is instant', () => {
 });
 
 test('renders globalGradient when materialStyle is linear-gradient and globalGradient is configured', () => {
-  useThemeStore.setState({
-    taskbarMode: 'blur',
-    materialStyle: 'linear-gradient',
-    globalGradient: {
-      type: 'linear',
-      angle: 45,
-      stops: [
-        { id: '1', color: '#112233', offset: 0 },
-        { id: '2', color: '#445566', offset: 100 },
-      ],
-    },
+  useThemeStore.getState().setMaterialStyle('linear-gradient');
+  useThemeStore.getState().setGlobalGradient({
+    type: 'linear',
+    angle: 45,
+    stops: [
+      { id: '1', color: '#112233', offset: 0 },
+      { id: '2', color: '#445566', offset: 100 },
+    ],
   });
 
   render(<PreviewCanvas />);

@@ -61,10 +61,7 @@ function resolveComponentStyle({
   isLightMode: boolean;
 }): ResolvedComponentStyle {
   const isOverridden = Boolean(override?.enabled);
-  const baseMaterial =
-    taskbarMode === 'gradient'
-      ? 'linear-gradient'
-      : (materialStyle || 'fluent-acrylic');
+  const baseMaterial = materialStyle || 'fluent-acrylic';
   const mat: MaterialStyle =
     isOverridden && override?.materialStyle ? override.materialStyle : baseMaterial;
 
@@ -100,6 +97,15 @@ function resolveComponentStyle({
   } else if (isOverridden && override?.gradient) {
     background = buildGradientCss(override.gradient, op);
     backdropFilter = 'none';
+  } else if (!isOverridden && taskbarMode === 'gradient' && mat !== 'linear-gradient') {
+    backdropFilter = 'none';
+    if (component === 'taskbar') {
+      background = `linear-gradient(90deg, rgba(${secRgb[0]}, ${secRgb[1]}, ${secRgb[2]}, ${op}) 0%, rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, ${op}) 50%, rgba(${bgRgb[0]}, ${bgRgb[1]}, ${bgRgb[2]}, ${op}) 100%)`;
+    } else if (component === 'startMenu') {
+      background = `linear-gradient(135deg, rgba(${bgRgb[0]}, ${bgRgb[1]}, ${bgRgb[2]}, ${op}) 0%, rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, ${op}) 50%, rgba(${secRgb[0]}, ${secRgb[1]}, ${secRgb[2]}, ${op}) 100%)`;
+    } else {
+      background = `linear-gradient(315deg, rgba(${bgRgb[0]}, ${bgRgb[1]}, ${bgRgb[2]}, ${op}) 0%, rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, ${op}) 50%, rgba(${secRgb[0]}, ${secRgb[1]}, ${secRgb[2]}, ${op}) 100%)`;
+    }
   } else if (mat === 'mica') {
     backdropFilter = 'blur(40px) saturate(1.15)';
     const micaAlpha = Number((op * 0.88).toFixed(2));
@@ -126,15 +132,7 @@ function resolveComponentStyle({
     backdropFilter = 'none';
     if (override?.gradient) {
       background = buildGradientCss(override.gradient, op);
-    } else if (taskbarMode === 'gradient') {
-      if (component === 'taskbar') {
-        background = `linear-gradient(90deg, rgba(${secRgb[0]}, ${secRgb[1]}, ${secRgb[2]}, ${op}) 0%, rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, ${op}) 50%, rgba(${bgRgb[0]}, ${bgRgb[1]}, ${bgRgb[2]}, ${op}) 100%)`;
-      } else if (component === 'startMenu') {
-        background = `linear-gradient(135deg, rgba(${bgRgb[0]}, ${bgRgb[1]}, ${bgRgb[2]}, ${op}) 0%, rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, ${op}) 50%, rgba(${secRgb[0]}, ${secRgb[1]}, ${secRgb[2]}, ${op}) 100%)`;
-      } else {
-        background = `linear-gradient(315deg, rgba(${bgRgb[0]}, ${bgRgb[1]}, ${bgRgb[2]}, ${op}) 0%, rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, ${op}) 50%, rgba(${secRgb[0]}, ${secRgb[1]}, ${secRgb[2]}, ${op}) 100%)`;
-      }
-    } else if (globalGradient) {
+    } else if (globalGradient && globalGradient.stops && globalGradient.stops.length > 0) {
       background = buildGradientCss(globalGradient, op);
     } else {
       if (component === 'taskbar') {

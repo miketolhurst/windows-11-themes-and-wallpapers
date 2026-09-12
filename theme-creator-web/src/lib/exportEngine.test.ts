@@ -62,11 +62,13 @@ describe('exportEngine', () => {
     const dockState = {
       ...mockState,
       dockMode: true,
-      dockMargin: 18,
     } as unknown as ThemeState;
     const reg = generateRegFileString(dockState);
     expect(reg).toContain('Taskbar.TaskbarBackground#BackgroundControl');
-    expect(reg).toContain('Margin=18,0,18,8');
+    expect(reg).toContain('Margin=5, 5, 5, 5');
+
+    const backups = buildWindhawkJsonBackups(dockState);
+    expect(backups.taskbarBackup).toContain('Margin=5, 5, 5, 5');
   });
 
   it('supports running indicator styles: dot, hidden, and glow', () => {

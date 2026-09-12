@@ -146,10 +146,7 @@ export function getModRawStyles(state: ThemeState): ModRawStyles {
   if (state.dockMode) {
     taskbarControlStyles.push({
       target: 'Taskbar.TaskbarBackground#BackgroundControl',
-      styles: [
-        `Margin=${state.dockMargin ?? 12},0,${state.dockMargin ?? 12},8`,
-        `CornerRadius=${Math.max(12, radius + 4)}`,
-      ],
+      styles: ['Margin=5, 5, 5, 5'],
     });
   }
 

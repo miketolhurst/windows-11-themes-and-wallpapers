@@ -169,5 +169,24 @@ test('selecting split-complementary color harmony updates secondary accent and s
   expect(useThemeStore.getState().accentColor).toBeDefined();
 });
 
+test('renders Start Button & Indicators section and Preview Surfaces switcher', () => {
+  render(<Sidebar />);
+  expect(screen.getByText('Start Button & Indicators')).toBeTruthy();
 
+  // Test Preview Surfaces buttons
+  const explorerBtn = screen.getByRole('button', { name: /📁 File Explorer/i });
+  fireEvent.click(explorerBtn);
+  expect(useThemeStore.getState().previewViewMode).toBe('file-explorer');
 
+  const terminalBtn = screen.getByRole('button', { name: /💻 Terminal/i });
+  fireEvent.click(terminalBtn);
+  expect(useThemeStore.getState().previewViewMode).toBe('terminal');
+
+  const contextMenuBtn = screen.getByRole('button', { name: /📋 Context Menu/i });
+  fireEvent.click(contextMenuBtn);
+  expect(useThemeStore.getState().previewViewMode).toBe('context-menu');
+
+  const desktopBtn = screen.getByRole('button', { name: /🖥️ Desktop/i });
+  fireEvent.click(desktopBtn);
+  expect(useThemeStore.getState().previewViewMode).toBe('desktop');
+});

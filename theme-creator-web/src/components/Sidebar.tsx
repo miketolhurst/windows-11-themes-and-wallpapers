@@ -8,6 +8,7 @@ import ComponentIsolationSection from './ComponentIsolationSection';
 import TypographyAnimationSection from './TypographyAnimationSection';
 import GradientEditorModal from './GradientEditorModal';
 import ColorPickerPopover from './ColorPickerPopover';
+import { StartButtonAndIndicatorsSection } from './StartButtonAndIndicatorsSection';
 import {
   extractPaletteFromImageUrl,
   hexToRgb,
@@ -98,6 +99,8 @@ export default function Sidebar() {
     setTypography,
     animations,
     setAnimations,
+    previewViewMode,
+    setPreviewViewMode,
     past,
     future,
     undo,
@@ -760,36 +763,10 @@ export default function Sidebar() {
               </div>
             )}
           </div>
-
-          {/* Custom Start Icon */}
-          <div>
-            <span className="text-xs text-neutral-400 block mb-1">Start Button Icon</span>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => iconInputRef.current?.click()}
-                className="flex-1 py-1 px-2.5 rounded text-xs bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700 transition-colors truncate cursor-pointer"
-              >
-                {customStartIconUrl ? 'Change Custom Icon...' : 'Upload Custom Icon...'}
-              </button>
-              {customStartIconUrl && (
-                <button
-                  onClick={() => setCustomStartIcon(null, null)}
-                  className="text-xs px-2 py-1 rounded bg-neutral-800 hover:bg-red-900/50 text-red-400 border border-neutral-700 transition-colors cursor-pointer"
-                  title="Reset to default Windows 11 logo"
-                >
-                  ✕
-                </button>
-              )}
-              <input
-                ref={iconInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleStartIconUpload}
-                className="hidden"
-              />
-            </div>
-          </div>
         </div>
+
+        {/* Start Button & Indicators */}
+        <StartButtonAndIndicatorsSection />
 
         {/* Wallpaper */}
         <div className="pt-2 border-t border-neutral-800">
@@ -1176,6 +1153,59 @@ export default function Sidebar() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Preview Surfaces & Windows Switcher */}
+        <div className="pt-2 border-t border-neutral-800">
+          <label className="text-xs font-semibold uppercase text-neutral-400 mb-2 block">
+            Preview Surfaces & Windows
+          </label>
+          <div className="grid grid-cols-2 gap-1.5 mb-2">
+            <button
+              type="button"
+              onClick={() => setPreviewViewMode('desktop')}
+              className={`py-1.5 px-2 rounded text-[11px] font-medium border transition-colors cursor-pointer text-center ${
+                previewViewMode === 'desktop'
+                  ? 'bg-blue-600 text-white border-blue-500 shadow-sm'
+                  : 'bg-neutral-800 text-neutral-300 border-neutral-700 hover:bg-neutral-700'
+              }`}
+            >
+              🖥️ Desktop
+            </button>
+            <button
+              type="button"
+              onClick={() => setPreviewViewMode('file-explorer')}
+              className={`py-1.5 px-2 rounded text-[11px] font-medium border transition-colors cursor-pointer text-center ${
+                previewViewMode === 'file-explorer'
+                  ? 'bg-blue-600 text-white border-blue-500 shadow-sm'
+                  : 'bg-neutral-800 text-neutral-300 border-neutral-700 hover:bg-neutral-700'
+              }`}
+            >
+              📁 File Explorer
+            </button>
+            <button
+              type="button"
+              onClick={() => setPreviewViewMode('terminal')}
+              className={`py-1.5 px-2 rounded text-[11px] font-medium border transition-colors cursor-pointer text-center ${
+                previewViewMode === 'terminal'
+                  ? 'bg-blue-600 text-white border-blue-500 shadow-sm'
+                  : 'bg-neutral-800 text-neutral-300 border-neutral-700 hover:bg-neutral-700'
+              }`}
+            >
+              💻 Terminal
+            </button>
+            <button
+              type="button"
+              onClick={() => setPreviewViewMode('context-menu')}
+              className={`py-1.5 px-2 rounded text-[11px] font-medium border transition-colors cursor-pointer text-center ${
+                previewViewMode === 'context-menu'
+                  ? 'bg-blue-600 text-white border-blue-500 shadow-sm'
+                  : 'bg-neutral-800 text-neutral-300 border-neutral-700 hover:bg-neutral-700'
+              }`}
+            >
+              📋 Context Menu
+            </button>
+          </div>
         </div>
 
         {/* Preview Viewport Switcher */}

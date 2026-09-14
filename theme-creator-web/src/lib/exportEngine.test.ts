@@ -335,5 +335,72 @@ describe('exportEngine Phase 1 extensions', () => {
     const uniqueCount = new Set(pkg.themeVariables).size;
     expect(pkg.themeVariables.length).toBe(uniqueCount);
   });
+
+  describe('Phase 2 exportEngine enhancements', () => {
+    it('generates Context Menu XAML styles', () => {
+      const state = {
+        ...useThemeStore.getState(),
+        contextMenuOverride: {
+          enabled: true,
+          materialStyle: 'pure-black-neon' as const,
+          customColor: '#FF0055',
+          cornerRadius: 12,
+          borderThickness: 2,
+        },
+      };
+      const pkg = generateWindhawkStylerMod(state);
+      expect(pkg.contextMenuStyles).toContain('MenuFlyoutPresenter');
+      expect(pkg.contextMenuStyles).toContain('CornerRadius=12');
+    });
+
+    it('generates Windows 10 classic context menu CLSID when enabled', () => {
+      const state = {
+        ...useThemeStore.getState(),
+        contextMenuOverride: { enabled: true, enableClassicMenu: true },
+      };
+      const reg = generateRegFileString(state);
+      expect(reg).toContain('{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}');
+    });
+
+    it('generates running app indicator geometry rules', () => {
+      const state = {
+        ...useThemeStore.getState(),
+        runningIndicator: {
+          style: 'dot' as const,
+          activeColorMode: 'white' as const,
+          activeCustomColor: '#FFFFFF',
+          inactiveColorMode: 'subtle-white' as const,
+          inactiveCustomColor: '#888888',
+          indicatorSize: 5,
+        },
+      };
+      const pkg = generateWindhawkStylerMod(state);
+      expect(pkg.taskbarStyles).toContain('CornerRadius=99');
+    });
+
+    it('bundles start_icon.png and updates Restore_Default_Windows11.bat when custom or preset start button used', async () => {
+      const state = {
+        ...useThemeStore.getState(),
+        startButton: {
+          type: 'preset' as const,
+          presetId: 'win11-minimal' as const,
+          colorMode: 'accent' as const,
+          customColor: '#0078D4',
+          size: 20,
+        },
+        contextMenuOverride: {
+          enabled: true,
+          enableClassicMenu: true,
+        },
+      };
+      const blob = await generateZipPayload(state as any);
+      const zip = await JSZip.loadAsync(blob);
+      expect(zip.file('start_icon.png')).not.toBeNull();
+      const restoreBat = await zip.file('Restore_Default_Windows11.bat')!.async('string');
+      expect(restoreBat).toContain('powershell');
+      const restorePs1 = await zip.file('Restore_Defaults.ps1')!.async('string');
+      expect(restorePs1).toContain('{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}');
+    });
+  });
 });
 

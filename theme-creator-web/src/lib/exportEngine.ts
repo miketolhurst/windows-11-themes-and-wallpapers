@@ -5,6 +5,9 @@ import {
   MaterialStyle,
   GradientConfig,
   ComponentOverride,
+  RunningIndicatorConfig,
+  ContextMenuOverride,
+  FileExplorerOverride,
   DEFAULT_THEME_STATE,
 } from '../store/useThemeStore';
 import {
@@ -129,15 +132,191 @@ export function buildSurfaceFill(
 
 export const buildMaterialBackgroundStyle = buildSurfaceFill;
 
+export const DEFAULT_START_ICON_PNG = new Uint8Array([
+  0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d,
+  0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+  0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4, 0x89, 0x00, 0x00, 0x00,
+  0x0a, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9c, 0x63, 0x00, 0x01, 0x00, 0x00,
+  0x05, 0x00, 0x01, 0x0d, 0x0a, 0x2d, 0xb4, 0x00, 0x00, 0x00, 0x00, 0x49,
+  0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82,
+]);
+
 export interface RawControlStyle {
   target: string;
   styles: string[];
+}
+
+export function generateRunningIndicatorStyles(
+  config: RunningIndicatorConfig,
+  cNormal: string = '#0078D4',
+  radius: number = 8
+): string[] {
+  const activeColor =
+    config.activeColorMode === 'white'
+      ? '#FFFFFF'
+      : config.activeColorMode === 'custom'
+      ? config.activeCustomColor
+      : cNormal;
+
+  const inactiveColor =
+    config.inactiveColorMode === 'accent'
+      ? cNormal
+      : config.inactiveColorMode === 'custom'
+      ? config.inactiveCustomColor
+      : '#888888';
+
+  const size = config.indicatorSize || 3;
+
+  if (config.style === 'dot') {
+    return [
+      `Fill=${inactiveColor}`,
+      `Width=${size}`,
+      `Height=${size}`,
+      'CornerRadius=99',
+      `Fill@ActiveRunningIndicator=${activeColor}`,
+    ];
+  }
+
+  if (config.style === 'pill') {
+    return [
+      `Fill=${inactiveColor}`,
+      'Width=12',
+      `Height=${size}`,
+      'CornerRadius=3',
+      `Fill@ActiveRunningIndicator=${activeColor}`,
+    ];
+  }
+
+  if (config.style === 'glow') {
+    return [
+      `Fill:=<LinearGradientBrush StartPoint="0,0" EndPoint="1,0"><GradientStop Color="#00${activeColor.replace('#', '')}" Offset="0.0"/><GradientStop Color="${activeColor}" Offset="0.5"/><GradientStop Color="#00${activeColor.replace('#', '')}" Offset="1.0"/></LinearGradientBrush>`,
+      `Height=${size}`,
+      'CornerRadius=99',
+      `Fill@ActiveRunningIndicator=${activeColor}`,
+    ];
+  }
+
+  if (config.style === 'off' || (config.style as string) === 'hidden') {
+    return ['Visibility=Collapsed'];
+  }
+
+  // line / standard
+  return [
+    `Fill=${inactiveColor}`,
+    `Height=${size}`,
+    `CornerRadius=${radius}`,
+    `Fill@ActiveRunningIndicator=${activeColor}`,
+  ];
+}
+
+export function generateContextMenuStyles(
+  state: ThemeConfigSnapshot | ThemeState
+): RawControlStyle[] {
+  const cNormal = (state.accentColor || '#0078D4').toLowerCase();
+  const radius = state.cornerRadius ?? 8;
+  const thickness = state.borderThickness ?? 2;
+  const cmOverride = state.contextMenuOverride;
+  const cmRadius = cmOverride?.cornerRadius ?? radius;
+  const cmThickness = cmOverride?.borderThickness ?? thickness;
+
+  const defaultBlur = state.notificationBlur ?? 15;
+  const defaultOp = state.notificationOpacity ?? 95;
+
+  let cmFill = '';
+  if (cmOverride?.materialStyle === 'pure-black-neon') {
+    cmFill = '<SolidColorBrush Color="#0A0A0C"/>';
+  } else if (cmOverride?.customColor) {
+    const alphaHex = opacityToAlphaHex(cmOverride.opacity ?? defaultOp);
+    let clean = cmOverride.customColor.replace(/^#/, '');
+    if (clean.length === 8) clean = clean.slice(2);
+    cmFill = `<SolidColorBrush Color="#${alphaHex}${clean}"/>`;
+  } else if (cmOverride?.gradient) {
+    cmFill = generateGradientBrushXaml(cmOverride.gradient, cmOverride.opacity ?? defaultOp);
+  } else {
+    cmFill = `<WindhawkBlur BlurAmount="${cmOverride?.blur ?? defaultBlur}" TintColor="#f7101216" TintOpacity="${((cmOverride?.opacity ?? defaultOp) / 100).toFixed(2)}" TintSaturation="0.85" NoiseOpacity="0.04" NoiseDensity="1.0" FallbackColor="#101216"/>`;
+  }
+
+  const styles: RawControlStyle[] = [
+    {
+      target: 'MenuFlyoutPresenter',
+      styles: [
+        `Background:=${cmFill}`,
+        `BorderBrush=${cNormal}`,
+        `BorderThickness=${cmThickness}`,
+        `CornerRadius=${cmRadius}`,
+        'Padding=4,4,4,4',
+      ],
+    },
+  ];
+
+  if (cmOverride?.itemHoverAccent !== false) {
+    styles.push({
+      target: 'MenuFlyoutItem',
+      styles: [
+        'CornerRadius=4',
+        `Background@PointerOver:=<SolidColorBrush Color="${cNormal}" Opacity="0.18"/>`,
+      ],
+    });
+  } else {
+    styles.push({
+      target: 'MenuFlyoutItem',
+      styles: ['CornerRadius=4'],
+    });
+  }
+
+  return styles;
+}
+
+export function generateFileExplorerStyles(
+  state: ThemeConfigSnapshot | ThemeState
+): RawControlStyle[] {
+  const cNormal = (state.accentColor || '#0078D4').toLowerCase();
+  const feOverride = state.fileExplorerOverride;
+  const tabStyle = feOverride?.tabStyle ?? 'integrated';
+  const activeColorMode = feOverride?.activeTabColorMode ?? 'accent';
+
+  const styles: RawControlStyle[] = [];
+
+  if (tabStyle === 'floating') {
+    styles.push({
+      target: 'TabViewItem',
+      styles: ['Margin=2,2,2,0', 'CornerRadius=6'],
+    });
+  } else if (tabStyle === 'accent-border') {
+    styles.push({
+      target: 'TabViewItem',
+      styles: ['BorderBottomThickness=2', `BorderBrush=${cNormal}`],
+    });
+  } else {
+    styles.push({
+      target: 'TabViewItem',
+      styles: ['CornerRadius=6,6,0,0'],
+    });
+  }
+
+  if (activeColorMode === 'accent') {
+    styles.push({
+      target: 'TabViewItem@Selected',
+      styles: [`Background:=<SolidColorBrush Color="${cNormal}" Opacity="0.22"/>`],
+    });
+  }
+
+  if (feOverride?.showCommandBarTint) {
+    styles.push({
+      target: 'CommandBar',
+      styles: [`Background:=<SolidColorBrush Color="${cNormal}" Opacity="0.12"/>`],
+    });
+  }
+
+  return styles;
 }
 
 export interface ModRawStyles {
   taskbarControlStyles: RawControlStyle[];
   startMenuControlStyles: RawControlStyle[];
   ncControlStyles: RawControlStyle[];
+  contextMenuControlStyles: RawControlStyle[];
+  fileExplorerControlStyles: RawControlStyle[];
   themeVarsCommon: string[];
   ncThemeVars: string[];
 }
@@ -239,7 +418,12 @@ export function getModRawStyles(state: ThemeConfigSnapshot | ThemeState): ModRaw
   const thickness = state.borderThickness ?? 2;
   const buttonRadius = Math.max(0, radius - 4);
 
-  const hasCustomIcon = !!(state.customStartIconUrl || state.customStartIconData);
+  const hasCustomIcon = !!(
+    state.customStartIconUrl ||
+    state.customStartIconData ||
+    state.startButton?.type === 'preset' ||
+    (state.startButton?.type === 'custom' && state.startButton.customIconUrl)
+  );
   const taskbarControlStyles: RawControlStyle[] = [];
 
   if (hasCustomIcon) {
@@ -285,7 +469,12 @@ export function getModRawStyles(state: ThemeConfigSnapshot | ThemeState): ModRaw
   });
 
   // Running indicator
-  if (state.runningIndicatorStyle === 'dot') {
+  if (state.runningIndicator) {
+    taskbarControlStyles.push({
+      target: 'Taskbar.TaskListLabeledButtonPanel@RunningIndicatorStates > Rectangle#RunningIndicator',
+      styles: generateRunningIndicatorStyles(state.runningIndicator, cNormal, radius),
+    });
+  } else if (state.runningIndicatorStyle === 'dot') {
     taskbarControlStyles.push({
       target: 'Taskbar.TaskListLabeledButtonPanel@RunningIndicatorStates > Rectangle#RunningIndicator',
       styles: [
@@ -504,10 +693,15 @@ export function getModRawStyles(state: ThemeConfigSnapshot | ThemeState): ModRaw
     });
   }
 
+  const contextMenuControlStyles = generateContextMenuStyles(state);
+  const fileExplorerControlStyles = generateFileExplorerStyles(state);
+
   return {
     taskbarControlStyles,
     startMenuControlStyles,
     ncControlStyles,
+    contextMenuControlStyles,
+    fileExplorerControlStyles,
     themeVarsCommon,
     ncThemeVars,
   };
@@ -612,6 +806,25 @@ export function generateRegFileString(state: ThemeState): string {
     '',
   ];
 
+  if (state.contextMenuOverride?.enableClassicMenu) {
+    regLines.push(
+      '; ============================================================',
+      '; 5. Classic Windows 10 Context Menu Override',
+      '; ============================================================',
+      '[HKEY_CURRENT_USER\\Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32]',
+      '@=""',
+      ''
+    );
+  } else {
+    regLines.push(
+      '; ============================================================',
+      '; 5. Restore Modern Windows 11 Context Menu',
+      '; ============================================================',
+      '[-HKEY_CURRENT_USER\\Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}]',
+      ''
+    );
+  }
+
   return regLines.join('\r\n');
 }
 
@@ -619,6 +832,8 @@ export interface WindhawkBackups {
   taskbarBackup: string;
   startMenuBackup: string;
   notificationCenterBackup: string;
+  contextMenuBackup: string;
+  fileExplorerBackup: string;
 }
 
 export function buildWindhawkJsonBackups(state: ThemeConfigSnapshot | ThemeState): WindhawkBackups {
@@ -626,6 +841,8 @@ export function buildWindhawkJsonBackups(state: ThemeConfigSnapshot | ThemeState
     taskbarControlStyles,
     startMenuControlStyles,
     ncControlStyles,
+    contextMenuControlStyles,
+    fileExplorerControlStyles,
     themeVarsCommon,
     ncThemeVars,
   } = getModRawStyles(state);
@@ -680,10 +897,30 @@ export function buildWindhawkJsonBackups(state: ThemeConfigSnapshot | ThemeState
     "",
   ].join('\n');
 
+  const contextMenuBackup = [
+    "theme: ''",
+    "styleConstants:",
+    "  - ''",
+    "controlStyles:",
+    formatStylesYaml(contextMenuControlStyles),
+    "",
+  ].join('\n');
+
+  const fileExplorerBackup = [
+    "theme: ''",
+    "styleConstants:",
+    "  - ''",
+    "controlStyles:",
+    formatStylesYaml(fileExplorerControlStyles),
+    "",
+  ].join('\n');
+
   return {
     taskbarBackup,
     startMenuBackup,
     notificationCenterBackup,
+    contextMenuBackup,
+    fileExplorerBackup,
   };
 }
 
@@ -691,6 +928,8 @@ export interface WindhawkThemePackage {
   taskbarStyles: string;
   startMenuStyles: string;
   notificationCenterStyles: string;
+  contextMenuStyles: string;
+  fileExplorerStyles: string;
   themeVariables: string[];
 }
 
@@ -709,6 +948,8 @@ export function generateWindhawkStylerMod(
     taskbarStyles: backups.taskbarBackup,
     startMenuStyles: backups.startMenuBackup,
     notificationCenterStyles: backups.notificationCenterBackup,
+    contextMenuStyles: backups.contextMenuBackup,
+    fileExplorerStyles: backups.fileExplorerBackup,
     themeVariables: Array.from(new Set([...themeVarsCommon, ...ncThemeVars])),
   };
 }
@@ -736,6 +977,15 @@ Set-ItemProperty -Path "HKCU:\\Software\\Microsoft\\Windows\\DWM" -Name "ColorPr
 Remove-ItemProperty -Path "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Accent" -Name "AccentColorMenu" -ErrorAction SilentlyContinue
 Remove-ItemProperty -Path "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Accent" -Name "StartColorMenu" -ErrorAction SilentlyContinue
 Remove-ItemProperty -Path "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Accent" -Name "AccentPalette" -ErrorAction SilentlyContinue
+
+# Restore modern Windows 11 context menu if classic override was present
+Remove-Item -Path "HKCU:\\Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}" -Recurse -ErrorAction SilentlyContinue
+
+# Clean up custom start button icon
+Remove-Item -Path "$env:PUBLIC\\Pictures\\Windhawk_start_icon.png" -Force -ErrorAction SilentlyContinue
+if (Test-Path "C:\\Users\\Public\\Pictures\\Windhawk_start_icon.png") {
+    Remove-Item -Path "C:\\Users\\Public\\Pictures\\Windhawk_start_icon.png" -Force -ErrorAction SilentlyContinue
+}
 
 # Broadcast color change to shell
 Add-Type @"
@@ -924,6 +1174,8 @@ export async function generateZipPayload(state: ThemeState): Promise<Blob> {
   zip.file('taskbar_backup.json', backups.taskbarBackup);
   zip.file('start_menu_backup.json', backups.startMenuBackup);
   zip.file('notification_center_backup.json', backups.notificationCenterBackup);
+  zip.file('context_menu_backup.json', backups.contextMenuBackup);
+  zip.file('file_explorer_backup.json', backups.fileExplorerBackup);
 
   // 6. Wallpaper (Custom upload, active preset, or default Windows 11 wallpaper)
   if (state.wallpaperData) {
@@ -967,14 +1219,25 @@ export async function generateZipPayload(state: ThemeState): Promise<Blob> {
     }
   }
 
-  // 7. Custom Start Icon if present
+  // 7. Custom or Preset Start Icon if present
   if (state.customStartIconData) {
     zip.file('start_icon.png', state.customStartIconData);
   } else if (state.customStartIconUrl && state.customStartIconUrl.startsWith('data:')) {
     const parts = state.customStartIconUrl.split(',');
     if (parts[1]) {
       zip.file('start_icon.png', parts[1], { base64: true });
+    } else {
+      zip.file('start_icon.png', DEFAULT_START_ICON_PNG);
     }
+  } else if (state.startButton?.type === 'custom' && state.startButton.customIconUrl?.startsWith('data:')) {
+    const parts = state.startButton.customIconUrl.split(',');
+    if (parts[1]) {
+      zip.file('start_icon.png', parts[1], { base64: true });
+    } else {
+      zip.file('start_icon.png', DEFAULT_START_ICON_PNG);
+    }
+  } else if (state.startButton?.type === 'preset' || state.startButton?.type === 'custom') {
+    zip.file('start_icon.png', DEFAULT_START_ICON_PNG);
   }
 
   return await zip.generateAsync({ type: 'blob' });

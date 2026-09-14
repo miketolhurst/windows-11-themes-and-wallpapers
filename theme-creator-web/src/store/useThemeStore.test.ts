@@ -183,5 +183,89 @@ describe('Phase 1 useThemeStore extensions', () => {
   });
 });
 
+describe('Phase 2 useThemeStore extensions', () => {
+  beforeEach(() => {
+    useThemeStore.getState().resetToDefaults();
+  });
 
+  it('initializes with default Phase 2 properties', () => {
+    const state = useThemeStore.getState();
+    expect(state.startButton).toEqual({
+      type: 'default',
+      presetId: 'win11-minimal',
+      customIconUrl: null,
+      colorMode: 'accent',
+      customColor: '#0078D4',
+      size: 20,
+    });
+    expect(state.runningIndicator).toEqual({
+      style: 'line',
+      activeColorMode: 'accent',
+      activeCustomColor: '#0078D4',
+      inactiveColorMode: 'subtle-white',
+      inactiveCustomColor: '#FFFFFF',
+      indicatorSize: 3,
+    });
+    expect(state.contextMenuOverride).toEqual({
+      enabled: false,
+      enableClassicMenu: false,
+      itemHoverAccent: true,
+      materialStyle: 'fluent-acrylic',
+      opacity: 95,
+      blur: 20,
+      cornerRadius: 8,
+      borderThickness: 1,
+    });
+    expect(state.fileExplorerOverride).toEqual({
+      enabled: false,
+      tabStyle: 'integrated',
+      showCommandBarTint: false,
+      activeTabColorMode: 'accent',
+      materialStyle: 'mica',
+      opacity: 95,
+      blur: 20,
+    });
+    expect(state.previewViewMode).toBe('desktop');
+  });
 
+  it('updates start button configuration', () => {
+    const { setStartButton } = useThemeStore.getState();
+    setStartButton({ type: 'preset', presetId: 'cyberpunk-hex', colorMode: 'custom', customColor: '#00FFCC', size: 24 });
+    const state = useThemeStore.getState();
+    expect(state.startButton.type).toBe('preset');
+    expect(state.startButton.presetId).toBe('cyberpunk-hex');
+    expect(state.startButton.customColor).toBe('#00FFCC');
+    expect(state.startButton.size).toBe(24);
+  });
+
+  it('updates running indicator configuration', () => {
+    const { setRunningIndicator } = useThemeStore.getState();
+    setRunningIndicator({ style: 'dot', activeColorMode: 'white', indicatorSize: 4 });
+    const state = useThemeStore.getState();
+    expect(state.runningIndicator.style).toBe('dot');
+    expect(state.runningIndicator.activeColorMode).toBe('white');
+    expect(state.runningIndicator.indicatorSize).toBe(4);
+  });
+
+  it('updates context menu override and file explorer override', () => {
+    const { setContextMenuOverride, setFileExplorerOverride, setPreviewViewMode } = useThemeStore.getState();
+    setContextMenuOverride({ enabled: true, enableClassicMenu: true });
+    setFileExplorerOverride({ enabled: true, tabStyle: 'floating' });
+    setPreviewViewMode('file-explorer');
+    const state = useThemeStore.getState();
+    expect(state.contextMenuOverride.enabled).toBe(true);
+    expect(state.contextMenuOverride.enableClassicMenu).toBe(true);
+    expect(state.fileExplorerOverride.tabStyle).toBe('floating');
+    expect(state.previewViewMode).toBe('file-explorer');
+  });
+
+  it('preserves Phase 2 state in snapshot undo and redo', () => {
+    const { setStartButton, undo, redo } = useThemeStore.getState();
+    setStartButton({ type: 'preset', presetId: 'linux-tux', customColor: '#EAA812' });
+    expect(useThemeStore.getState().startButton.presetId).toBe('linux-tux');
+    undo();
+    expect(useThemeStore.getState().startButton.presetId).toBe('win11-minimal');
+    redo();
+    expect(useThemeStore.getState().startButton.presetId).toBe('linux-tux');
+  });
+});

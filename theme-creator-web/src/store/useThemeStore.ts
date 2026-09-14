@@ -3,7 +3,49 @@ import { ColorHarmonyType } from '../lib/paletteEngine';
 export type { ColorHarmonyType };
 
 export type MaterialStyle = 'fluent-acrylic' | 'pure-black-neon' | 'linear-gradient' | 'matte-slate' | 'mica' | 'mica-alt';
-export type RunningIndicatorStyle = 'bar' | 'standard' | 'dot' | 'glow' | 'hidden';
+export type RunningIndicatorStyle = 'line' | 'dot' | 'pill' | 'glow' | 'off' | 'bar' | 'standard' | 'hidden';
+
+export type StartButtonType = 'default' | 'preset' | 'custom';
+export type StartButtonPresetId =
+  | 'win11-minimal'
+  | 'win98-retro'
+  | 'apple-glyph'
+  | 'cyberpunk-hex'
+  | 'linux-tux'
+  | 'minimal-diamond'
+  | 'gaming-rog'
+  | 'fluent-orb';
+
+export interface StartButtonConfig {
+  type: StartButtonType;
+  presetId?: StartButtonPresetId;
+  customIconUrl?: string | null;
+  colorMode: 'accent' | 'secondary' | 'custom';
+  customColor: string;
+  size: number;
+}
+
+export interface RunningIndicatorConfig {
+  style: RunningIndicatorStyle;
+  activeColorMode: 'accent' | 'white' | 'custom';
+  activeCustomColor: string;
+  inactiveColorMode: 'subtle-white' | 'accent' | 'custom';
+  inactiveCustomColor: string;
+  indicatorSize: number;
+}
+
+export interface ContextMenuOverride extends ComponentOverride {
+  enableClassicMenu?: boolean;
+  itemHoverAccent?: boolean;
+}
+
+export interface FileExplorerOverride extends ComponentOverride {
+  tabStyle: 'integrated' | 'floating' | 'accent-border';
+  showCommandBarTint: boolean;
+  activeTabColorMode: 'accent' | 'surface';
+}
+
+export type PreviewViewMode = 'desktop' | 'file-explorer' | 'terminal' | 'context-menu';
 
 export interface GradientStop {
   id: string;
@@ -24,6 +66,8 @@ export interface ComponentOverride {
   gradient?: GradientConfig;
   opacity?: number;
   blur?: number;
+  cornerRadius?: number;
+  borderThickness?: number;
 }
 
 export interface TypographyConfig {
@@ -80,6 +124,13 @@ export interface ThemeConfigSnapshot {
   flyoutOverride: ComponentOverride;
   typography: TypographyConfig;
   animations: AnimationConfig;
+
+  // Phase 2 Properties
+  startButton: StartButtonConfig;
+  runningIndicator: RunningIndicatorConfig;
+  contextMenuOverride: ContextMenuOverride;
+  fileExplorerOverride: FileExplorerOverride;
+  previewViewMode: PreviewViewMode;
 }
 
 export interface ThemeState extends ThemeConfigSnapshot {
@@ -135,6 +186,13 @@ export interface ThemeState extends ThemeConfigSnapshot {
   setFlyoutOverride: (o: Partial<ComponentOverride>) => void;
   setTypography: (t: Partial<TypographyConfig>) => void;
   setAnimations: (a: Partial<AnimationConfig>) => void;
+
+  // Phase 2 Actions
+  setStartButton: (b: Partial<StartButtonConfig>) => void;
+  setRunningIndicator: (i: Partial<RunningIndicatorConfig>) => void;
+  setContextMenuOverride: (o: Partial<ContextMenuOverride>) => void;
+  setFileExplorerOverride: (o: Partial<FileExplorerOverride>) => void;
+  setPreviewViewMode: (m: PreviewViewMode) => void;
 
   // Preview & UI Actions
   setShowDesktopIcons: (v: boolean) => void;
@@ -236,6 +294,45 @@ export const DEFAULT_THEME_STATE = {
     durationMs: 250,
     easing: 'fluent-spring' as const,
   } as AnimationConfig,
+
+  // Phase 2 Defaults
+  startButton: {
+    type: 'default' as const,
+    presetId: 'win11-minimal' as const,
+    customIconUrl: null,
+    colorMode: 'accent' as const,
+    customColor: '#0078D4',
+    size: 20,
+  } as StartButtonConfig,
+  runningIndicator: {
+    style: 'line' as const,
+    activeColorMode: 'accent' as const,
+    activeCustomColor: '#0078D4',
+    inactiveColorMode: 'subtle-white' as const,
+    inactiveCustomColor: '#FFFFFF',
+    indicatorSize: 3,
+  } as RunningIndicatorConfig,
+  contextMenuOverride: {
+    enabled: false,
+    enableClassicMenu: false,
+    itemHoverAccent: true,
+    materialStyle: 'fluent-acrylic' as const,
+    opacity: 95,
+    blur: 20,
+    cornerRadius: 8,
+    borderThickness: 1,
+  } as ContextMenuOverride,
+  fileExplorerOverride: {
+    enabled: false,
+    tabStyle: 'integrated' as const,
+    showCommandBarTint: false,
+    activeTabColorMode: 'accent' as const,
+    materialStyle: 'mica' as const,
+    opacity: 95,
+    blur: 20,
+  } as FileExplorerOverride,
+  previewViewMode: 'desktop' as PreviewViewMode,
+
   activePane: 'start' as const,
   showDesktopIcons: true,
   showWindowPreview: false,
@@ -286,6 +383,13 @@ export const takeSnapshot = (state: ThemeState): ThemeConfigSnapshot => ({
   flyoutOverride: state.flyoutOverride ? { ...state.flyoutOverride } : { ...DEFAULT_THEME_STATE.flyoutOverride },
   typography: state.typography ? { ...state.typography } : { ...DEFAULT_THEME_STATE.typography },
   animations: state.animations ? { ...state.animations } : { ...DEFAULT_THEME_STATE.animations },
+
+  // Phase 2 Snapshot
+  startButton: state.startButton ? { ...state.startButton } : { ...DEFAULT_THEME_STATE.startButton },
+  runningIndicator: state.runningIndicator ? { ...state.runningIndicator } : { ...DEFAULT_THEME_STATE.runningIndicator },
+  contextMenuOverride: state.contextMenuOverride ? { ...state.contextMenuOverride } : { ...DEFAULT_THEME_STATE.contextMenuOverride },
+  fileExplorerOverride: state.fileExplorerOverride ? { ...state.fileExplorerOverride } : { ...DEFAULT_THEME_STATE.fileExplorerOverride },
+  previewViewMode: state.previewViewMode || DEFAULT_THEME_STATE.previewViewMode,
 });
 
 export const useThemeStore = create<ThemeState>((set, get) => {
@@ -355,6 +459,20 @@ export const useThemeStore = create<ThemeState>((set, get) => {
       withHistory((state) => ({ typography: { ...state.typography, ...t } })),
     setAnimations: (a: Partial<AnimationConfig>) =>
       withHistory((state) => ({ animations: { ...state.animations, ...a } })),
+
+    // Phase 2 Actions
+    setStartButton: (b: Partial<StartButtonConfig>) =>
+      withHistory((state) => ({ startButton: { ...state.startButton, ...b } })),
+    setRunningIndicator: (i: Partial<RunningIndicatorConfig>) =>
+      withHistory((state) => ({
+        runningIndicator: { ...state.runningIndicator, ...i },
+        runningIndicatorStyle: (i.style as RunningIndicatorStyle) || state.runningIndicatorStyle,
+      })),
+    setContextMenuOverride: (o: Partial<ContextMenuOverride>) =>
+      withHistory((state) => ({ contextMenuOverride: { ...state.contextMenuOverride, ...o } })),
+    setFileExplorerOverride: (o: Partial<FileExplorerOverride>) =>
+      withHistory((state) => ({ fileExplorerOverride: { ...state.fileExplorerOverride, ...o } })),
+    setPreviewViewMode: (m: PreviewViewMode) => set({ previewViewMode: m }),
 
     // Saved Themes Library
     saveCurrentTheme: (name?: string) => {
@@ -452,6 +570,19 @@ export const useThemeStore = create<ThemeState>((set, get) => {
           animations: config.animations
             ? { ...state.animations, ...config.animations }
             : state.animations,
+          startButton: config.startButton
+            ? { ...state.startButton, ...config.startButton }
+            : state.startButton,
+          runningIndicator: config.runningIndicator
+            ? { ...state.runningIndicator, ...config.runningIndicator }
+            : state.runningIndicator,
+          contextMenuOverride: config.contextMenuOverride
+            ? { ...state.contextMenuOverride, ...config.contextMenuOverride }
+            : state.contextMenuOverride,
+          fileExplorerOverride: config.fileExplorerOverride
+            ? { ...state.fileExplorerOverride, ...config.fileExplorerOverride }
+            : state.fileExplorerOverride,
+          previewViewMode: config.previewViewMode ?? state.previewViewMode,
           past: [...state.past, snap].slice(-30),
           future: [],
         };
@@ -471,6 +602,11 @@ export const useThemeStore = create<ThemeState>((set, get) => {
           flyoutOverride: { ...DEFAULT_THEME_STATE.flyoutOverride },
           typography: { ...DEFAULT_THEME_STATE.typography },
           animations: { ...DEFAULT_THEME_STATE.animations },
+          startButton: { ...DEFAULT_THEME_STATE.startButton },
+          runningIndicator: { ...DEFAULT_THEME_STATE.runningIndicator },
+          contextMenuOverride: { ...DEFAULT_THEME_STATE.contextMenuOverride },
+          fileExplorerOverride: { ...DEFAULT_THEME_STATE.fileExplorerOverride },
+          previewViewMode: DEFAULT_THEME_STATE.previewViewMode,
           past: [...state.past, snap].slice(-30),
           future: [],
         };

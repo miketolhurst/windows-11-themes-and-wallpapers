@@ -144,6 +144,55 @@ describe('urlSharing', () => {
     const decoded = decodeThemeFromUrl(new URLSearchParams(qs));
     expect(decoded?.globalGradient?.angle).toBe(0);
   });
+
+  it('round-trips Phase 2 start button, running indicator, and OS surface overrides', () => {
+    const base: ThemeConfigSnapshot = {
+      ...DEFAULT_THEME_STATE,
+      startButton: {
+        type: 'preset',
+        presetId: 'fluent-orb',
+        colorMode: 'custom',
+        customColor: '#FFCC00',
+        size: 24,
+      },
+      runningIndicator: {
+        style: 'glow',
+        activeColorMode: 'white',
+        activeCustomColor: '#FFFFFF',
+        inactiveColorMode: 'accent',
+        inactiveCustomColor: '#0078D4',
+        indicatorSize: 4,
+      },
+      contextMenuOverride: {
+        enabled: true,
+        enableClassicMenu: true,
+        itemHoverAccent: false,
+        materialStyle: 'pure-black-neon',
+      },
+      fileExplorerOverride: {
+        enabled: true,
+        tabStyle: 'accent-border',
+        showCommandBarTint: true,
+        activeTabColorMode: 'accent',
+      },
+    };
+    const qs = encodeThemeToUrl(base);
+    expect(qs).toContain('sb=');
+    expect(qs).toContain('ind=');
+    expect(qs).toContain('cmOvr=');
+    expect(qs).toContain('feOvr=');
+
+    const decoded = decodeThemeFromUrl(new URLSearchParams(qs));
+    expect(decoded?.startButton?.type).toBe('preset');
+    expect(decoded?.startButton?.presetId).toBe('fluent-orb');
+    expect(decoded?.startButton?.customColor).toBe('#FFCC00');
+    expect(decoded?.runningIndicator?.style).toBe('glow');
+    expect(decoded?.runningIndicator?.indicatorSize).toBe(4);
+    expect(decoded?.contextMenuOverride?.enableClassicMenu).toBe(true);
+    expect(decoded?.contextMenuOverride?.itemHoverAccent).toBe(false);
+    expect(decoded?.fileExplorerOverride?.tabStyle).toBe('accent-border');
+    expect(decoded?.fileExplorerOverride?.showCommandBarTint).toBe(true);
+  });
 });
 
 

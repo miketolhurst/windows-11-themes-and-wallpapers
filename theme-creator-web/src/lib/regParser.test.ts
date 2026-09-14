@@ -148,6 +148,51 @@ Windows Registry Editor Version 5.00
     expect(animDiff?.incomingValue).not.toContain('undefined');
     expect(animDiff?.incomingValue).toContain('instant');
   });
+
+  it('detects Context Menu, File Explorer, Start Button, and Running Indicator diffs', () => {
+    const current = { ...DEFAULT_THEME_STATE };
+    const incoming = {
+      contextMenuOverride: {
+        enabled: true,
+        enableClassicMenu: true,
+      },
+      fileExplorerOverride: {
+        enabled: true,
+        tabStyle: 'floating' as const,
+        showCommandBarTint: true,
+      },
+      startButton: {
+        type: 'preset' as const,
+        presetId: 'win11-minimal' as const,
+      },
+      runningIndicator: {
+        style: 'dot' as const,
+        indicatorSize: 5,
+      },
+    };
+    const diffs = compareThemeConfigs(current, incoming as any);
+    const cmDiff = diffs.find((d) => d.key === 'contextMenuOverride');
+    expect(cmDiff?.hasChanged).toBe(true);
+
+    const feDiff = diffs.find((d) => d.key === 'fileExplorerOverride');
+    expect(feDiff?.hasChanged).toBe(true);
+
+    const sbDiff = diffs.find((d) => d.key === 'startButton');
+    expect(sbDiff?.hasChanged).toBe(true);
+
+    const indDiff = diffs.find((d) => d.key === 'runningIndicator');
+    expect(indDiff?.hasChanged).toBe(true);
+  });
+
+  it('parses classic context menu CLSID from reg file', () => {
+    const sampleReg = `
+Windows Registry Editor Version 5.00
+[HKEY_CURRENT_USER\\Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32]
+@=""
+    `;
+    const parsed = parseRegFile(sampleReg);
+    expect(parsed.contextMenuOverride?.enableClassicMenu).toBe(true);
+  });
 });
 
 

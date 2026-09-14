@@ -5,6 +5,10 @@ import {
   GradientConfig,
   TypographyConfig,
   AnimationConfig,
+  ContextMenuOverride,
+  FileExplorerOverride,
+  StartButtonConfig,
+  RunningIndicatorConfig,
 } from '../store/useThemeStore';
 import { rgbToHex, RGB } from './paletteEngine';
 
@@ -68,6 +72,86 @@ function formatTypography(t?: TypographyConfig): string {
 function formatAnimation(a?: AnimationConfig): string {
   if (!a) return 'Default (fluent-spring, 250ms)';
   return `${a.speed || 'default'} (${a.easing || 'fluent-spring'}, ${a.durationMs ?? 250}ms)`;
+}
+
+function formatContextMenu(ovr?: ContextMenuOverride): string {
+  if (!ovr) return 'Default';
+  const parts: string[] = [];
+  if (ovr.enableClassicMenu) parts.push('Windows 10 Classic Menu');
+  if (ovr.enabled) {
+    parts.push(`WinUI 3 Override (${ovr.materialStyle || 'Default'}, ${ovr.cornerRadius ?? 8}px)`);
+  }
+  return parts.length > 0 ? parts.join(', ') : 'Default';
+}
+
+function isContextMenuChanged(curr?: ContextMenuOverride, inc?: ContextMenuOverride): boolean {
+  if (!inc) return false;
+  if (!curr) return true;
+  return (
+    (inc.enabled !== undefined && inc.enabled !== curr.enabled) ||
+    (inc.enableClassicMenu !== undefined && inc.enableClassicMenu !== curr.enableClassicMenu) ||
+    (inc.materialStyle !== undefined && inc.materialStyle !== curr.materialStyle) ||
+    (inc.cornerRadius !== undefined && inc.cornerRadius !== curr.cornerRadius) ||
+    (inc.borderThickness !== undefined && inc.borderThickness !== curr.borderThickness) ||
+    (inc.itemHoverAccent !== undefined && inc.itemHoverAccent !== curr.itemHoverAccent)
+  );
+}
+
+function formatFileExplorer(ovr?: FileExplorerOverride): string {
+  if (!ovr || !ovr.enabled) return 'Default';
+  const parts: string[] = [ovr.tabStyle || 'integrated'];
+  if (ovr.showCommandBarTint) parts.push('Tinted Command Bar');
+  if (ovr.activeTabColorMode) parts.push(`Tab: ${ovr.activeTabColorMode}`);
+  return parts.join(', ');
+}
+
+function isFileExplorerChanged(curr?: FileExplorerOverride, inc?: FileExplorerOverride): boolean {
+  if (!inc) return false;
+  if (!curr) return true;
+  return (
+    (inc.enabled !== undefined && inc.enabled !== curr.enabled) ||
+    (inc.tabStyle !== undefined && inc.tabStyle !== curr.tabStyle) ||
+    (inc.showCommandBarTint !== undefined && inc.showCommandBarTint !== curr.showCommandBarTint) ||
+    (inc.activeTabColorMode !== undefined && inc.activeTabColorMode !== curr.activeTabColorMode)
+  );
+}
+
+function formatStartButton(sb?: StartButtonConfig): string {
+  if (!sb) return 'Default';
+  if (sb.type === 'default') return 'Windows 11 Default';
+  if (sb.type === 'custom') return `Custom Icon (${sb.size}px)`;
+  return `Preset (${sb.presetId || 'win11-minimal'}, ${sb.colorMode}, ${sb.size}px)`;
+}
+
+function isStartButtonChanged(curr?: StartButtonConfig, inc?: StartButtonConfig): boolean {
+  if (!inc) return false;
+  if (!curr) return true;
+  return (
+    (inc.type !== undefined && inc.type !== curr.type) ||
+    (inc.presetId !== undefined && inc.presetId !== curr.presetId) ||
+    (inc.colorMode !== undefined && inc.colorMode !== curr.colorMode) ||
+    (inc.customColor !== undefined && inc.customColor !== curr.customColor) ||
+    (inc.size !== undefined && inc.size !== curr.size) ||
+    (inc.customIconUrl !== undefined && inc.customIconUrl !== curr.customIconUrl)
+  );
+}
+
+function formatRunningIndicator(ind?: RunningIndicatorConfig): string {
+  if (!ind) return 'Line';
+  return `${ind.style} (${ind.activeColorMode}, ${ind.indicatorSize}px)`;
+}
+
+function isRunningIndicatorChanged(curr?: RunningIndicatorConfig, inc?: RunningIndicatorConfig): boolean {
+  if (!inc) return false;
+  if (!curr) return true;
+  return (
+    (inc.style !== undefined && inc.style !== curr.style) ||
+    (inc.activeColorMode !== undefined && inc.activeColorMode !== curr.activeColorMode) ||
+    (inc.activeCustomColor !== undefined && inc.activeCustomColor !== curr.activeCustomColor) ||
+    (inc.inactiveColorMode !== undefined && inc.inactiveColorMode !== curr.inactiveColorMode) ||
+    (inc.inactiveCustomColor !== undefined && inc.inactiveCustomColor !== curr.inactiveCustomColor) ||
+    (inc.indicatorSize !== undefined && inc.indicatorSize !== curr.indicatorSize)
+  );
 }
 
 export function compareThemeConfigs(
@@ -302,6 +386,62 @@ export function compareThemeConfigs(
     hasChanged: isGradChanged,
   });
 
+  // Context Menu Override
+  const isCmChanged =
+    incoming.contextMenuOverride !== undefined &&
+    isContextMenuChanged(current.contextMenuOverride, incoming.contextMenuOverride);
+  items.push({
+    key: 'contextMenuOverride',
+    label: 'Context Menu',
+    currentValue: formatContextMenu(current.contextMenuOverride),
+    incomingValue: incoming.contextMenuOverride
+      ? formatContextMenu(incoming.contextMenuOverride)
+      : formatContextMenu(current.contextMenuOverride),
+    hasChanged: isCmChanged,
+  });
+
+  // File Explorer Override
+  const isFeChanged =
+    incoming.fileExplorerOverride !== undefined &&
+    isFileExplorerChanged(current.fileExplorerOverride, incoming.fileExplorerOverride);
+  items.push({
+    key: 'fileExplorerOverride',
+    label: 'File Explorer',
+    currentValue: formatFileExplorer(current.fileExplorerOverride),
+    incomingValue: incoming.fileExplorerOverride
+      ? formatFileExplorer(incoming.fileExplorerOverride)
+      : formatFileExplorer(current.fileExplorerOverride),
+    hasChanged: isFeChanged,
+  });
+
+  // Start Button
+  const isSbChanged =
+    incoming.startButton !== undefined &&
+    isStartButtonChanged(current.startButton, incoming.startButton);
+  items.push({
+    key: 'startButton',
+    label: 'Start Button',
+    currentValue: formatStartButton(current.startButton),
+    incomingValue: incoming.startButton
+      ? formatStartButton(incoming.startButton)
+      : formatStartButton(current.startButton),
+    hasChanged: isSbChanged,
+  });
+
+  // Running Indicator
+  const isIndCfgChanged =
+    incoming.runningIndicator !== undefined &&
+    isRunningIndicatorChanged(current.runningIndicator, incoming.runningIndicator);
+  items.push({
+    key: 'runningIndicator',
+    label: 'Running Indicator',
+    currentValue: formatRunningIndicator(current.runningIndicator),
+    incomingValue: incoming.runningIndicator
+      ? formatRunningIndicator(incoming.runningIndicator)
+      : formatRunningIndicator(current.runningIndicator),
+    hasChanged: isIndCfgChanged,
+  });
+
   return items;
 }
 
@@ -429,6 +569,46 @@ export function parseRegFile(content: string): Partial<ThemeState> {
 
   if (content.includes('Shadow:=')) {
     result.removeDropShadows = true;
+  }
+
+  if (content.includes('{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}')) {
+    result.contextMenuOverride = {
+      ...(result.contextMenuOverride || {
+        enabled: true,
+        itemHoverAccent: true,
+        materialStyle: 'fluent-acrylic',
+        opacity: 95,
+        blur: 20,
+        cornerRadius: 8,
+        borderThickness: 1,
+      }),
+      enableClassicMenu: true,
+    };
+  } else if (content.includes('MenuFlyoutPresenter')) {
+    result.contextMenuOverride = {
+      ...(result.contextMenuOverride || {
+        enableClassicMenu: false,
+        itemHoverAccent: true,
+        materialStyle: 'fluent-acrylic',
+        opacity: 95,
+        blur: 20,
+        cornerRadius: 8,
+        borderThickness: 1,
+      }),
+      enabled: true,
+    };
+  }
+
+  if (content.includes('TabViewItem')) {
+    result.fileExplorerOverride = {
+      ...(result.fileExplorerOverride || {
+        tabStyle: 'integrated',
+        showCommandBarTint: false,
+        activeTabColorMode: 'accent',
+        materialStyle: 'mica',
+      }),
+      enabled: true,
+    };
   }
 
   return result;

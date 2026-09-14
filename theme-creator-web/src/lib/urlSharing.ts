@@ -8,6 +8,10 @@ import {
   ComponentOverride,
   TypographyConfig,
   AnimationConfig,
+  StartButtonConfig,
+  RunningIndicatorConfig,
+  ContextMenuOverride,
+  FileExplorerOverride,
 } from '../store/useThemeStore';
 import { ColorHarmonyType } from './paletteEngine';
 
@@ -170,6 +174,98 @@ function deserializeAnimation(val: string | null): AnimationConfig | undefined {
   return undefined;
 }
 
+function serializeStartButton(sb?: StartButtonConfig): string | null {
+  if (!sb) return null;
+  const isDefault =
+    sb.type === DEFAULT_THEME_STATE.startButton.type &&
+    sb.presetId === DEFAULT_THEME_STATE.startButton.presetId &&
+    sb.colorMode === DEFAULT_THEME_STATE.startButton.colorMode &&
+    sb.customColor === DEFAULT_THEME_STATE.startButton.customColor &&
+    sb.size === DEFAULT_THEME_STATE.startButton.size &&
+    !sb.customIconUrl;
+  if (isDefault) return null;
+  return JSON.stringify(sb);
+}
+
+function deserializeStartButton(val: string | null): StartButtonConfig | undefined {
+  if (!val) return undefined;
+  try {
+    const parsed = JSON.parse(val);
+    if (typeof parsed === 'object' && parsed !== null) {
+      return { ...DEFAULT_THEME_STATE.startButton, ...parsed };
+    }
+  } catch {
+    return undefined;
+  }
+  return undefined;
+}
+
+function serializeRunningIndicator(ind?: RunningIndicatorConfig): string | null {
+  if (!ind) return null;
+  const isDefault =
+    ind.style === DEFAULT_THEME_STATE.runningIndicator.style &&
+    ind.activeColorMode === DEFAULT_THEME_STATE.runningIndicator.activeColorMode &&
+    ind.activeCustomColor === DEFAULT_THEME_STATE.runningIndicator.activeCustomColor &&
+    ind.inactiveColorMode === DEFAULT_THEME_STATE.runningIndicator.inactiveColorMode &&
+    ind.inactiveCustomColor === DEFAULT_THEME_STATE.runningIndicator.inactiveCustomColor &&
+    ind.indicatorSize === DEFAULT_THEME_STATE.runningIndicator.indicatorSize;
+  if (isDefault) return null;
+  return JSON.stringify(ind);
+}
+
+function deserializeRunningIndicator(val: string | null): RunningIndicatorConfig | undefined {
+  if (!val) return undefined;
+  try {
+    if (val.startsWith('{')) {
+      const parsed = JSON.parse(val);
+      return { ...DEFAULT_THEME_STATE.runningIndicator, ...parsed };
+    }
+    if (['line', 'dot', 'pill', 'glow', 'off', 'bar', 'hidden'].includes(val)) {
+      const style = (val === 'bar' ? 'line' : val === 'hidden' ? 'off' : val) as any;
+      return { ...DEFAULT_THEME_STATE.runningIndicator, style };
+    }
+  } catch {
+    return undefined;
+  }
+  return undefined;
+}
+
+function serializeContextMenuOverride(ovr?: ContextMenuOverride): string | null {
+  if (!ovr || (!ovr.enabled && !ovr.enableClassicMenu)) return null;
+  return JSON.stringify(ovr);
+}
+
+function deserializeContextMenuOverride(val: string | null): ContextMenuOverride | undefined {
+  if (!val) return undefined;
+  try {
+    const parsed = JSON.parse(val);
+    if (typeof parsed === 'object' && parsed !== null) {
+      return { ...DEFAULT_THEME_STATE.contextMenuOverride, ...parsed };
+    }
+  } catch {
+    return undefined;
+  }
+  return undefined;
+}
+
+function serializeFileExplorerOverride(ovr?: FileExplorerOverride): string | null {
+  if (!ovr || (!ovr.enabled && ovr.tabStyle === 'integrated' && !ovr.showCommandBarTint)) return null;
+  return JSON.stringify(ovr);
+}
+
+function deserializeFileExplorerOverride(val: string | null): FileExplorerOverride | undefined {
+  if (!val) return undefined;
+  try {
+    const parsed = JSON.parse(val);
+    if (typeof parsed === 'object' && parsed !== null) {
+      return { ...DEFAULT_THEME_STATE.fileExplorerOverride, ...parsed };
+    }
+  } catch {
+    return undefined;
+  }
+  return undefined;
+}
+
 export function encodeThemeToUrl(state: Partial<ThemeConfigSnapshot> & { accentColor?: string }): string {
   const accent = state.accentColor || '#0078D4';
   const payload: SharedThemePayload = {
@@ -227,6 +323,18 @@ export function encodeThemeToUrl(state: Partial<ThemeConfigSnapshot> & { accentC
 
   const anim = serializeAnimation(state.animations);
   if (anim) params.set('anim', anim);
+
+  const sb = serializeStartButton(state.startButton);
+  if (sb) params.set('sb', sb);
+
+  const ind = serializeRunningIndicator(state.runningIndicator);
+  if (ind) params.set('ind', ind);
+
+  const cmOvr = serializeContextMenuOverride(state.contextMenuOverride);
+  if (cmOvr) params.set('cmOvr', cmOvr);
+
+  const feOvr = serializeFileExplorerOverride(state.fileExplorerOverride);
+  if (feOvr) params.set('feOvr', feOvr);
 
   return `?${params.toString()}`;
 }
@@ -350,6 +458,19 @@ export function decodeThemeFromUrl(searchStringOrUrl: string | URLSearchParams):
 
     const animParsed = deserializeAnimation(params.get('anim'));
     result.animations = animParsed || { ...DEFAULT_THEME_STATE.animations };
+
+    // Parse Phase 2 properties if present, or assign safe fallbacks
+    const sbParsed = deserializeStartButton(params.get('sb'));
+    result.startButton = sbParsed || { ...DEFAULT_THEME_STATE.startButton };
+
+    const indParsed = deserializeRunningIndicator(params.get('ind'));
+    result.runningIndicator = indParsed || { ...DEFAULT_THEME_STATE.runningIndicator };
+
+    const cmOvrParsed = deserializeContextMenuOverride(params.get('cmOvr'));
+    result.contextMenuOverride = cmOvrParsed || { ...DEFAULT_THEME_STATE.contextMenuOverride };
+
+    const feOvrParsed = deserializeFileExplorerOverride(params.get('feOvr'));
+    result.fileExplorerOverride = feOvrParsed || { ...DEFAULT_THEME_STATE.fileExplorerOverride };
 
     return result;
   } catch {

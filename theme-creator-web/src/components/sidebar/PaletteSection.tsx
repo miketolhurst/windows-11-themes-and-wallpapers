@@ -16,19 +16,17 @@ export default function PaletteSection({
   extractedSwatches,
   setExtractedSwatches,
 }: PaletteSectionProps) {
-  const {
-    accentColor,
-    setAccentColor,
-    secondaryAccent,
-    setSecondaryAccent,
-    isLightMode,
-    setIsLightMode,
-    colorHarmony,
-    setColorHarmony,
-    wallpaperUrl,
-    setWallpaper,
-    applyThemeConfig,
-  } = useThemeStore();
+  const accentColor = useThemeStore((s) => s.accentColor);
+  const setAccentColor = useThemeStore((s) => s.setAccentColor);
+  const secondaryAccent = useThemeStore((s) => s.secondaryAccent);
+  const setSecondaryAccent = useThemeStore((s) => s.setSecondaryAccent);
+  const isLightMode = useThemeStore((s) => s.isLightMode);
+  const setIsLightMode = useThemeStore((s) => s.setIsLightMode);
+  const colorHarmony = useThemeStore((s) => s.colorHarmony);
+  const setColorHarmony = useThemeStore((s) => s.setColorHarmony);
+  const wallpaperUrl = useThemeStore((s) => s.wallpaperUrl);
+  const setWallpaper = useThemeStore((s) => s.setWallpaper);
+  const applyThemeConfig = useThemeStore((s) => s.applyThemeConfig);
 
   const wallpaperInputRef = useRef<HTMLInputElement>(null);
   const [isExtracting, setIsExtracting] = useState(false);

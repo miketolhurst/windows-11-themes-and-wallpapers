@@ -17,13 +17,11 @@ export default function DesktopBackground({
   onCloseContextMenu = () => {},
   onDismiss = () => {},
 }: DesktopBackgroundProps) {
-  const {
-    showDesktopIcons,
-    showWindowPreview,
-    setShowWindowPreview,
-    previewViewMode,
-    setPreviewViewMode,
-  } = useThemeStore();
+  const showDesktopIcons = useThemeStore((s) => s.showDesktopIcons);
+  const showWindowPreview = useThemeStore((s) => s.showWindowPreview);
+  const setShowWindowPreview = useThemeStore((s) => s.setShowWindowPreview);
+  const previewViewMode = useThemeStore((s) => s.previewViewMode);
+  const setPreviewViewMode = useThemeStore((s) => s.setPreviewViewMode);
 
   return (
     <>

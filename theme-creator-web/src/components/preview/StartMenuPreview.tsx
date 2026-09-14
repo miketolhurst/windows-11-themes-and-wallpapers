@@ -3,26 +3,24 @@ import { useThemeStore } from '../../store/useThemeStore';
 import { resolveComponentStyle, getCardBg, NoiseOverlay } from './previewStyles';
 
 export default function StartMenuPreview() {
-  const {
-    accentColor,
-    secondaryAccent,
-    isLightMode,
-    taskbarMode,
-    materialStyle,
-    globalGradient,
-    noiseOpacity,
-    dockMode,
-    dockMargin,
-    cornerRadius,
-    borderThickness: rawBorderThickness,
-    hideRecommended,
-    compactSearch,
-    removeDropShadows,
-    startMenuBlur,
-    startMenuOpacity,
-    activePane,
-    startMenuOverride,
-  } = useThemeStore();
+  const accentColor = useThemeStore((s) => s.accentColor);
+  const secondaryAccent = useThemeStore((s) => s.secondaryAccent);
+  const isLightMode = useThemeStore((s) => s.isLightMode);
+  const taskbarMode = useThemeStore((s) => s.taskbarMode);
+  const materialStyle = useThemeStore((s) => s.materialStyle);
+  const globalGradient = useThemeStore((s) => s.globalGradient);
+  const noiseOpacity = useThemeStore((s) => s.noiseOpacity);
+  const dockMode = useThemeStore((s) => s.dockMode);
+  const dockMargin = useThemeStore((s) => s.dockMargin);
+  const cornerRadius = useThemeStore((s) => s.cornerRadius);
+  const rawBorderThickness = useThemeStore((s) => s.borderThickness);
+  const hideRecommended = useThemeStore((s) => s.hideRecommended);
+  const compactSearch = useThemeStore((s) => s.compactSearch);
+  const removeDropShadows = useThemeStore((s) => s.removeDropShadows);
+  const startMenuBlur = useThemeStore((s) => s.startMenuBlur);
+  const startMenuOpacity = useThemeStore((s) => s.startMenuOpacity);
+  const activePane = useThemeStore((s) => s.activePane);
+  const startMenuOverride = useThemeStore((s) => s.startMenuOverride);
 
   if (activePane !== 'start') return null;
 

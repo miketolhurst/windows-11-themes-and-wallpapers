@@ -8,18 +8,15 @@ export interface SidebarHeaderProps {
 }
 
 export default function SidebarHeader({ className = '' }: SidebarHeaderProps) {
-  const state = useThemeStore();
-  const {
-    themeName,
-    setThemeName,
-    past,
-    future,
-    undo,
-    redo,
-    applyThemeConfig,
-    resetToDefaults,
-    toggleSidebar,
-  } = state;
+  const themeName = useThemeStore((s) => s.themeName);
+  const setThemeName = useThemeStore((s) => s.setThemeName);
+  const canUndo = useThemeStore((s) => s.past.length > 0);
+  const canRedo = useThemeStore((s) => s.future.length > 0);
+  const undo = useThemeStore((s) => s.undo);
+  const redo = useThemeStore((s) => s.redo);
+  const applyThemeConfig = useThemeStore((s) => s.applyThemeConfig);
+  const resetToDefaults = useThemeStore((s) => s.resetToDefaults);
+  const toggleSidebar = useThemeStore((s) => s.toggleSidebar);
 
   const regInputRef = useRef<HTMLInputElement>(null);
   const [copiedShare, setCopiedShare] = useState(false);
@@ -60,7 +57,7 @@ export default function SidebarHeader({ className = '' }: SidebarHeaderProps) {
 
   // Handle Share link copy
   const handleShare = async () => {
-    const ok = await copyShareLink(state);
+    const ok = await copyShareLink(useThemeStore.getState());
     if (ok) {
       setCopiedShare(true);
       setTimeout(() => setCopiedShare(false), 2000);
@@ -80,7 +77,7 @@ export default function SidebarHeader({ className = '' }: SidebarHeaderProps) {
         <div className="flex items-center gap-1.5">
           <button
             onClick={undo}
-            disabled={past.length === 0}
+            disabled={!canUndo}
             title="Undo (Ctrl+Z)"
             className="text-xs px-2.5 py-1 rounded bg-neutral-800 hover:bg-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed text-neutral-300 transition-colors border border-neutral-700 cursor-pointer flex-1 flex items-center justify-center gap-1"
           >
@@ -89,7 +86,7 @@ export default function SidebarHeader({ className = '' }: SidebarHeaderProps) {
           </button>
           <button
             onClick={redo}
-            disabled={future.length === 0}
+            disabled={!canRedo}
             title="Redo (Ctrl+Y)"
             className="text-xs px-2.5 py-1 rounded bg-neutral-800 hover:bg-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed text-neutral-300 transition-colors border border-neutral-700 cursor-pointer flex-1 flex items-center justify-center gap-1"
           >

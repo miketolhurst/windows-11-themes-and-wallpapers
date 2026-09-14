@@ -9,16 +9,13 @@ export interface LibrarySectionProps {
 }
 
 export default function LibrarySection({ onResetExtractedSwatches }: LibrarySectionProps) {
-  const state = useThemeStore();
-  const {
-    themeName,
-    savedThemes,
-    saveCurrentTheme,
-    loadSavedTheme,
-    deleteSavedTheme,
-    applyThemeConfig,
-    setShowDownloadModal,
-  } = state;
+  const themeName = useThemeStore((s) => s.themeName);
+  const savedThemes = useThemeStore((s) => s.savedThemes);
+  const saveCurrentTheme = useThemeStore((s) => s.saveCurrentTheme);
+  const loadSavedTheme = useThemeStore((s) => s.loadSavedTheme);
+  const deleteSavedTheme = useThemeStore((s) => s.deleteSavedTheme);
+  const applyThemeConfig = useThemeStore((s) => s.applyThemeConfig);
+  const setShowDownloadModal = useThemeStore((s) => s.setShowDownloadModal);
 
   const [selectedCategory, setSelectedCategory] = useState<PresetCategory>('All');
   const [newThemeName, setNewThemeName] = useState('');
@@ -37,11 +34,12 @@ export default function LibrarySection({ onResetExtractedSwatches }: LibrarySect
   const handleDownload = async () => {
     try {
       setIsDownloading(true);
-      const blob = await generateZipPayload(state);
+      const currentStore = useThemeStore.getState();
+      const blob = await generateZipPayload(currentStore);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      const slug = (themeName || 'Theme').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const slug = (currentStore.themeName || 'Theme').replace(/[^a-zA-Z0-9_-]/g, '_');
       a.download = `Windhawk_${slug}_Theme.zip`;
       a.click();
       URL.revokeObjectURL(url);
@@ -56,7 +54,7 @@ export default function LibrarySection({ onResetExtractedSwatches }: LibrarySect
   // Handle MCP Direct Apply payload copy
   const handleDirectApply = async () => {
     try {
-      const payload = generateDirectApplyPayload(state);
+      const payload = generateDirectApplyPayload(useThemeStore.getState());
       if (typeof navigator !== 'undefined' && navigator.clipboard) {
         await navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
         setCopiedDirectApply(true);

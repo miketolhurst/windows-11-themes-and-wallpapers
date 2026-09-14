@@ -3,25 +3,23 @@ import { useThemeStore } from '../../store/useThemeStore';
 import { resolveComponentStyle, getCardBg, NoiseOverlay } from './previewStyles';
 
 export default function FlyoutsPreview() {
-  const {
-    accentColor,
-    secondaryAccent,
-    isLightMode,
-    taskbarMode,
-    materialStyle,
-    globalGradient,
-    noiseOpacity,
-    dockMode,
-    dockMargin,
-    cornerRadius,
-    borderThickness: rawBorderThickness,
-    dynamicNotificationHeight,
-    removeDropShadows,
-    notificationBlur,
-    notificationOpacity,
-    activePane,
-    flyoutOverride,
-  } = useThemeStore();
+  const accentColor = useThemeStore((s) => s.accentColor);
+  const secondaryAccent = useThemeStore((s) => s.secondaryAccent);
+  const isLightMode = useThemeStore((s) => s.isLightMode);
+  const taskbarMode = useThemeStore((s) => s.taskbarMode);
+  const materialStyle = useThemeStore((s) => s.materialStyle);
+  const globalGradient = useThemeStore((s) => s.globalGradient);
+  const noiseOpacity = useThemeStore((s) => s.noiseOpacity);
+  const dockMode = useThemeStore((s) => s.dockMode);
+  const dockMargin = useThemeStore((s) => s.dockMargin);
+  const cornerRadius = useThemeStore((s) => s.cornerRadius);
+  const rawBorderThickness = useThemeStore((s) => s.borderThickness);
+  const dynamicNotificationHeight = useThemeStore((s) => s.dynamicNotificationHeight);
+  const removeDropShadows = useThemeStore((s) => s.removeDropShadows);
+  const notificationBlur = useThemeStore((s) => s.notificationBlur);
+  const notificationOpacity = useThemeStore((s) => s.notificationOpacity);
+  const activePane = useThemeStore((s) => s.activePane);
+  const flyoutOverride = useThemeStore((s) => s.flyoutOverride);
 
   const [brightness, setBrightness] = useState(100);
   const [volume, setVolume] = useState(75);

@@ -4,28 +4,26 @@ import { renderStartButtonSvg } from '../../lib/startButtonVectors';
 import { resolveComponentStyle, NoiseOverlay } from './previewStyles';
 
 export default function TaskbarPreview() {
-  const {
-    accentColor,
-    secondaryAccent,
-    isLightMode,
-    taskbarMode,
-    materialStyle,
-    globalGradient,
-    noiseOpacity,
-    dockMode,
-    dockMargin,
-    runningIndicatorStyle,
-    cornerRadius,
-    borderThickness: rawBorderThickness,
-    customStartIconUrl,
-    taskbarBlur,
-    taskbarOpacity,
-    activePane,
-    setActivePane,
-    taskbarOverride,
-    startButton,
-    runningIndicator,
-  } = useThemeStore();
+  const accentColor = useThemeStore((s) => s.accentColor);
+  const secondaryAccent = useThemeStore((s) => s.secondaryAccent);
+  const isLightMode = useThemeStore((s) => s.isLightMode);
+  const taskbarMode = useThemeStore((s) => s.taskbarMode);
+  const materialStyle = useThemeStore((s) => s.materialStyle);
+  const globalGradient = useThemeStore((s) => s.globalGradient);
+  const noiseOpacity = useThemeStore((s) => s.noiseOpacity);
+  const dockMode = useThemeStore((s) => s.dockMode);
+  const dockMargin = useThemeStore((s) => s.dockMargin);
+  const runningIndicatorStyle = useThemeStore((s) => s.runningIndicatorStyle);
+  const cornerRadius = useThemeStore((s) => s.cornerRadius);
+  const rawBorderThickness = useThemeStore((s) => s.borderThickness);
+  const customStartIconUrl = useThemeStore((s) => s.customStartIconUrl);
+  const taskbarBlur = useThemeStore((s) => s.taskbarBlur);
+  const taskbarOpacity = useThemeStore((s) => s.taskbarOpacity);
+  const activePane = useThemeStore((s) => s.activePane);
+  const setActivePane = useThemeStore((s) => s.setActivePane);
+  const taskbarOverride = useThemeStore((s) => s.taskbarOverride);
+  const startButton = useThemeStore((s) => s.startButton);
+  const runningIndicator = useThemeStore((s) => s.runningIndicator);
 
   const borderThickness = rawBorderThickness ?? 2;
 

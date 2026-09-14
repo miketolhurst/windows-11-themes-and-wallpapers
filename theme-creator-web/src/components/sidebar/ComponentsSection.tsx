@@ -10,7 +10,7 @@ export interface ComponentsSectionProps {
 }
 
 export default function ComponentsSection({ onOpenGradientModal }: ComponentsSectionProps) {
-  const { activePane, setActivePane } = useThemeStore();
+  const setActivePane = useThemeStore((s) => s.setActivePane);
   const [isIsolationExpanded, setIsIsolationExpanded] = useState(false);
   const [isTypographyExpanded, setIsTypographyExpanded] = useState(false);
 
@@ -81,7 +81,8 @@ export default function ComponentsSection({ onOpenGradientModal }: ComponentsSec
           <div className="mt-3 pt-3 border-t border-neutral-800">
             <TypographyAnimationSection
               onTestAnimation={() => {
-                setActivePane(activePane === 'start' ? null : 'start');
+                const currentPane = useThemeStore.getState().activePane;
+                setActivePane(currentPane === 'start' ? null : 'start');
               }}
             />
           </div>

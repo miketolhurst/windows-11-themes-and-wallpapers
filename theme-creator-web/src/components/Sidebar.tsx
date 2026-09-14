@@ -25,21 +25,7 @@ const NAV_TABS: TabItem[] = [
 ];
 
 export default function Sidebar() {
-  const {
-    isSidebarCollapsed,
-    globalGradient,
-    setGlobalGradient,
-    taskbarOverride,
-    setTaskbarOverride,
-    startMenuOverride,
-    setStartMenuOverride,
-    flyoutOverride,
-    setFlyoutOverride,
-    contextMenuOverride,
-    setContextMenuOverride,
-    fileExplorerOverride,
-    setFileExplorerOverride,
-  } = useThemeStore();
+  const isSidebarCollapsed = useThemeStore((s) => s.isSidebarCollapsed);
 
   const [activeTab, setActiveTab] = useState<SidebarTab>('all');
   const [extractedSwatches, setExtractedSwatches] = useState<string[]>([]);
@@ -58,12 +44,13 @@ export default function Sidebar() {
   const getGradientForTarget = (
     target: 'global' | 'taskbar' | 'startMenu' | 'flyout' | 'contextMenu' | 'fileExplorer'
   ): GradientConfig => {
-    if (target === 'taskbar') return taskbarOverride?.gradient || globalGradient;
-    if (target === 'startMenu') return startMenuOverride?.gradient || globalGradient;
-    if (target === 'flyout') return flyoutOverride?.gradient || globalGradient;
-    if (target === 'contextMenu') return contextMenuOverride?.gradient || globalGradient;
-    if (target === 'fileExplorer') return fileExplorerOverride?.gradient || globalGradient;
-    return globalGradient;
+    const s = useThemeStore.getState();
+    if (target === 'taskbar') return s.taskbarOverride?.gradient || s.globalGradient;
+    if (target === 'startMenu') return s.startMenuOverride?.gradient || s.globalGradient;
+    if (target === 'flyout') return s.flyoutOverride?.gradient || s.globalGradient;
+    if (target === 'contextMenu') return s.contextMenuOverride?.gradient || s.globalGradient;
+    if (target === 'fileExplorer') return s.fileExplorerOverride?.gradient || s.globalGradient;
+    return s.globalGradient;
   };
 
   const getModalTitleForTarget = (
@@ -78,18 +65,19 @@ export default function Sidebar() {
   };
 
   const handleSaveGradient = (config: GradientConfig) => {
+    const s = useThemeStore.getState();
     if (gradientTarget === 'taskbar') {
-      setTaskbarOverride({ gradient: config });
+      s.setTaskbarOverride({ gradient: config });
     } else if (gradientTarget === 'startMenu') {
-      setStartMenuOverride({ gradient: config });
+      s.setStartMenuOverride({ gradient: config });
     } else if (gradientTarget === 'flyout') {
-      setFlyoutOverride({ gradient: config });
+      s.setFlyoutOverride({ gradient: config });
     } else if (gradientTarget === 'contextMenu') {
-      setContextMenuOverride({ gradient: config });
+      s.setContextMenuOverride({ gradient: config });
     } else if (gradientTarget === 'fileExplorer') {
-      setFileExplorerOverride({ gradient: config });
+      s.setFileExplorerOverride({ gradient: config });
     } else {
-      setGlobalGradient(config);
+      s.setGlobalGradient(config);
     }
   };
 

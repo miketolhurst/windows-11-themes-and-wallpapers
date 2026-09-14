@@ -8,13 +8,11 @@ import {
 } from './preview';
 
 export default function PreviewCanvas() {
-  const {
-    isLightMode,
-    wallpaperUrl,
-    setActivePane,
-    typography,
-    animations,
-  } = useThemeStore();
+  const isLightMode = useThemeStore((s) => s.isLightMode);
+  const wallpaperUrl = useThemeStore((s) => s.wallpaperUrl);
+  const setActivePane = useThemeStore((s) => s.setActivePane);
+  const typography = useThemeStore((s) => s.typography);
+  const animations = useThemeStore((s) => s.animations);
 
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
   const [showContextMenu, setShowContextMenu] = useState(false);

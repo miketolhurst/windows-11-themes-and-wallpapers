@@ -9,53 +9,51 @@ export interface ShellSectionProps {
 }
 
 export default function ShellSection({ onOpenGradientModal }: ShellSectionProps) {
-  const {
-    taskbarMode,
-    materialStyle,
-    setMaterialStyle,
-    noiseOpacity,
-    setNoiseOpacity,
-    tintSaturation,
-    setTintSaturation,
-    cornerRadius,
-    setCornerRadius,
-    borderThickness,
-    setBorderThickness,
-    dockMode,
-    setDockMode,
-    dockMargin,
-    setDockMargin,
-    runningIndicatorStyle,
-    setRunningIndicatorStyle,
-    hideRecommended,
-    setHideRecommended,
-    compactSearch,
-    setCompactSearch,
-    dynamicNotificationHeight,
-    setDynamicNotificationHeight,
-    removeDropShadows,
-    setRemoveDropShadows,
-    taskbarBlur,
-    setTaskbarBlur,
-    startMenuBlur,
-    setStartMenuBlur,
-    notificationBlur,
-    setNotificationBlur,
-    taskbarOpacity,
-    setTaskbarOpacity,
-    startMenuOpacity,
-    setStartMenuOpacity,
-    notificationOpacity,
-    setNotificationOpacity,
-    previewViewMode,
-    setPreviewViewMode,
-    activePane,
-    setActivePane,
-    showDesktopIcons,
-    setShowDesktopIcons,
-    showWindowPreview,
-    setShowWindowPreview,
-  } = useThemeStore();
+  const taskbarMode = useThemeStore((s) => s.taskbarMode);
+  const materialStyle = useThemeStore((s) => s.materialStyle);
+  const setMaterialStyle = useThemeStore((s) => s.setMaterialStyle);
+  const noiseOpacity = useThemeStore((s) => s.noiseOpacity);
+  const setNoiseOpacity = useThemeStore((s) => s.setNoiseOpacity);
+  const tintSaturation = useThemeStore((s) => s.tintSaturation);
+  const setTintSaturation = useThemeStore((s) => s.setTintSaturation);
+  const cornerRadius = useThemeStore((s) => s.cornerRadius);
+  const setCornerRadius = useThemeStore((s) => s.setCornerRadius);
+  const borderThickness = useThemeStore((s) => s.borderThickness);
+  const setBorderThickness = useThemeStore((s) => s.setBorderThickness);
+  const dockMode = useThemeStore((s) => s.dockMode);
+  const setDockMode = useThemeStore((s) => s.setDockMode);
+  const dockMargin = useThemeStore((s) => s.dockMargin);
+  const setDockMargin = useThemeStore((s) => s.setDockMargin);
+  const runningIndicatorStyle = useThemeStore((s) => s.runningIndicatorStyle);
+  const setRunningIndicatorStyle = useThemeStore((s) => s.setRunningIndicatorStyle);
+  const hideRecommended = useThemeStore((s) => s.hideRecommended);
+  const setHideRecommended = useThemeStore((s) => s.setHideRecommended);
+  const compactSearch = useThemeStore((s) => s.compactSearch);
+  const setCompactSearch = useThemeStore((s) => s.setCompactSearch);
+  const dynamicNotificationHeight = useThemeStore((s) => s.dynamicNotificationHeight);
+  const setDynamicNotificationHeight = useThemeStore((s) => s.setDynamicNotificationHeight);
+  const removeDropShadows = useThemeStore((s) => s.removeDropShadows);
+  const setRemoveDropShadows = useThemeStore((s) => s.setRemoveDropShadows);
+  const taskbarBlur = useThemeStore((s) => s.taskbarBlur);
+  const setTaskbarBlur = useThemeStore((s) => s.setTaskbarBlur);
+  const startMenuBlur = useThemeStore((s) => s.startMenuBlur);
+  const setStartMenuBlur = useThemeStore((s) => s.setStartMenuBlur);
+  const notificationBlur = useThemeStore((s) => s.notificationBlur);
+  const setNotificationBlur = useThemeStore((s) => s.setNotificationBlur);
+  const taskbarOpacity = useThemeStore((s) => s.taskbarOpacity);
+  const setTaskbarOpacity = useThemeStore((s) => s.setTaskbarOpacity);
+  const startMenuOpacity = useThemeStore((s) => s.startMenuOpacity);
+  const setStartMenuOpacity = useThemeStore((s) => s.setStartMenuOpacity);
+  const notificationOpacity = useThemeStore((s) => s.notificationOpacity);
+  const setNotificationOpacity = useThemeStore((s) => s.setNotificationOpacity);
+  const previewViewMode = useThemeStore((s) => s.previewViewMode);
+  const setPreviewViewMode = useThemeStore((s) => s.setPreviewViewMode);
+  const activePane = useThemeStore((s) => s.activePane);
+  const setActivePane = useThemeStore((s) => s.setActivePane);
+  const showDesktopIcons = useThemeStore((s) => s.showDesktopIcons);
+  const setShowDesktopIcons = useThemeStore((s) => s.setShowDesktopIcons);
+  const showWindowPreview = useThemeStore((s) => s.showWindowPreview);
+  const setShowWindowPreview = useThemeStore((s) => s.setShowWindowPreview);
 
   const activeMaterial =
     materialStyle ?? (taskbarMode === 'gradient' ? 'linear-gradient' : 'fluent-acrylic');

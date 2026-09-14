@@ -1,4 +1,4 @@
-import { render, cleanup, screen } from '@testing-library/react';
+import { render, cleanup, screen, fireEvent } from '@testing-library/react';
 import { test, expect, afterEach } from 'vitest';
 import PreviewCanvas from './PreviewCanvas';
 import { useThemeStore } from '../store/useThemeStore';
@@ -357,5 +357,26 @@ test('renders globalGradient when materialStyle is linear-gradient and globalGra
   expect(startMenu.style.background).toContain('linear-gradient(45deg');
   expect(startMenu.style.background).toContain('rgba(17, 34, 51');
   expect(startMenu.style.background).toContain('rgba(68, 85, 102');
+});
+
+test('renders custom vector start button icon and running indicators', () => {
+  useThemeStore.getState().setStartButton({ type: 'preset', presetId: 'cyberpunk-hex', customColor: '#00FFCC' });
+  useThemeStore.getState().setRunningIndicator({ style: 'dot' });
+  render(<PreviewCanvas />);
+  expect(screen.getByTestId('custom-start-icon-vector')).toBeTruthy();
+  expect(screen.getAllByTestId('indicator-dot').length).toBeGreaterThan(0);
+});
+
+test('renders File Explorer window when previewViewMode is file-explorer', () => {
+  useThemeStore.getState().setPreviewViewMode('file-explorer');
+  render(<PreviewCanvas />);
+  expect(screen.getByTestId('file-explorer-window')).toBeTruthy();
+});
+
+test('opens context menu on canvas right click', () => {
+  render(<PreviewCanvas />);
+  const canvas = screen.getByTestId('preview-canvas-root');
+  fireEvent.contextMenu(canvas);
+  expect(screen.getByTestId('context-menu-popover')).toBeTruthy();
 });
 

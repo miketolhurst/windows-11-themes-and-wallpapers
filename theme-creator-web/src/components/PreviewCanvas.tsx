@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   useThemeStore,
   MaterialStyle,
@@ -6,6 +6,10 @@ import {
   GradientConfig,
 } from '../store/useThemeStore';
 import { hexToRgb } from '../lib/paletteEngine';
+import { renderStartButtonSvg } from '../lib/startButtonVectors';
+import FileExplorerPreviewWindow from './FileExplorerPreviewWindow';
+import TerminalPreviewWindow from './TerminalPreviewWindow';
+import ContextMenuPreview from './ContextMenuPreview';
 
 function colorToRgba(color: string, opacity: number): string {
   if (color.startsWith('#')) {
@@ -212,10 +216,18 @@ export default function PreviewCanvas() {
     flyoutOverride,
     typography,
     animations,
+    startButton,
+    runningIndicator,
+    contextMenuOverride,
+    fileExplorerOverride,
+    previewViewMode,
+    setPreviewViewMode,
   } = useThemeStore();
 
   const [brightness, setBrightness] = React.useState(100);
   const [volume, setVolume] = React.useState(75);
+  const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
+  const [showContextMenu, setShowContextMenu] = useState(false);
 
   const borderThickness = rawBorderThickness ?? 2;
 
@@ -347,6 +359,15 @@ export default function PreviewCanvas() {
     <div
       data-testid="preview-canvas-root"
       className="flex-1 h-full flex flex-col justify-end relative select-none overflow-hidden"
+      onContextMenu={(e) => {
+        e.preventDefault();
+        const rect = e.currentTarget.getBoundingClientRect();
+        setContextMenuPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+        setShowContextMenu(true);
+      }}
+      onClick={() => {
+        if (showContextMenu) setShowContextMenu(false);
+      }}
       style={{
         backgroundColor: isLightMode ? '#f8fafc' : '#090a10',
         backgroundImage: `url("${activeWallpaper}")`,
@@ -368,7 +389,10 @@ export default function PreviewCanvas() {
       {/* Desktop click area to dismiss open flyouts */}
       <div
         className="absolute inset-0 z-10"
-        onClick={() => setActivePane(null)}
+        onClick={() => {
+          setActivePane(null);
+          if (showContextMenu) setShowContextMenu(false);
+        }}
       />
 
       {/* Desktop Icons Layer */}
@@ -393,122 +417,26 @@ export default function PreviewCanvas() {
         </div>
       )}
 
-      {/* Window Preview (Mock Windows 11 File Explorer) */}
-      {showWindowPreview && (
-        <div
-          className={`absolute left-1/2 top-[44%] -translate-x-1/2 -translate-y-1/2 w-[680px] h-[420px] max-w-[92%] max-h-[72%] rounded-xl shadow-2xl border overflow-hidden flex flex-col pointer-events-auto z-15 transition-all duration-200 ${shadowClass}`}
-          style={{
-            background: isLightMode ? 'rgba(255, 255, 255, 0.88)' : 'rgba(24, 24, 28, 0.88)',
-            backdropFilter: `blur(${Math.max(12, taskbarBlur)}px)`,
-            WebkitBackdropFilter: `blur(${Math.max(12, taskbarBlur)}px)`,
-            borderColor: `${accentColor}44`,
-            borderRadius: `${cornerRadius}px`,
-          }}
-        >
-          {/* Window Title Bar & Tabs */}
-          <div className="h-9 flex items-center justify-between border-b px-2 select-none" style={{ borderColor: `${accentColor}22` }}>
-            <div className="flex items-center gap-1 text-xs">
-              <div
-                className="px-3 py-1 rounded-t-md flex items-center gap-1.5 font-medium border-t-2"
-                style={{
-                  backgroundColor: isLightMode ? 'rgba(240, 240, 245, 0.9)' : 'rgba(35, 35, 42, 0.9)',
-                  borderColor: accentColor,
-                  color: isLightMode ? '#111827' : '#f3f4f6',
-                }}
-              >
-                <span>📁</span>
-                <span>Home</span>
-                <span className="text-[10px] opacity-60 ml-1">✕</span>
-              </div>
-              <button className="w-6 h-6 flex items-center justify-center rounded hover:bg-white/10 text-xs opacity-70">+</button>
-            </div>
-            <div className="flex items-center gap-2 text-xs">
-              <span className="p-1 hover:bg-white/10 rounded cursor-pointer">─</span>
-              <span className="p-1 hover:bg-white/10 rounded cursor-pointer">□</span>
-              <button
-                onClick={() => setShowWindowPreview(false)}
-                className="p-1 hover:bg-red-600 hover:text-white rounded cursor-pointer"
-                title="Close window preview"
-              >
-                ✕
-              </button>
-            </div>
-          </div>
+      {/* Active Preview Window according to previewViewMode or showWindowPreview */}
+      <div className="absolute left-1/2 top-[44%] -translate-x-1/2 -translate-y-1/2 max-w-[95%] max-h-[80%] flex items-center justify-center pointer-events-auto z-15">
+        {previewViewMode === 'file-explorer' ? (
+          <FileExplorerPreviewWindow onClose={() => setPreviewViewMode('desktop')} />
+        ) : previewViewMode === 'terminal' ? (
+          <TerminalPreviewWindow onClose={() => setPreviewViewMode('desktop')} />
+        ) : previewViewMode === 'context-menu' ? (
+          <ContextMenuPreview isFloating={true} />
+        ) : showWindowPreview ? (
+          <FileExplorerPreviewWindow onClose={() => setShowWindowPreview(false)} />
+        ) : null}
+      </div>
 
-          {/* Address & Search Bar */}
-          <div className="px-3 py-2 flex items-center gap-2 border-b text-xs" style={{ borderColor: `${accentColor}22` }}>
-            <div className="flex gap-2 text-neutral-400">
-              <span>←</span>
-              <span>→</span>
-              <span>↑</span>
-            </div>
-            <div
-              className="flex-1 px-2.5 py-1 rounded flex items-center gap-2 border text-xs"
-              style={{
-                backgroundColor: isLightMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(15, 15, 18, 0.6)',
-                borderColor: `${accentColor}33`,
-              }}
-            >
-              <span>📁</span>
-              <span className={textColor}>Home</span>
-            </div>
-            <div
-              className="w-48 px-2.5 py-1 rounded flex items-center gap-1.5 border text-xs text-neutral-400"
-              style={{
-                backgroundColor: isLightMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(15, 15, 18, 0.6)',
-                borderColor: `${accentColor}33`,
-              }}
-            >
-              <span>🔍</span>
-              <span>Search Home</span>
-            </div>
-          </div>
-
-          {/* Window Body: Navigation + Content */}
-          <div className="flex-1 flex overflow-hidden">
-            <div className="w-40 border-r p-2 flex flex-col gap-1 text-xs" style={{ borderColor: `${accentColor}22` }}>
-              {[
-                { name: 'Home', icon: '⭐', active: true },
-                { name: 'Desktop', icon: '💻', active: false },
-                { name: 'Downloads', icon: '⬇️', active: false },
-                { name: 'Documents', icon: '📄', active: false },
-                { name: 'Pictures', icon: '🖼️', active: false },
-              ].map((nav) => (
-                <div
-                  key={nav.name}
-                  className="px-2 py-1 rounded flex items-center gap-2 cursor-pointer transition-colors"
-                  style={{
-                    backgroundColor: nav.active ? `${accentColor}25` : undefined,
-                    color: nav.active ? accentColor : undefined,
-                    fontWeight: nav.active ? 600 : 400,
-                  }}
-                >
-                  <span>{nav.icon}</span>
-                  <span>{nav.name}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex-1 p-3.5 overflow-y-auto">
-              <h4 className={`text-xs font-semibold mb-2.5 ${textColor}`}>Quick Access</h4>
-              <div className="grid grid-cols-3 gap-2.5">
-                {['Desktop', 'Downloads', 'Documents', 'Pictures', 'Music', 'Videos'].map((f) => (
-                  <div
-                    key={f}
-                    className="p-2.5 rounded-lg border flex items-center gap-2.5 text-xs transition-all hover:border-blue-400 cursor-pointer shadow-xs"
-                    style={{
-                      backgroundColor: notifCardBg,
-                      borderColor: `${accentColor}25`,
-                    }}
-                  >
-                    <span className="text-xl">📁</span>
-                    <span className={`font-medium ${textColor}`}>{f}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Right-click Context Menu overlay */}
+      {showContextMenu && (
+        <ContextMenuPreview
+          x={contextMenuPos?.x}
+          y={contextMenuPos?.y}
+          onClose={() => setShowContextMenu(false)}
+        />
       )}
 
       {/* Floating Canvas Area (Start Menu, Notification Center, or Quick Settings) */}
@@ -968,12 +896,28 @@ export default function PreviewCanvas() {
             style={{ borderRadius: `${cornerRadius}px` }}
             title="Start"
           >
-            {customStartIconUrl ? (
+            {customStartIconUrl || (startButton?.type === 'custom' && startButton.customIconUrl) ? (
               <img
-                src={customStartIconUrl}
+                src={
+                  startButton?.type === 'custom' && startButton.customIconUrl
+                    ? startButton.customIconUrl
+                    : customStartIconUrl!
+                }
                 alt="Start Icon"
                 className="w-5 h-5 object-contain"
               />
+            ) : startButton?.type === 'preset' ? (
+              <span data-testid="custom-start-icon-vector" className="flex items-center justify-center">
+                {renderStartButtonSvg(
+                  startButton.presetId || 'win11-minimal',
+                  startButton.colorMode === 'accent'
+                    ? accentColor
+                    : startButton.colorMode === 'secondary'
+                    ? secondaryAccent
+                    : startButton.customColor || accentColor,
+                  startButton.size || 20
+                )}
+              </span>
             ) : (
               <div
                 className="w-5 h-5 grid grid-cols-2 gap-0.5 rounded-xs p-0.5 transition-colors"
@@ -988,60 +932,112 @@ export default function PreviewCanvas() {
           </button>
 
           {/* Taskbar Pinned Icons with Running Indicators */}
-          {['🔍', '📂', '🌐', '💬', '🎵'].map((icon, idx) => (
-            <div
-              key={idx}
-              className={`w-10 h-10 flex flex-col items-center justify-center text-lg cursor-pointer transition-colors relative ${cardHover}`}
-              style={{ borderRadius: `${cornerRadius}px` }}
-            >
-              <span>{icon}</span>
-              {/* Running indicator matching Windows 11 Taskbar Styler */}
-              {idx < 3 && runningIndicatorStyle !== 'hidden' && (
-                runningIndicatorStyle === 'dot' ? (
-                  <div
-                    data-testid="indicator-dot"
-                    className="w-1.5 h-1.5 rounded-full absolute bottom-1 transition-all"
-                    style={{
-                      backgroundColor:
-                        idx === 0
-                          ? accentColor
-                          : isLightMode
-                          ? 'rgba(0,0,0,0.35)'
-                          : 'rgba(255,255,255,0.45)',
-                      boxShadow: idx === 0 ? `0 0 6px ${accentColor}` : undefined,
-                    }}
-                  />
-                ) : runningIndicatorStyle === 'glow' ? (
-                  <div
-                    data-testid="indicator-glow"
-                    className="w-5 h-1 rounded-full absolute bottom-0.5 transition-all blur-[1px]"
-                    style={{
-                      backgroundColor:
-                        idx === 0
-                          ? accentColor
-                          : isLightMode
-                          ? 'rgba(0,0,0,0.3)'
-                          : 'rgba(255,255,255,0.4)',
-                      boxShadow: `0 0 8px 2px ${idx === 0 ? accentColor : 'rgba(255,255,255,0.3)'}`,
-                    }}
-                  />
-                ) : (
-                  <div
-                    data-testid="indicator-standard"
-                    className="w-4 h-0.5 rounded-full absolute bottom-1 transition-colors"
-                    style={{
-                      backgroundColor:
-                        idx === 0
-                          ? accentColor
-                          : isLightMode
-                          ? 'rgba(0,0,0,0.35)'
-                          : 'rgba(255,255,255,0.45)',
-                    }}
-                  />
-                )
-              )}
-            </div>
-          ))}
+          {['🔍', '📂', '🌐', '💬', '🎵'].map((icon, idx) => {
+            const indConfig = runningIndicator || {
+              style: 'line',
+              activeColorMode: 'accent',
+              activeCustomColor: accentColor,
+              inactiveColorMode: 'subtle-white',
+              inactiveCustomColor: '#FFFFFF',
+              indicatorSize: 3,
+            };
+
+            let effectiveStyle: string = indConfig.style || 'line';
+            if (
+              runningIndicatorStyle &&
+              runningIndicatorStyle !== 'standard' &&
+              indConfig.style === 'line'
+            ) {
+              effectiveStyle = runningIndicatorStyle;
+            }
+            if (
+              runningIndicatorStyle === 'hidden' ||
+              indConfig.style === 'off' ||
+              (indConfig.style as string) === 'hidden'
+            ) {
+              effectiveStyle = 'off';
+            }
+
+            const isRunning =
+              idx < 3 &&
+              effectiveStyle !== 'off' &&
+              effectiveStyle !== 'hidden';
+
+            const activeColor =
+              indConfig.activeColorMode === 'white'
+                ? '#ffffff'
+                : indConfig.activeColorMode === 'custom'
+                ? indConfig.activeCustomColor
+                : accentColor;
+
+            const inactiveColor =
+              indConfig.inactiveColorMode === 'accent'
+                ? accentColor
+                : indConfig.inactiveColorMode === 'custom'
+                ? indConfig.inactiveCustomColor
+                : isLightMode
+                ? 'rgba(0,0,0,0.35)'
+                : 'rgba(255,255,255,0.45)';
+
+            const indColor = idx === 0 ? activeColor : inactiveColor;
+            const indSize = indConfig.indicatorSize || 3;
+
+            return (
+              <div
+                key={idx}
+                className={`w-10 h-10 flex flex-col items-center justify-center text-lg cursor-pointer transition-colors relative ${cardHover}`}
+                style={{ borderRadius: `${cornerRadius}px` }}
+              >
+                <span>{icon}</span>
+                {isRunning && (
+                  effectiveStyle === 'dot' ? (
+                    <div
+                      data-testid="indicator-dot"
+                      className="rounded-full absolute bottom-1 transition-all"
+                      style={{
+                        width: `${Math.max(4, indSize * 1.5)}px`,
+                        height: `${Math.max(4, indSize * 1.5)}px`,
+                        backgroundColor: indColor,
+                        boxShadow: idx === 0 ? `0 0 6px ${indColor}` : undefined,
+                      }}
+                    />
+                  ) : effectiveStyle === 'pill' ? (
+                    <div
+                      data-testid="indicator-pill"
+                      className="rounded-full absolute bottom-1 transition-all"
+                      style={{
+                        width: '12px',
+                        height: `${Math.max(3, indSize)}px`,
+                        backgroundColor: indColor,
+                        boxShadow: idx === 0 ? `0 0 6px ${indColor}88` : undefined,
+                      }}
+                    />
+                  ) : effectiveStyle === 'glow' ? (
+                    <div
+                      data-testid="indicator-glow"
+                      className="rounded-full absolute bottom-0.5 transition-all blur-[1px]"
+                      style={{
+                        width: '20px',
+                        height: `${Math.max(2, indSize)}px`,
+                        backgroundColor: indColor,
+                        boxShadow: `0 0 8px 2px ${indColor}`,
+                      }}
+                    />
+                  ) : (
+                    <div
+                      data-testid="indicator-standard"
+                      className="rounded-full absolute bottom-1 transition-colors"
+                      style={{
+                        width: '16px',
+                        height: `${Math.max(2, indSize)}px`,
+                        backgroundColor: indColor,
+                      }}
+                    />
+                  )
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* Right System Tray */}

@@ -15,11 +15,13 @@ afterEach(() => {
 });
 
 describe('ComponentIsolationSection', () => {
-  it('renders component isolation tabs and toggles override', () => {
+  it('renders 5 component isolation tabs and toggles override', () => {
     render(<ComponentIsolationSection onOpenGradientEditor={() => {}} />);
     expect(screen.getByText('Taskbar')).toBeTruthy();
     expect(screen.getByText('Start Menu')).toBeTruthy();
     expect(screen.getByText('Flyouts')).toBeTruthy();
+    expect(screen.getByText('Context Menu')).toBeTruthy();
+    expect(screen.getByText('File Explorer')).toBeTruthy();
   });
 
   it('shows inheriting badge when override is disabled', () => {
@@ -135,4 +137,39 @@ describe('ComponentIsolationSection', () => {
     expect(useThemeStore.getState().taskbarOverride.enabled).toBe(false);
     expect(screen.getByText(/Inheriting global material, color, and blur settings\./i)).toBeTruthy();
   });
+
+  it('toggles Context Menu override and classic menu switch', () => {
+    render(<ComponentIsolationSection onOpenGradientEditor={() => {}} />);
+    fireEvent.click(screen.getByText('Context Menu'));
+
+    const toggle = screen.getByLabelText(/Override Global Styling/i);
+    fireEvent.click(toggle);
+    expect(useThemeStore.getState().contextMenuOverride.enabled).toBe(true);
+
+    const classicToggle = screen.getByLabelText(/Use Windows 10 Classic Context Menu/i);
+    fireEvent.click(classicToggle);
+    expect(useThemeStore.getState().contextMenuOverride.enableClassicMenu).toBe(true);
+
+    const hoverAccentToggle = screen.getByLabelText(/Item Hover Accent Highlight/i);
+    fireEvent.click(hoverAccentToggle);
+    expect(useThemeStore.getState().contextMenuOverride.itemHoverAccent).toBe(false);
+  });
+
+  it('toggles File Explorer override and updates tab style and ribbon tint', () => {
+    render(<ComponentIsolationSection onOpenGradientEditor={() => {}} />);
+    fireEvent.click(screen.getByText('File Explorer'));
+
+    const toggle = screen.getByLabelText(/Override Global Styling/i);
+    fireEvent.click(toggle);
+    expect(useThemeStore.getState().fileExplorerOverride.enabled).toBe(true);
+
+    const floatingBtn = screen.getByRole('button', { name: /^Floating$/i });
+    fireEvent.click(floatingBtn);
+    expect(useThemeStore.getState().fileExplorerOverride.tabStyle).toBe('floating');
+
+    const ribbonToggle = screen.getByLabelText(/Tint Command Bar Ribbon/i);
+    fireEvent.click(ribbonToggle);
+    expect(useThemeStore.getState().fileExplorerOverride.showCommandBarTint).toBe(true);
+  });
 });
+

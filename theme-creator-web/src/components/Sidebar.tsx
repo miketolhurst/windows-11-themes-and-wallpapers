@@ -95,6 +95,10 @@ export default function Sidebar() {
     setStartMenuOverride,
     flyoutOverride,
     setFlyoutOverride,
+    contextMenuOverride,
+    setContextMenuOverride,
+    fileExplorerOverride,
+    setFileExplorerOverride,
     typography,
     setTypography,
     animations,
@@ -124,24 +128,36 @@ export default function Sidebar() {
   const [isIsolationExpanded, setIsIsolationExpanded] = useState(false);
   const [isTypographyExpanded, setIsTypographyExpanded] = useState(false);
   const [isGradientModalOpen, setIsGradientModalOpen] = useState(false);
-  const [gradientTarget, setGradientTarget] = useState<'global' | 'taskbar' | 'startMenu' | 'flyout'>('global');
+  const [gradientTarget, setGradientTarget] = useState<
+    'global' | 'taskbar' | 'startMenu' | 'flyout' | 'contextMenu' | 'fileExplorer'
+  >('global');
 
-  const handleOpenGradientModal = (target: 'global' | 'taskbar' | 'startMenu' | 'flyout') => {
+  const handleOpenGradientModal = (
+    target: 'global' | 'taskbar' | 'startMenu' | 'flyout' | 'contextMenu' | 'fileExplorer'
+  ) => {
     setGradientTarget(target);
     setIsGradientModalOpen(true);
   };
 
-  const getGradientForTarget = (target: 'global' | 'taskbar' | 'startMenu' | 'flyout'): GradientConfig => {
+  const getGradientForTarget = (
+    target: 'global' | 'taskbar' | 'startMenu' | 'flyout' | 'contextMenu' | 'fileExplorer'
+  ): GradientConfig => {
     if (target === 'taskbar') return taskbarOverride?.gradient || globalGradient;
     if (target === 'startMenu') return startMenuOverride?.gradient || globalGradient;
     if (target === 'flyout') return flyoutOverride?.gradient || globalGradient;
+    if (target === 'contextMenu') return contextMenuOverride?.gradient || globalGradient;
+    if (target === 'fileExplorer') return fileExplorerOverride?.gradient || globalGradient;
     return globalGradient;
   };
 
-  const getModalTitleForTarget = (target: 'global' | 'taskbar' | 'startMenu' | 'flyout') => {
+  const getModalTitleForTarget = (
+    target: 'global' | 'taskbar' | 'startMenu' | 'flyout' | 'contextMenu' | 'fileExplorer'
+  ) => {
     if (target === 'taskbar') return 'Edit Taskbar Gradient';
     if (target === 'startMenu') return 'Edit Start Menu Gradient';
     if (target === 'flyout') return 'Edit Flyout Gradient';
+    if (target === 'contextMenu') return 'Edit Context Menu Gradient';
+    if (target === 'fileExplorer') return 'Edit File Explorer Gradient';
     return 'Edit Global Gradient';
   };
 
@@ -152,6 +168,10 @@ export default function Sidebar() {
       setStartMenuOverride({ gradient: config });
     } else if (gradientTarget === 'flyout') {
       setFlyoutOverride({ gradient: config });
+    } else if (gradientTarget === 'contextMenu') {
+      setContextMenuOverride({ gradient: config });
+    } else if (gradientTarget === 'fileExplorer') {
+      setFileExplorerOverride({ gradient: config });
     } else {
       setGlobalGradient(config);
     }

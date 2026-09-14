@@ -4,13 +4,17 @@ import {
   useThemeStore,
   MaterialStyle,
   ComponentOverride,
+  ContextMenuOverride,
+  FileExplorerOverride,
 } from '../store/useThemeStore';
 
 export interface ComponentIsolationSectionProps {
-  onOpenGradientEditor: (target: 'taskbar' | 'startMenu' | 'flyout') => void;
+  onOpenGradientEditor: (
+    target: 'taskbar' | 'startMenu' | 'flyout' | 'contextMenu' | 'fileExplorer'
+  ) => void;
 }
 
-type TabType = 'taskbar' | 'startMenu' | 'flyout';
+export type TabType = 'taskbar' | 'startMenu' | 'flyout' | 'contextMenu' | 'fileExplorer';
 
 const MATERIAL_OPTIONS: { id: MaterialStyle; label: string }[] = [
   { id: 'fluent-acrylic', label: 'Acrylic Glass' },
@@ -57,9 +61,13 @@ export function ComponentIsolationSection({
     taskbarOverride,
     startMenuOverride,
     flyoutOverride,
+    contextMenuOverride,
+    fileExplorerOverride,
     setTaskbarOverride,
     setStartMenuOverride,
     setFlyoutOverride,
+    setContextMenuOverride,
+    setFileExplorerOverride,
     materialStyle,
     accentColor,
     taskbarOpacity,
@@ -75,15 +83,23 @@ export function ComponentIsolationSection({
       ? taskbarOverride
       : activeTab === 'startMenu'
       ? startMenuOverride
-      : flyoutOverride;
+      : activeTab === 'flyout'
+      ? flyoutOverride
+      : activeTab === 'contextMenu'
+      ? contextMenuOverride
+      : fileExplorerOverride;
 
-  const setOverride = (partial: Partial<ComponentOverride>) => {
+  const setOverride = (partial: any) => {
     if (activeTab === 'taskbar') {
       setTaskbarOverride(partial);
     } else if (activeTab === 'startMenu') {
       setStartMenuOverride(partial);
-    } else {
+    } else if (activeTab === 'flyout') {
       setFlyoutOverride(partial);
+    } else if (activeTab === 'contextMenu') {
+      setContextMenuOverride(partial);
+    } else {
+      setFileExplorerOverride(partial);
     }
   };
 
@@ -92,42 +108,52 @@ export function ComponentIsolationSection({
       ? taskbarOpacity
       : activeTab === 'startMenu'
       ? startMenuOpacity
-      : notificationOpacity;
+      : activeTab === 'flyout'
+      ? notificationOpacity
+      : 95;
 
   const globalBlur =
     activeTab === 'taskbar'
       ? taskbarBlur
       : activeTab === 'startMenu'
       ? startMenuBlur
-      : notificationBlur;
+      : activeTab === 'flyout'
+      ? notificationBlur
+      : 20;
 
   const currentMaterial: MaterialStyle =
     override.materialStyle ?? materialStyle ?? 'fluent-acrylic';
   const currentColor: string = override.customColor ?? accentColor ?? '#0078D4';
-  const currentOpacity: number = override.opacity ?? globalOpacity ?? 97;
-  const currentBlur: number = override.blur ?? globalBlur ?? 15;
+  const currentOpacity: number = override.opacity ?? globalOpacity ?? 95;
+  const currentBlur: number = override.blur ?? globalBlur ?? 20;
 
   const targetLabel =
     activeTab === 'taskbar'
       ? 'Taskbar'
       : activeTab === 'startMenu'
       ? 'Start Menu'
-      : 'Flyouts';
+      : activeTab === 'flyout'
+      ? 'Flyouts'
+      : activeTab === 'contextMenu'
+      ? 'Context Menu'
+      : 'File Explorer';
 
   return (
     <div className="flex flex-col gap-3">
-      {/* 3-tab Segmented Control */}
-      <div className="flex bg-neutral-800/80 p-1 rounded-xl border border-neutral-700/60">
+      {/* 5-tab Segmented Control */}
+      <div className="flex flex-wrap gap-1 bg-neutral-800/80 p-1 rounded-xl border border-neutral-700/60">
         {[
           { id: 'taskbar', label: 'Taskbar' },
           { id: 'startMenu', label: 'Start Menu' },
           { id: 'flyout', label: 'Flyouts' },
+          { id: 'contextMenu', label: 'Context Menu' },
+          { id: 'fileExplorer', label: 'File Explorer' },
         ].map((tab) => (
           <button
             key={tab.id}
             type="button"
             onClick={() => setActiveTab(tab.id as TabType)}
-            className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+            className={`flex-1 min-w-[70px] py-1 px-1.5 rounded-lg text-[11px] font-medium transition-all cursor-pointer text-center ${
               activeTab === tab.id
                 ? 'bg-blue-600 text-white shadow-xs'
                 : 'text-neutral-400 hover:text-white hover:bg-neutral-700/50'
@@ -163,6 +189,98 @@ export function ComponentIsolationSection({
         </div>
       ) : (
         <div className="flex flex-col gap-3 p-3 rounded-xl bg-neutral-900/60 border border-neutral-800 animate-fadeIn">
+          {/* Context Menu specific: Windows 10 Classic Toggle */}
+          {activeTab === 'contextMenu' && (
+            <div className="flex flex-col gap-2 p-2.5 rounded-lg bg-neutral-800/40 border border-neutral-700/40">
+              <label className="flex items-center justify-between text-xs text-neutral-300 cursor-pointer hover:text-white">
+                <span className="font-medium">Use Windows 10 Classic Context Menu</span>
+                <input
+                  type="checkbox"
+                  aria-label="Use Windows 10 Classic Context Menu"
+                  checked={Boolean(contextMenuOverride.enableClassicMenu)}
+                  onChange={(e) => setContextMenuOverride({ enableClassicMenu: e.target.checked })}
+                  className="w-4 h-4 rounded bg-neutral-800 border-neutral-700 text-blue-600 focus:ring-0 cursor-pointer"
+                />
+              </label>
+              <label className="flex items-center justify-between text-xs text-neutral-300 cursor-pointer hover:text-white">
+                <span>Item Hover Accent Highlight</span>
+                <input
+                  type="checkbox"
+                  aria-label="Item Hover Accent Highlight"
+                  checked={contextMenuOverride.itemHoverAccent ?? true}
+                  onChange={(e) => setContextMenuOverride({ itemHoverAccent: e.target.checked })}
+                  className="w-4 h-4 rounded bg-neutral-800 border-neutral-700 text-blue-600 focus:ring-0 cursor-pointer"
+                />
+              </label>
+            </div>
+          )}
+
+          {/* File Explorer specific options */}
+          {activeTab === 'fileExplorer' && (
+            <div className="flex flex-col gap-2.5 p-2.5 rounded-lg bg-neutral-800/40 border border-neutral-700/40">
+              {/* Tab Style pills */}
+              <div>
+                <span className="text-xs text-neutral-300 font-medium block mb-1.5">Tab Style</span>
+                <div className="grid grid-cols-3 gap-1">
+                  {[
+                    { id: 'integrated', label: 'Integrated' },
+                    { id: 'floating', label: 'Floating' },
+                    { id: 'accent-border', label: 'Accent Border' },
+                  ].map((style) => (
+                    <button
+                      key={style.id}
+                      type="button"
+                      onClick={() => setFileExplorerOverride({ tabStyle: style.id as any })}
+                      className={`py-1 px-1.5 rounded text-[11px] font-medium border transition-colors cursor-pointer text-center ${
+                        fileExplorerOverride.tabStyle === style.id
+                          ? 'bg-blue-600 text-white border-blue-500 shadow-xs'
+                          : 'bg-neutral-800 text-neutral-300 border-neutral-700 hover:bg-neutral-700'
+                      }`}
+                    >
+                      {style.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Active Tab Color Mode */}
+              <div>
+                <span className="text-xs text-neutral-300 font-medium block mb-1.5">Active Tab Color</span>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {[
+                    { id: 'accent', label: 'Accent Color' },
+                    { id: 'surface', label: 'Surface Match' },
+                  ].map((mode) => (
+                    <button
+                      key={mode.id}
+                      type="button"
+                      onClick={() => setFileExplorerOverride({ activeTabColorMode: mode.id as any })}
+                      className={`py-1 px-1.5 rounded text-[11px] font-medium border transition-colors cursor-pointer text-center ${
+                        fileExplorerOverride.activeTabColorMode === mode.id
+                          ? 'bg-blue-600 text-white border-blue-500 shadow-xs'
+                          : 'bg-neutral-800 text-neutral-300 border-neutral-700 hover:bg-neutral-700'
+                      }`}
+                    >
+                      {mode.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Command Bar Ribbon Tint */}
+              <label className="flex items-center justify-between text-xs text-neutral-300 cursor-pointer hover:text-white pt-1">
+                <span>Tint Command Bar Ribbon</span>
+                <input
+                  type="checkbox"
+                  aria-label="Tint Command Bar Ribbon"
+                  checked={Boolean(fileExplorerOverride.showCommandBarTint)}
+                  onChange={(e) => setFileExplorerOverride({ showCommandBarTint: e.target.checked })}
+                  className="w-4 h-4 rounded bg-neutral-800 border-neutral-700 text-blue-600 focus:ring-0 cursor-pointer"
+                />
+              </label>
+            </div>
+          )}
+
           {/* Material Finish Selector */}
           <div>
             <span className="text-xs text-neutral-400 block mb-1.5">Material Finish</span>

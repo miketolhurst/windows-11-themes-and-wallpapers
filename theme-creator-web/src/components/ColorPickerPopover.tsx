@@ -141,7 +141,8 @@ const DEFAULT_QUICK_SWATCHES = [
 ];
 
 export interface ColorPickerPopoverProps {
-  value: string;
+  value?: string;
+  color?: string;
   onChange: (hex: string) => void;
   label?: string;
   quickSwatches?: string[];
@@ -150,35 +151,37 @@ export interface ColorPickerPopoverProps {
 
 export const ColorPickerPopover: React.FC<ColorPickerPopoverProps> = ({
   value,
+  color,
   onChange,
   label = 'Color',
   quickSwatches = DEFAULT_QUICK_SWATCHES,
   id,
 }) => {
+  const effectiveColor = value ?? color ?? '#0078D4';
   const [isOpen, setIsOpen] = useState(false);
-  const [hexInput, setHexInput] = useState(value);
+  const [hexInput, setHexInput] = useState(effectiveColor);
   const containerRef = useRef<HTMLDivElement>(null);
   const spectrumRef = useRef<HTMLDivElement>(null);
   const isDraggingSpectrum = useRef(false);
 
   // Normalize initial HSV
-  const initRgb = hexToRgb(value || '#0078D4');
+  const initRgb = hexToRgb(effectiveColor);
   const [initH, initS, initV] = rgbToHsv(initRgb[0], initRgb[1], initRgb[2]);
   const [hsv, setHsv] = useState<[number, number, number]>([initH, initS, initV]);
 
   // Sync external value changes
   useEffect(() => {
-    if (value) {
-      setHexInput(value);
+    if (effectiveColor) {
+      setHexInput(effectiveColor);
       try {
-        const rgb = hexToRgb(value);
+        const rgb = hexToRgb(effectiveColor);
         const [h, s, v] = rgbToHsv(rgb[0], rgb[1], rgb[2]);
         setHsv([h, s, v]);
       } catch {
         // Ignore invalid
       }
     }
-  }, [value]);
+  }, [effectiveColor]);
 
   // Close on outside click
   useEffect(() => {
@@ -320,7 +323,7 @@ export const ColorPickerPopover: React.FC<ColorPickerPopoverProps> = ({
           aria-label="Open color picker"
           onClick={() => setIsOpen((prev) => !prev)}
           className="w-7 h-7 rounded-md cursor-pointer border border-white/20 shadow-xs shrink-0 transition-transform active:scale-95 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          style={{ backgroundColor: value }}
+          style={{ backgroundColor: effectiveColor }}
           title={`Click to edit ${label}`}
         />
         <input
@@ -378,7 +381,7 @@ export const ColorPickerPopover: React.FC<ColorPickerPopoverProps> = ({
               style={{
                 left: `${hsv[1] * 100}%`,
                 top: `${(1 - hsv[2]) * 100}%`,
-                backgroundColor: value,
+                backgroundColor: effectiveColor,
               }}
             />
           </div>
@@ -461,7 +464,7 @@ export const ColorPickerPopover: React.FC<ColorPickerPopoverProps> = ({
                     type="button"
                     onClick={() => commitHex(swatch)}
                     className={`w-5 h-5 rounded-md border transition-transform hover:scale-110 cursor-pointer ${
-                      value.toLowerCase() === swatch.toLowerCase()
+                      effectiveColor.toLowerCase() === swatch.toLowerCase()
                         ? 'border-white ring-1 ring-blue-400'
                         : 'border-white/15'
                     }`}

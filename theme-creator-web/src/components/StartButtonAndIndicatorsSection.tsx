@@ -185,7 +185,7 @@ export function StartButtonAndIndicatorsSection(): React.JSX.Element {
                 <div className="pt-1">
                   <ColorPickerPopover
                     label="Start Icon Custom Color"
-                    color={startButton.customColor || '#0078D4'}
+                    value={startButton.customColor || '#0078D4'}
                     onChange={(hex) => setStartButton({ customColor: hex })}
                   />
                 </div>
@@ -283,7 +283,7 @@ export function StartButtonAndIndicatorsSection(): React.JSX.Element {
                 <div className="pt-1">
                   <ColorPickerPopover
                     label="Active Indicator Color"
-                    color={runningIndicator.activeCustomColor || '#0078D4'}
+                    value={runningIndicator.activeCustomColor || '#0078D4'}
                     onChange={(hex) => setRunningIndicator({ activeCustomColor: hex })}
                   />
                 </div>
@@ -337,7 +337,7 @@ export function StartButtonAndIndicatorsSection(): React.JSX.Element {
                 <div className="pt-1">
                   <ColorPickerPopover
                     label="Inactive Indicator Color"
-                    color={runningIndicator.inactiveCustomColor || '#808080'}
+                    value={runningIndicator.inactiveCustomColor || '#808080'}
                     onChange={(hex) => setRunningIndicator({ inactiveCustomColor: hex })}
                   />
                 </div>

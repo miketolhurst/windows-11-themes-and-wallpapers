@@ -50,11 +50,14 @@ export interface WindhawkThemePackage {
 
 export const DEFAULT_START_ICON_PNG = new Uint8Array([
   0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d,
-  0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
-  0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4, 0x89, 0x00, 0x00, 0x00,
-  0x0a, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9c, 0x63, 0x00, 0x01, 0x00, 0x00,
-  0x05, 0x00, 0x01, 0x0d, 0x0a, 0x2d, 0xb4, 0x00, 0x00, 0x00, 0x00, 0x49,
-  0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82,
+  0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x18, 0x00, 0x00, 0x00, 0x18,
+  0x08, 0x06, 0x00, 0x00, 0x00, 0xe0, 0x77, 0x3d, 0xf8, 0x00, 0x00, 0x00,
+  0x29, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9c, 0x63, 0x60, 0x18, 0x3e, 0xa0,
+  0xe2, 0xca, 0x7f, 0x82, 0x98, 0x1c, 0xb5, 0xa3, 0x16, 0x8c, 0x5a, 0x30,
+  0x6a, 0xc1, 0xb0, 0x02, 0x43, 0x3f, 0x0e, 0x46, 0x2d, 0x18, 0xb5, 0x60,
+  0x08, 0x58, 0x30, 0x54, 0x01, 0x00, 0xa9, 0xa6, 0xe7, 0x0b, 0x7a, 0x04,
+  0x62, 0xe6, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42,
+  0x60, 0x82,
 ]);
 
 export function calculateGradientPoints(
@@ -264,7 +267,7 @@ export function buildTaskbarMod(
   if (hasIcon) {
     styles.push(
       { target: 'Taskbar.ExperienceToggleButton#LaunchListButton[AutomationPropertiesAutomationId=StartButton] > Taskbar.TaskListButtonPanel > Grid > Microsoft.UI.Xaml.Controls.AnimatedVisualPlayer#Icon', styles: ['Visibility=Collapsed'] },
-      { target: 'Taskbar.ExperienceToggleButton#LaunchListButton[AutomationPropertiesAutomationId=StartButton] > Taskbar.TaskListButtonPanel > Grid > Border#BackgroundElement', styles: [`CornerRadius=${rad}`, '<ImageBrush ImageSource="C:\\Users\\Public\\Pictures\\Windhawk_start_icon.png" Stretch="Uniform"/>'] }
+      { target: 'Taskbar.ExperienceToggleButton#LaunchListButton[AutomationPropertiesAutomationId=StartButton] > Taskbar.TaskListButtonPanel > Grid > Border#BackgroundElement', styles: [`CornerRadius=${rad}`, 'Background:=<ImageBrush ImageSource="C:\\Users\\Public\\Pictures\\Windhawk_start_icon.png" Stretch="Uniform"/>'] }
     );
   } else {
     styles.push({ target: 'Taskbar.ExperienceToggleButton#LaunchListButton[AutomationPropertiesAutomationId=StartButton] > Taskbar.TaskListButtonPanel > Grid > Border#BackgroundElement', styles: [`CornerRadius=${rad}`] });
@@ -377,16 +380,16 @@ export function getModRawStyles(state: ThemeConfigSnapshot | ThemeState): ModRaw
     const weightMap: Record<string, string> = { '300': 'Light', '400': 'Normal', '500': 'Medium', '600': 'SemiBold', '700': 'Bold' };
     const typo = [`FontFamily=${state.typography.fontFamily}`, `FontWeight=${weightMap[state.typography.fontWeight] || state.typography.fontWeight || 'Normal'}`, `CharacterSpacing=${state.typography.characterSpacing}`];
     taskbarControlStyles.push(
-      { target: 'TextBlock#LabelControl, SystemTray.ClockButton * > TextBlock, TextBlock#TimeTextBlock, TextBlock#DateTextBlock', styles: typo },
+      { target: 'TextBlock#LabelControl, TextBlock#TimeInnerTextBlock, TextBlock#DateInnerTextBlock, TextBlock#TimeTextBlock, TextBlock#DateTextBlock, SystemTray.ClockButton > * > TextBlock', styles: typo },
       { target: 'SystemTray.TextIconContent > * > TextBlock', styles: ['FontFamily=Segoe Fluent Icons', 'CharacterSpacing=0'] }
     );
     startMenuControlStyles.push(
-      { target: 'StartMenu.PinnedList TextBlock, StartMenu.AllAppsList TextBlock, StartDocked.SearchBoxToggleButton TextBlock, Grid#TopLevelSuggestionsContainer TextBlock, StartDocked.UserProfileButton TextBlock', styles: typo },
-      { target: 'StartDocked.PowerOptionsView TextBlock, Button#PowerButton TextBlock', styles: ['FontFamily=Segoe Fluent Icons', 'CharacterSpacing=0'] }
+      { target: 'TextBlock#DisplayName, TextBlock#PinnedListHeaderText, TextBlock#AllAppsHeaderText, TextBlock#RecommendedListHeaderText, StartMenu.PinnedList > * > TextBlock, StartMenu.AllAppsList > * > TextBlock, StartDocked.SearchBoxToggleButton > * > TextBlock, Grid#TopLevelSuggestionsContainer > * > TextBlock, StartDocked.UserProfileButton > * > TextBlock', styles: typo },
+      { target: 'StartDocked.PowerOptionsView > * > TextBlock, StartDocked.PowerOptionsView TextBlock, Button#PowerButton > * > TextBlock, Button#PowerButton TextBlock', styles: ['FontFamily=Segoe Fluent Icons', 'CharacterSpacing=0'] }
     );
     ncControlStyles.push(
-      { target: 'Grid#NotificationCenterGrid TextBlock#Header, Grid#NotificationCenterGrid TextBlock#Body, CalendarView TextBlock', styles: typo },
-      { target: 'ActionCenter.FocusSessionControl TextBlock, QuickActions.AccessibleToggleButton TextBlock', styles: ['FontFamily=Segoe Fluent Icons', 'CharacterSpacing=0'] }
+      { target: 'Grid#NotificationCenterGrid > * > TextBlock#Header, Grid#NotificationCenterGrid > * > TextBlock#Body, CalendarView > * > TextBlock, Grid#CalendarCenterGrid > * > TextBlock', styles: typo },
+      { target: 'ActionCenter.FocusSessionControl > * > TextBlock, ActionCenter.FocusSessionControl TextBlock, QuickActions.AccessibleToggleButton > * > TextBlock, QuickActions.AccessibleToggleButton TextBlock', styles: ['FontFamily=Segoe Fluent Icons', 'CharacterSpacing=0'] }
     );
   }
 

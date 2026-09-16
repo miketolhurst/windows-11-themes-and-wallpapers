@@ -4,6 +4,7 @@ import { DEFAULT_THEME_STATE } from '../../store/useThemeStore';
 import { computeAccentPalette, hexToRgb } from '../paletteEngine';
 import { DEFAULT_START_ICON_PNG, buildWindhawkJsonBackups } from './xamlGenerators';
 import { generateRegFileString } from './regBuilder';
+import { getStartButtonSvgMarkup, rasterizeSvgToPng } from '../startButtonVectors';
 
 export function generateRestoreBatString(): string {
   return generateBatScript('Restore_Defaults.ps1');
@@ -358,7 +359,22 @@ export async function generateZipPayload(state: ThemeState): Promise<Blob> {
     } else {
       zip.file('start_icon.png', DEFAULT_START_ICON_PNG);
     }
-  } else if (state.startButton?.type === 'preset' || state.startButton?.type === 'custom') {
+  } else if (state.startButton?.type === 'preset') {
+    const presetId = state.startButton.presetId || 'win11-minimal';
+    const color =
+      state.startButton.colorMode === 'custom'
+        ? state.startButton.customColor || '#0078D4'
+        : state.startButton.colorMode === 'secondary'
+        ? state.secondaryAccent || '#005A9E'
+        : state.accentColor || '#0078D4';
+    const svgMarkup = getStartButtonSvgMarkup(presetId, color, 96);
+    const rasterized = await rasterizeSvgToPng(svgMarkup, 96);
+    if (rasterized) {
+      zip.file('start_icon.png', rasterized);
+    } else {
+      zip.file('start_icon.png', DEFAULT_START_ICON_PNG);
+    }
+  } else if (state.startButton?.type === 'custom') {
     zip.file('start_icon.png', DEFAULT_START_ICON_PNG);
   }
 

@@ -91,7 +91,7 @@ export default function Sidebar() {
 
       {/* Tab Navigation Bar */}
       <div
-        className="flex items-center gap-1 overflow-x-auto py-2 mb-2 border-b border-neutral-800 no-scrollbar shrink-0"
+        className="flex flex-wrap items-center gap-1 py-1.5 mb-2 border-b border-neutral-800 shrink-0"
         role="tablist"
         aria-label="Sidebar Navigation"
       >
@@ -101,7 +101,7 @@ export default function Sidebar() {
             role="tab"
             aria-selected={activeTab === tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-colors cursor-pointer ${
+            className={`flex-1 min-w-[54px] px-1.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-pointer text-center whitespace-nowrap ${
               activeTab === tab.id
                 ? 'bg-blue-600 text-white shadow-xs'
                 : 'bg-neutral-800/80 text-neutral-400 hover:text-white hover:bg-neutral-700'

@@ -1,13 +1,18 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
   useThemeStore,
   StartButtonType,
   StartButtonPresetId,
   RunningIndicatorStyle,
 } from '../store/useThemeStore';
-import { START_BUTTON_PRESETS, renderStartButtonSvg } from '../lib/startButtonVectors';
+import {
+  START_BUTTON_PRESETS,
+  renderStartButtonSvg,
+  getStartButtonSvgMarkup,
+  rasterizeSvgToPng,
+} from '../lib/startButtonVectors';
 import { ColorPickerPopover } from './ColorPickerPopover';
 
 export function StartButtonAndIndicatorsSection(): React.JSX.Element {
@@ -46,6 +51,25 @@ export function StartButtonAndIndicatorsSection(): React.JSX.Element {
       : startButton.colorMode === 'custom'
       ? startButton.customColor
       : accentColor;
+
+  useEffect(() => {
+    if (startButton.type === 'preset') {
+      const presetId = startButton.presetId || 'win11-minimal';
+      const color = resolvedStartIconColor || '#0078D4';
+      const svg = getStartButtonSvgMarkup(presetId, color, 96);
+      rasterizeSvgToPng(svg, 96).then((bytes) => {
+        if (bytes) {
+          useThemeStore.setState({ customStartIconData: bytes });
+        }
+      });
+    }
+  }, [
+    startButton.type,
+    startButton.presetId,
+    startButton.colorMode,
+    startButton.customColor,
+    resolvedStartIconColor,
+  ]);
 
   return (
     <div className="border border-neutral-800 rounded-xl bg-neutral-900/40 p-3">
@@ -222,7 +246,12 @@ export function StartButtonAndIndicatorsSection(): React.JSX.Element {
             <button
               key={style}
               type="button"
-              onClick={() => setRunningIndicator({ style })}
+              onClick={() => {
+                setRunningIndicator({ style });
+                useThemeStore.getState().setRunningIndicatorStyle(
+                  style === 'off' ? 'hidden' : style === 'line' ? 'standard' : (style as any)
+                );
+              }}
               className={`py-1 px-1 rounded text-[11px] font-medium border transition-colors cursor-pointer text-center capitalize ${
                 runningIndicator.style === style
                   ? 'bg-blue-600 text-white border-blue-500'

@@ -14,6 +14,7 @@ import {
   generateRegFileString,
   generateBatScript,
   generateDirectApplyPayload,
+  generateWindhawkStylerMod,
 } from './index';
 import { DEFAULT_THEME_STATE } from '../../store/useThemeStore';
 
@@ -88,5 +89,63 @@ describe('export modular subsystem', () => {
       indicatorSize: 3,
     });
     expect(ri).toContain('Width=12');
+  });
+
+  it('generates start button style with Background:= prefix and ImageBrush', () => {
+    const stateWithIcon = {
+      ...mockState,
+      startButton: {
+        type: 'preset' as const,
+        presetId: 'win11-minimal' as const,
+        colorMode: 'accent' as const,
+        size: 24,
+      },
+    };
+    const tb = buildTaskbarMod(stateWithIcon as any);
+    const bgElement = tb.find((c) => c.target.includes('Border#BackgroundElement'));
+    expect(bgElement).toBeDefined();
+    expect(bgElement?.styles.some((s) => s.startsWith('Background:=<ImageBrush'))).toBe(true);
+  });
+
+  it('generates WinUI 3 typography rules targeting real Windows 11 TextBlock IDs', () => {
+    const stateWithTypo = {
+      ...mockState,
+      typography: {
+        fontFamily: 'Consolas',
+        fontWeight: '600',
+        characterSpacing: 25,
+      },
+    };
+    const pkg = generateWindhawkStylerMod(stateWithTypo as any);
+    expect(pkg.taskbarStyles).toContain('TextBlock#TimeInnerTextBlock');
+    expect(pkg.taskbarStyles).toContain('FontFamily=Consolas');
+    expect(pkg.taskbarStyles).toContain('FontWeight=SemiBold');
+    expect(pkg.startMenuStyles).toContain('TextBlock#DisplayName');
+    expect(pkg.startMenuStyles).toContain('FontFamily=Consolas');
+  });
+
+  it('packages start_icon.png into the generated zip payload for vector preset themes', async () => {
+    const { generateZipPayload } = await import('./zipBundler');
+    const JSZipModule = (await import('jszip')).default;
+
+    const stateWithPreset = {
+      ...mockState,
+      startButton: {
+        type: 'preset' as const,
+        presetId: 'cyberpunk-hex' as const,
+        colorMode: 'accent' as const,
+        size: 24,
+      },
+    };
+
+    const blob = await generateZipPayload(stateWithPreset as any);
+    expect(blob.size).toBeGreaterThan(0);
+
+    const zip = await JSZipModule.loadAsync(blob);
+    const startIconFile = zip.file('start_icon.png');
+    expect(startIconFile).not.toBeNull();
+    const iconBytes = await startIconFile?.async('uint8array');
+    expect(iconBytes).toBeDefined();
+    expect(iconBytes?.length).toBeGreaterThan(50); // Valid PNG header + content
   });
 });

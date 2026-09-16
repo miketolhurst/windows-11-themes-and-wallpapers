@@ -76,11 +76,11 @@ test('updates running indicator style when indicator buttons are clicked', () =>
   useThemeStore.setState({ runningIndicatorStyle: 'standard' });
   render(<Sidebar />);
 
-  const dotBtn = screen.getByLabelText(/Indicator Dot/i);
+  const dotBtn = screen.getByRole('button', { name: /^Dot$/i });
   fireEvent.click(dotBtn);
   expect(useThemeStore.getState().runningIndicatorStyle).toBe('dot');
 
-  const glowBtn = screen.getByLabelText(/Indicator Glow/i);
+  const glowBtn = screen.getByRole('button', { name: /^Glow$/i });
   fireEvent.click(glowBtn);
   expect(useThemeStore.getState().runningIndicatorStyle).toBe('glow');
 });

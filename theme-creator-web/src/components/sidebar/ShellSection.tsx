@@ -24,8 +24,6 @@ export default function ShellSection({ onOpenGradientModal }: ShellSectionProps)
   const setDockMode = useThemeStore((s) => s.setDockMode);
   const dockMargin = useThemeStore((s) => s.dockMargin);
   const setDockMargin = useThemeStore((s) => s.setDockMargin);
-  const runningIndicatorStyle = useThemeStore((s) => s.runningIndicatorStyle);
-  const setRunningIndicatorStyle = useThemeStore((s) => s.setRunningIndicatorStyle);
   const hideRecommended = useThemeStore((s) => s.hideRecommended);
   const setHideRecommended = useThemeStore((s) => s.setHideRecommended);
   const compactSearch = useThemeStore((s) => s.compactSearch);
@@ -247,32 +245,6 @@ export default function ShellSection({ onOpenGradientModal }: ShellSectionProps)
               />
             </div>
           )}
-        </div>
-
-        <div className="mb-3">
-          <label className="text-xs text-neutral-300 block mb-1.5">Running App Indicator</label>
-          <div className="grid grid-cols-4 gap-1">
-            {[
-              { id: 'standard', label: 'Line' },
-              { id: 'dot', label: 'Dot' },
-              { id: 'glow', label: 'Glow' },
-              { id: 'hidden', label: 'Off' },
-            ].map((ind) => (
-              <button
-                key={ind.id}
-                type="button"
-                onClick={() => setRunningIndicatorStyle(ind.id as any)}
-                className={`py-1 px-1.5 rounded text-[11px] font-medium border transition-colors cursor-pointer text-center ${
-                  runningIndicatorStyle === ind.id
-                    ? 'bg-blue-600 text-white border-blue-500 shadow-xs'
-                    : 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:text-neutral-200'
-                }`}
-                aria-label={`Indicator ${ind.label}`}
-              >
-                {ind.label}
-              </button>
-            ))}
-          </div>
         </div>
 
         <div className="flex flex-col gap-2">
